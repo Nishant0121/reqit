@@ -1,0 +1,13 @@
+version: 1
+name: Users
+order:
+  - get-user
+  - create-user
+
+headers:
+  - name: X-Team
+    value: backend
+
+auth:
+  type: bearer
+  token: '{{token}}'

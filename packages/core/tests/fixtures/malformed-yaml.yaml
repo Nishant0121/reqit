@@ -1,0 +1,6 @@
+version: 1
+name: Malformed YAML
+method: GET
+url: 'https://example.com'
+  indentation_error: true
+ [invalid: yaml: syntax: ]

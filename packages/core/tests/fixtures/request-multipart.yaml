@@ -1,0 +1,12 @@
+version: 1
+name: Upload Document
+method: POST
+url: 'https://api.example.com/upload'
+
+body:
+  type: multipart
+  form:
+    - name: title
+      value: Contract Proposal
+    - name: file
+      value: '@/path/to/document.pdf'

@@ -51,23 +51,23 @@ This plan breaks the whole project into small phases. Each phase is meant to tak
 
 **Goal:** read and write request files with zero-diff round-tripping.
 
-- [ ] Define TypeScript types in `core/src/format/types.ts`: `RequestFile`, `KeyValue`, `Auth`, `Body`, `FolderFile`, `CollectionFile`, `EnvironmentFile`, `SecretsFile`
-- [ ] Define a schema (Zod) that mirrors the types, with friendly error messages that include file path and field
-- [ ] Implement `parseRequest(text)` using the `yaml` package, preserving comments where possible
-- [ ] Implement `serializeRequest(request)` with a **fixed field order**
-- [ ] Always quote strings that YAML would misread (values starting with `{`, `[`, `*`, `&`, `!`, `%`, `@`, or a backtick; `yes`/`no`/`on`/`off`; numeric-looking strings)
-- [ ] Write multi-line bodies and scripts as `|` block scalars
-- [ ] Preserve unknown fields instead of dropping them
-- [ ] Implement the same parse/serialize pair for folder, collection, environment, and secrets files
-- [ ] Add `version` handling and a `migrate()` function stub (identity for v1)
-- [ ] Create a fixtures folder with 15+ sample files: minimal, full, comments, tricky quoting, disabled headers, empty body, unicode, very long scripts, malformed files
+- [x] Define TypeScript types in `core/src/format/types.ts`: `RequestFile`, `KeyValue`, `Auth`, `Body`, `FolderFile`, `CollectionFile`, `EnvironmentFile`, `SecretsFile`
+- [x] Define a schema (Zod) that mirrors the types, with friendly error messages that include file path and field
+- [x] Implement `parseRequest(text)` using the `yaml` package, preserving comments where possible
+- [x] Implement `serializeRequest(request)` with a **fixed field order**
+- [x] Always quote strings that YAML would misread (values starting with `{`, `[`, `*`, `&`, `!`, `%`, `@`, or a backtick; `yes`/`no`/`on`/`off`; numeric-looking strings)
+- [x] Write multi-line bodies and scripts as `|` block scalars
+- [x] Preserve unknown fields instead of dropping them
+- [x] Implement the same parse/serialize pair for folder, collection, environment, and secrets files
+- [x] Add `version` handling and a `migrate()` function stub (identity for v1)
+- [x] Create a fixtures folder with 15+ sample files: minimal, full, comments, tricky quoting, disabled headers, empty body, unicode, very long scripts, malformed files
 
 **Tests**
 
-- [ ] Round-trip: `serialize(parse(text)) === text` for every canonical fixture
-- [ ] Parse then serialize an untouched file produces zero diff
-- [ ] Malformed YAML and schema violations return clear errors, not crashes
-- [ ] Unknown fields survive a round trip
+- [x] Round-trip: `serialize(parse(text)) === text` for every canonical fixture
+- [x] Parse then serialize an untouched file produces zero diff
+- [x] Malformed YAML and schema violations return clear errors, not crashes
+- [x] Unknown fields survive a round trip
 
 **Done when:** all fixtures round-trip byte for byte and the test suite is green.
 

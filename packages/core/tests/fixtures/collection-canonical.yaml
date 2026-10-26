@@ -1,0 +1,7 @@
+version: 1
+name: My Project API
+
+defaults:
+  timeoutMs: 30000
+  followRedirects: true
+  validateSsl: true

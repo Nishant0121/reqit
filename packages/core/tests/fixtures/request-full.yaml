@@ -1,0 +1,43 @@
+version: 1
+name: Create User
+method: POST
+url: '{{baseUrl}}/users'
+
+params:
+  - name: notify
+    value: 'true'
+    enabled: true
+
+headers:
+  - name: Content-Type
+    value: application/json
+  - name: X-Debug
+    value: '1'
+    enabled: false
+
+auth:
+  type: bearer
+  token: '{{token}}'
+
+body:
+  type: json
+  content: |
+    {
+      "name": "Nishant",
+      "email": "n@example.com"
+    }
+
+scripts:
+  pre: |
+    req.setHeader("X-Request-Time", Date.now());
+  post: |
+    reqit.setVar("userId", res.body.id);
+
+tests:
+  - name: Status is 201
+    assert: res.status === 201
+  - name: Returns an id
+    assert: typeof res.body.id === "string"
+
+docs: |
+  Creates a user. Returns the new user's id.

@@ -1,0 +1,22 @@
+version: 1
+name: 🚀 用户注册 · नमस्ते दुनिया
+method: POST
+url: 'https://api.example.com/v1/café/search'
+
+headers:
+  - name: X-Language
+    value: 中文 · हिन्दी · Français
+  - name: X-Emoji
+    value: 🌟✨🎉
+
+body:
+  type: json
+  content: |
+    {
+      "greeting": "नमस्ते दुनिया",
+      "city": "München",
+      "tags": ["🎉", "🚀"]
+    }
+
+docs: |
+  Unicode verification fixture covering emojis, CJK, Devanagari, and accents.

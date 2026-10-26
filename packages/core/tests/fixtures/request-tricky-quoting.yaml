@@ -1,0 +1,34 @@
+version: 1
+name: Tricky Quoting Endpoint
+method: POST
+url: '{{baseUrl}}/tricky'
+
+params:
+  - name: is_active
+    value: 'yes'
+  - name: is_deleted
+    value: 'false'
+  - name: flag_on
+    value: 'on'
+  - name: zip_code
+    value: '01234'
+  - name: float_num
+    value: '3.14159'
+  - name: hex_val
+    value: '0x1F'
+  - name: starts_bracket
+    value: '[item]'
+  - name: starts_brace
+    value: '{key}'
+  - name: starts_at
+    value: '@user'
+  - name: starts_backtick
+    value: '`code`'
+  - name: starts_star
+    value: '*pointer'
+  - name: starts_amp
+    value: '&ref'
+  - name: starts_bang
+    value: '!important'
+  - name: starts_percent
+    value: '%encoded'

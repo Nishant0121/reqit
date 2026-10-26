@@ -1,0 +1,9 @@
+version: 1
+name: Request With Unknown Fields
+method: GET
+url: 'https://api.example.com/custom'
+
+customTag: analytics-v2
+vendorExtension:
+  owner: core-platform
+  retries: 3

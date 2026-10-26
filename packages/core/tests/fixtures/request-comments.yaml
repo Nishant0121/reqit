@@ -1,0 +1,18 @@
+# Top-level collection comment
+version: 1 # In-line version comment
+# The display name of the request
+name: Get User Profile
+method: GET
+url: '{{baseUrl}}/profile'
+
+# Request headers for authentication and telemetry
+headers:
+  - name: Accept
+    value: application/json
+  # Custom tracing header
+  - name: X-Trace-Id
+    value: '{{traceId}}'
+    enabled: true
+
+docs: |
+  Fetches current user profile with telemetry headers.

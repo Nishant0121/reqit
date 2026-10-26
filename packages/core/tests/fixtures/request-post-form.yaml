@@ -1,0 +1,16 @@
+version: 1
+name: Submit Form
+method: POST
+url: 'https://httpbin.org/post'
+
+headers:
+  - name: Content-Type
+    value: application/x-www-form-urlencoded
+
+body:
+  type: form
+  form:
+    - name: username
+      value: testuser
+    - name: remember_me
+      value: 'true'

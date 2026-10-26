@@ -1,0 +1,10 @@
+version: 1
+name: Empty Body Request
+method: DELETE
+url: 'https://api.example.com/items/99'
+
+body:
+  type: none
+
+docs: |
+  Delete item with explicitly empty body.

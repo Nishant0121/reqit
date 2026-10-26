@@ -4,3 +4,4 @@ coverage/
 pnpm-lock.yaml
 .git/
 .reqit/
+**/tests/fixtures/**

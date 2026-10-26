@@ -1,0 +1,23 @@
+version: 1
+name: Disabled Headers Test
+method: GET
+url: 'https://httpbin.org/headers'
+
+params:
+  - name: page
+    value: '1'
+    enabled: true
+  - name: filter
+    value: active
+    enabled: false
+
+headers:
+  - name: X-Feature-Alpha
+    value: enabled
+    enabled: true
+  - name: X-Feature-Beta
+    value: disabled
+    enabled: false
+  - name: Authorization
+    value: Bearer token123
+    enabled: false

@@ -1,0 +1,6 @@
+version: 1
+name: dev
+
+variables:
+  baseUrl: 'http://localhost:3000'
+  apiVersion: v1
