@@ -5,7 +5,10 @@
   "type": "module",
   "packageManager": "pnpm@12.15.0",
   "scripts": {
+    "dev": "pnpm --filter desktop dev",
+    "build": "pnpm --filter desktop build",
     "test": "vitest run",
+    "test:smoke": "pnpm --filter desktop test:smoke",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",

@@ -9,10 +9,33 @@
       "import": "./src/index.ts"
     }
   },
+  "main": "./out/main/index.js",
   "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "preview": "electron-vite preview",
+    "test:smoke": "playwright test",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@reqit/core": "workspace:*"
+    "@fontsource/inter": "^5.3.0",
+    "@fontsource/jetbrains-mono": "^5.3.0",
+    "@reqit/core": "workspace:*",
+    "lucide-react": "^1.61.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.1",
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "autoprefixer": "^10.6.1",
+    "electron": "^45.0.0",
+    "electron-vite": "^6.0.0",
+    "postcss": "^8.5.31",
+    "tailwindcss": "^4.3.3",
+    "vite": "^8.3.5"
   }
 }

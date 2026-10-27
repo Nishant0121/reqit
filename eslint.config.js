@@ -5,7 +5,15 @@ import globals from 'globals';
 
 export default tseslint.config(
   {
-    ignores: ['**/dist/**', '**/node_modules/**', '**/coverage/**', '.husky/**', '.github/**'],
+    ignores: [
+      '**/dist/**',
+      '**/out/**',
+      '**/test-results/**',
+      '**/node_modules/**',
+      '**/coverage/**',
+      '.husky/**',
+      '.github/**',
+    ],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,

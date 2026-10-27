@@ -1,0 +1,221 @@
+@import '@fontsource/inter/index.css';
+@import '@fontsource/jetbrains-mono/index.css';
+@import 'tailwindcss';
+
+:root {
+  /* Surfaces */
+  --bg-base: #ffffff;
+  --bg-subtle: #f6f7f9;
+  --bg-muted: #edeff3;
+  --bg-elevated: #ffffff;
+  --bg-overlay: rgba(15, 17, 21, 0.45);
+
+  /* Borders */
+  --border: #e1e4ea;
+  --border-strong: #c9ced8;
+
+  /* Text */
+  --text-primary: #14171f;
+  --text-secondary: #4a5162;
+  --text-muted: #6b7384;
+  --text-disabled: #9aa1b0;
+
+  /* Accent */
+  --accent: #2f5bea;
+  --accent-hover: #2449c4;
+  --accent-subtle: #e8eeff;
+  --accent-fg: #ffffff;
+  --focus-ring: #2f5bea;
+
+  /* Semantics */
+  --success: #1a7f4b;
+  --success-subtle: #e4f5ec;
+  --warning: #9a6700;
+  --warning-subtle: #fff4d6;
+  --danger: #c62f3e;
+  --danger-subtle: #fde8ea;
+  --info: #0b6bcb;
+  --info-subtle: #e3f0fd;
+
+  /* HTTP Methods */
+  --method-get: #1a7f4b;
+  --method-post: #9a5b00;
+  --method-put: #2f5bea;
+  --method-patch: #7a3fd1;
+  --method-delete: #c62f3e;
+  --method-head: #0e7c86;
+  --method-options: #6b7384;
+
+  /* Syntax Highlighting */
+  --syntax-key: #1f4fbf;
+  --syntax-string: #1a7f4b;
+  --syntax-number: #9a5b00;
+  --syntax-bool: #7a3fd1;
+  --syntax-punct: #6b7384;
+  --syntax-comment: #6b7384;
+  --var-known: #0e7c86;
+  --var-unknown: #c62f3e;
+
+  /* Sizing & Spacing */
+  --space-0-5: 2px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+
+  /* Radius */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-full: 999px;
+
+  /* Elevation */
+  --shadow-elevation: 0 4px 16px rgba(0, 0, 0, 0.12);
+
+  /* Fonts */
+  --font-ui: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* Type Scale */
+  --text-xs: 11px;
+  --line-xs: 16px;
+  --text-sm: 12px;
+  --line-sm: 16px;
+  --text-base: 13px;
+  --line-base: 20px;
+  --text-md: 14px;
+  --line-md: 20px;
+  --text-lg: 16px;
+  --line-lg: 24px;
+  --text-xl: 20px;
+  --line-xl: 28px;
+}
+
+:root[data-theme='dark'] {
+  --bg-base: #0f1115;
+  --bg-subtle: #151820;
+  --bg-muted: #1d212b;
+  --bg-elevated: #1a1e27;
+  --bg-overlay: rgba(0, 0, 0, 0.6);
+
+  --border: #2a2f3b;
+  --border-strong: #3a4150;
+
+  --text-primary: #e8eaf0;
+  --text-secondary: #a9b0bf;
+  --text-muted: #8a92a3;
+  --text-disabled: #5b6272;
+
+  --accent: #6c8cff;
+  --accent-hover: #8aa3ff;
+  --accent-subtle: #1e2745;
+  --accent-fg: #0f1115;
+  --focus-ring: #8aa3ff;
+
+  --success: #4cc38a;
+  --success-subtle: #12281e;
+  --warning: #e3b341;
+  --warning-subtle: #2d2410;
+  --danger: #ff6b7a;
+  --danger-subtle: #2e1519;
+  --info: #5ab0ff;
+  --info-subtle: #10243a;
+
+  --method-get: #4cc38a;
+  --method-post: #f0a040;
+  --method-put: #6c8cff;
+  --method-patch: #b28cff;
+  --method-delete: #ff6b7a;
+  --method-head: #4cc9d6;
+  --method-options: #8a92a3;
+
+  --syntax-key: #8aa3ff;
+  --syntax-string: #4cc38a;
+  --syntax-number: #f0a040;
+  --syntax-bool: #b28cff;
+  --syntax-punct: #8a92a3;
+  --syntax-comment: #8a92a3;
+  --var-known: #4cc9d6;
+  --var-unknown: #ff6b7a;
+
+  --shadow-elevation: 0 4px 16px rgba(0, 0, 0, 0.5);
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  font-size: var(--text-base);
+  line-height: var(--line-base);
+  font-weight: 400;
+  user-select: none;
+  -webkit-user-select: none;
+  overflow: hidden;
+}
+
+/* Allow text selection in content areas as required by Section 13 */
+input,
+textarea,
+pre,
+code,
+.selectable-text {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+/* Scrollbars: Thin native-like scrollbars (10px) with visible thumbs */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: var(--radius-sm);
+  border: 2px solid var(--bg-base);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* Focus ring (2px with 1px offset, Section 6.2, 10.2) */
+.app-focus-ring:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 1px;
+}
+
+/* Transitions: Section 9.2 (120ms / 180ms / 240ms cubic-bezier(0.2, 0, 0, 1)) */
+.transition-fast {
+  transition-duration: 120ms;
+  transition-timing-function: cubic-bezier(0.2, 0, 0, 1);
+}
+.transition-panel {
+  transition-duration: 180ms;
+  transition-timing-function: cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* Reduced motion constraint: Section 9.2 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .spin-allowed {
+    animation-duration: 1s !important;
+    animation-iteration-count: infinite !important;
+  }
+}

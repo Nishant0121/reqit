@@ -2,8 +2,10 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "composite": true,
+    "jsx": "react-jsx",
     "rootDir": ".",
-    "outDir": "./dist"
+    "outDir": "./dist",
+    "types": ["node"]
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*", "tests/**/*", "electron.vite.config.ts"]
 }

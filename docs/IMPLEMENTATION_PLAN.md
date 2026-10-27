@@ -77,19 +77,19 @@ This plan breaks the whole project into small phases. Each phase is meant to tak
 
 **Goal:** `{{variable}}` substitution with scopes and good errors.
 
-- [ ] Implement `resolve(template, scopes)` where scopes are ordered: collection, folder, environment, secrets, runtime
-- [ ] Higher-priority scopes override lower ones
-- [ ] Support variables that reference other variables
-- [ ] Detect cycles (`a -> b -> a`) and report the chain
-- [ ] Undefined variable throws an error naming the variable, not an empty string
-- [ ] Support an escape for literal `{{` (for example `\{{`)
-- [ ] Implement `resolveRequest(request, scopes)` that resolves URL, params, headers, auth, and body
-- [ ] Implement folder inheritance: merge folder-level headers and auth into requests, with request values winning
+- [x] Implement `resolve(template, scopes)` where scopes are ordered: collection, folder, environment, secrets, runtime
+- [x] Higher-priority scopes override lower ones
+- [x] Support variables that reference other variables
+- [x] Detect cycles (`a -> b -> a`) and report the chain
+- [x] Undefined variable throws an error naming the variable, not an empty string
+- [x] Support an escape for literal `{{` (for example `\{{`)
+- [x] Implement `resolveRequest(request, scopes)` that resolves URL, params, headers, auth, and body
+- [x] Implement folder inheritance: merge folder-level headers and auth into requests, with request values winning
 
 **Tests**
 
-- [ ] Scope priority, nested variables, cycles, undefined variables, escapes, inheritance
-- [ ] Variables inside JSON bodies and headers
+- [x] Scope priority, nested variables, cycles, undefined variables, escapes, inheritance
+- [x] Variables inside JSON bodies and headers
 
 **Done when:** a request with variables across all scopes resolves correctly, and every error case has a test.
 
@@ -101,25 +101,25 @@ This plan breaks the whole project into small phases. Each phase is meant to tak
 
 **Goal:** send a request from code and get a structured response.
 
-- [ ] Implement `sendRequest(resolvedRequest, options)` using Node `http`/`https`
-- [ ] Methods: GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS
-- [ ] Query params appended and encoded correctly, with disabled params skipped
-- [ ] Body types: none, JSON (auto `Content-Type`), text, form-urlencoded, multipart (with file fields)
-- [ ] Auth: Bearer, Basic, API key (header or query)
-- [ ] Redirect handling with a max-redirect limit and a toggle
-- [ ] Timeout and cancellation via `AbortController`
-- [ ] Gzip, deflate, and brotli decompression
-- [ ] TLS options: validate certificates by default, with a per-request opt-out
-- [ ] Stream the body to a temp file when it exceeds a size threshold (for example 5 MB), and return the path
-- [ ] Return `{ status, statusText, headers, body or bodyPath, sizeBytes, totalMs }`
-- [ ] Clear errors for DNS failure, connection refused, timeout, TLS failure, and aborted requests
+- [x] Implement `sendRequest(resolvedRequest, options)` using Node `http`/`https`
+- [x] Methods: GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS
+- [x] Query params appended and encoded correctly, with disabled params skipped
+- [x] Body types: none, JSON (auto `Content-Type`), text, form-urlencoded, multipart (with file fields)
+- [x] Auth: Bearer, Basic, API key (header or query)
+- [x] Redirect handling with a max-redirect limit and a toggle
+- [x] Timeout and cancellation via `AbortController`
+- [x] Gzip, deflate, and brotli decompression
+- [x] TLS options: validate certificates by default, with a per-request opt-out
+- [x] Stream the body to a temp file when it exceeds a size threshold (for example 5 MB), and return the path
+- [x] Return `{ status, statusText, headers, body or bodyPath, sizeBytes, totalMs }`
+- [x] Clear errors for DNS failure, connection refused, timeout, TLS failure, and aborted requests
 
 **Tests** (against a local test server you start in the test setup)
 
-- [ ] Every method, every body type, every auth type
-- [ ] Redirects (301, 302, 307, 308), loops, and the limit
-- [ ] Timeout, cancel, large body, compressed responses
-- [ ] Each error type returns the expected message
+- [x] Every method, every body type, every auth type
+- [x] Redirects (301, 302, 307, 308), loops, and the limit
+- [x] Timeout, cancel, large body, compressed responses
+- [x] Each error type returns the expected message
 
 **Done when:** a script can send any supported request to the test server and the whole engine test suite passes.
 
@@ -129,17 +129,17 @@ This plan breaks the whole project into small phases. Each phase is meant to tak
 
 **Goal:** show where time went, like browser dev tools.
 
-- [ ] Hook socket events: `lookup` (DNS), `connect` (TCP), `secureConnect` (TLS), first byte of `response`, and `end`
-- [ ] Compute `dnsMs`, `tcpMs`, `tlsMs`, `ttfbMs`, `downloadMs`, `totalMs`
-- [ ] Handle connection reuse (keep-alive), where DNS, TCP, and TLS are 0
-- [ ] Handle plain HTTP (TLS is 0) and IP addresses (DNS is 0)
-- [ ] Record redirect hops separately
-- [ ] Expose the timing in the response type
+- [x] Hook socket events: `lookup` (DNS), `connect` (TCP), `secureConnect` (TLS), first byte of `response`, and `end`
+- [x] Compute `dnsMs`, `tcpMs`, `tlsMs`, `ttfbMs`, `downloadMs`, `totalMs`
+- [x] Handle connection reuse (keep-alive), where DNS, TCP, and TLS are 0
+- [x] Handle plain HTTP (TLS is 0) and IP addresses (DNS is 0)
+- [x] Record redirect hops separately
+- [x] Expose the timing in the response type
 
 **Tests**
 
-- [ ] Use a test server with artificial delays and assert each phase is within tolerance
-- [ ] Timing fields are never negative and the phases sum to roughly the total
+- [x] Use a test server with artificial delays and assert each phase is within tolerance
+- [x] Timing fields are never negative and the phases sum to roughly the total
 
 **Done when:** timing values are sensible against both the local server and a real HTTPS API.
 
@@ -151,14 +151,14 @@ This plan breaks the whole project into small phases. Each phase is meant to tak
 
 **Goal:** a secure Electron app that can call into `core`.
 
-- [ ] Scaffold `packages/desktop` with electron-vite, React, TypeScript, and Tailwind
-- [ ] Enable `contextIsolation`, disable `nodeIntegration`, set a strict Content Security Policy
-- [ ] Create the preload script exposing a narrow API through `contextBridge`
-- [ ] Define IPC channels as a typed contract shared by main and renderer (one `ipc-types.ts`)
-- [ ] Implement first handlers: `request:send`, `request:cancel`, `app:getVersion`
-- [ ] Add a temporary button in the renderer that sends a hard-coded GET request and prints the result
-- [ ] Add dev tooling: hot reload for renderer, restart for main
-- [ ] Add a `desktop` smoke test with Playwright that launches the app
+- [x] Scaffold `packages/desktop` with electron-vite, React, TypeScript, and Tailwind
+- [x] Enable `contextIsolation`, disable `nodeIntegration`, set a strict Content Security Policy
+- [x] Create the preload script exposing a narrow API through `contextBridge`
+- [x] Define IPC channels as a typed contract shared by main and renderer (one `ipc-types.ts`)
+- [x] Implement first handlers: `request:send`, `request:cancel`, `app:getVersion`
+- [x] Add a temporary button in the renderer that sends a hard-coded GET request and prints the result
+- [x] Add dev tooling: hot reload for renderer, restart for main
+- [x] Add a `desktop` smoke test with Playwright that launches the app
 
 **Done when:** clicking the button sends a real request through main and shows the response in the window.
 
