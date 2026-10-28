@@ -6,6 +6,7 @@ import { Button } from './ui/Button';
 import { Tabs } from './ui/Tabs';
 import { TimingWaterfall } from './ui/TimingWaterfall';
 import { EmptyState } from './ui/EmptyState';
+import { CodeEditor } from './editor/CodeEditor';
 import { formatDuration, formatBytes } from '../lib/format';
 import { strings } from '../lib/strings';
 
@@ -288,16 +289,27 @@ export function ResponsePanel({
                 {strings.responsePanel.streamedNotice(result.bodyPath)}
               </div>
             )}
-            <pre
-              className="p-3 font-mono text-[12px] leading-relaxed select-text outline-none rounded-[4px] border whitespace-pre-wrap break-all"
-              style={{
-                backgroundColor: 'var(--bg-surface)',
-                borderColor: 'var(--border)',
-                color: 'var(--text-primary)',
-              }}
-            >
-              {formatBody(result.body) || `[${strings.responsePanel.emptyBody}]`}
-            </pre>
+            {result.body ? (
+              <CodeEditor
+                value={formatBody(result.body)}
+                readOnly
+                mode={formatMode === 'pretty' ? 'json' : 'text'}
+                background="surface"
+                minHeight="200px"
+                maxHeight="100%"
+              />
+            ) : (
+              <pre
+                className="p-3 font-mono text-[12px] leading-relaxed select-text outline-none rounded-[4px] border whitespace-pre-wrap break-all"
+                style={{
+                  backgroundColor: 'var(--bg-surface)',
+                  borderColor: 'var(--border)',
+                  color: 'var(--text-muted)',
+                }}
+              >
+                [{strings.responsePanel.emptyBody}]
+              </pre>
+            )}
           </div>
         )}
 

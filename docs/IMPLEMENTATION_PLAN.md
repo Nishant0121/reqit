@@ -168,13 +168,13 @@ This plan breaks the whole project into small phases. Each phase is meant to tak
 
 **Goal:** the app's structure, before any real functionality.
 
-- [ ] Layout: left sidebar, main request/response area (resizable split), status bar
-- [ ] Light and dark theme with CSS variables, following the system by default
-- [ ] Base components: Button, Input, Select, Tabs, Dropdown, Modal, Tooltip, Toast, ContextMenu, KeyValueTable
-- [ ] Set up Zustand stores: `appStore`, `collectionStore`, `requestStore`
-- [ ] Add a CodeMirror 6 wrapper component with JSON, XML, HTML, and plain text modes
-- [ ] Keyboard shortcut system (a single registry, so shortcuts can be listed and rebound later)
-- [ ] Persist window size, sidebar width, and theme
+- [x] Layout: left sidebar, main request/response area (resizable split), status bar
+- [x] Light and dark theme with CSS variables, following the system by default
+- [x] Base components: Button, Input, Select, Tabs, Dropdown, Modal, Tooltip, Toast, ContextMenu, KeyValueTable
+- [x] Set up Zustand stores: `appStore`, `collectionStore`, `requestStore`
+- [x] Add a CodeMirror 6 wrapper component with JSON, XML, HTML, and plain text modes
+- [x] Keyboard shortcut system (a single registry, so shortcuts can be listed and rebound later)
+- [x] Persist window size, sidebar width, and theme
 
 **Done when:** the app looks like a real API client shell, with working panel resizing and theme switching.
 
@@ -186,16 +186,16 @@ This plan breaks the whole project into small phases. Each phase is meant to tak
 
 **Goal:** edit every part of a request in the UI.
 
-- [ ] URL bar with method dropdown and Send button (Ctrl/Cmd+Enter to send)
-- [ ] Query params table that stays in sync with the URL (edit either one)
-- [ ] Headers table with enable/disable checkboxes, with autocomplete for common header names
-- [ ] Body tab with a type selector: none, JSON, text, form-urlencoded, multipart
-- [ ] JSON editor with syntax highlighting, bracket matching, and a "Beautify" action
-- [ ] Multipart editor with file picker
-- [ ] Auth tab: none, Bearer, Basic, API key
-- [ ] Highlight `{{variables}}` in inputs (known variables in one color, unknown in another)
-- [ ] Unsaved-changes indicator
-- [ ] Wire the Send button to the IPC call, with a loading state and a Cancel button
+- [x] URL bar with method dropdown and Send button (Ctrl/Cmd+Enter to send)
+- [x] Query params table that stays in sync with the URL (edit either one)
+- [x] Headers table with enable/disable checkboxes, with autocomplete for common header names
+- [x] Body tab with a type selector: none, JSON, text, form-urlencoded, multipart
+- [x] JSON editor with syntax highlighting, bracket matching, and a "Beautify" action
+- [x] Multipart editor with file picker
+- [x] Auth tab: none, Bearer, Basic, API key
+- [x] Highlight `{{variables}}` in inputs (known variables in one color, unknown in another)
+- [x] Unsaved-changes indicator
+- [x] Wire the Send button to the IPC call, with a loading state and a Cancel button
 
 **Done when:** you can build any supported request entirely in the UI and send it.
 

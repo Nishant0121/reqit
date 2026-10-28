@@ -1,4 +1,4 @@
-import { app, ipcMain } from 'electron';
+import { app, ipcMain, dialog } from 'electron';
 import { sendRequest } from '@reqit/core';
 import type { SendRequestPayload } from '../shared/ipc-types.js';
 
@@ -17,6 +17,18 @@ export function registerIpcHandlers(): void {
       return `http://127.0.0.1:${testPort}/`;
     }
     return 'https://httpbin.org/get';
+  });
+
+  // 3. dialog:openFile
+  ipcMain.handle('dialog:openFile', async (): Promise<string | null> => {
+    const res = await dialog.showOpenDialog({
+      properties: ['openFile'],
+      title: 'Select File to Upload',
+    });
+    if (res.canceled || res.filePaths.length === 0) {
+      return null;
+    }
+    return res.filePaths[0] ?? null;
   });
 
   // 3. request:send

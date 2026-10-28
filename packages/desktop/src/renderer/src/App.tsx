@@ -1,73 +1,90 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
-import type { HttpMethod, ResponseResult } from '@reqit/core';
+import React, { useEffect, useRef, useCallback } from 'react';
 import { TopBar } from './components/TopBar';
-import { Sidebar, type RequestItem } from './components/Sidebar';
-import { RequestTabs, type TabItemData } from './components/RequestTabs';
+import { Sidebar } from './components/Sidebar';
+import { RequestTabs } from './components/RequestTabs';
 import { UrlBar } from './components/UrlBar';
-import { RequestPanel, type AuthType, type BodyType } from './components/RequestPanel';
+import { RequestPanel } from './components/RequestPanel';
 import { ResponsePanel } from './components/ResponsePanel';
 import { StatusBar } from './components/StatusBar';
+import { ToastContainer } from './components/ui/Toast';
+import { ShortcutsDialog } from './components/ShortcutsDialog';
+import { useAppStore } from './stores/appStore';
+import { useCollectionStore } from './stores/collectionStore';
+import { useRequestStore } from './stores/requestStore';
+import { matchesShortcut } from './lib/shortcuts';
+import { parseUrlQueryParams, syncUrlWithParams } from './lib/url-sync';
+import type { ThemeMode } from './lib/theme';
 import type { KeyValueRow } from './components/ui/KeyValueTable';
-import { getStoredTheme, applyTheme, type ThemeMode } from './lib/theme';
-import { strings } from './lib/strings';
 
-const INITIAL_REQUEST: RequestItem = {
-  id: 'req-1',
-  name: 'Smoke test GET',
-  method: 'GET',
-  url: 'https://httpbin.org/get',
-};
+const KNOWN_VARIABLES = ['baseUrl', 'token', 'userId', 'apiKey', 'env', 'apiVersion', 'port'];
 
 export default function App(): React.JSX.Element {
-  // Theme state
-  const [theme, setTheme] = useState<ThemeMode>(getStoredTheme);
+  // 1. App store
+  const {
+    theme,
+    setTheme,
+    sidebarOpen,
+    toggleSidebar,
+    sidebarWidth,
+    setSidebarWidth,
+    splitHeight,
+    setSplitHeight,
+    environment,
+    setEnvironment,
+    version,
+    setVersion,
+    toasts,
+    addToast,
+    removeToast,
+    shortcutsModalOpen,
+    setShortcutsModalOpen,
+  } = useAppStore();
 
-  // App version
-  const [version, setVersion] = useState<string>('0.1.0');
+  // 2. Collection store
+  const { activeCollection } = useCollectionStore();
 
-  // Sidebar state
-  const [sidebarOpen, setSidebarOpen] = useState<boolean>(true);
-  const [sidebarWidth, setSidebarWidth] = useState<number>(260);
+  // 3. Request store
+  const {
+    drafts,
+    tabs,
+    activeRequestId,
+    result,
+    error,
+    loading,
+    activeExecutionId,
+    historyCount,
+    createRequest,
+    openRequest,
+    closeTab,
+    updateActiveDraft,
+    saveActiveDraft,
+    setLoading,
+    setResult,
+    setError,
+    setActiveExecutionId,
+    incrementHistoryCount,
+  } = useRequestStore();
 
-  // Environment state
-  const [environment, setEnvironment] = useState<string>('none');
-
-  // Split height state (vertical split between request and response)
-  const [requestSplitHeight, setRequestSplitHeight] = useState<number>(300);
-
-  // Active request and tabs state
-  const [requests, setRequests] = useState<RequestItem[]>([INITIAL_REQUEST]);
-  const [activeRequestId, setActiveRequestId] = useState<string>(INITIAL_REQUEST.id);
-  const [tabs, setTabs] = useState<TabItemData[]>([
-    {
-      id: INITIAL_REQUEST.id,
-      name: INITIAL_REQUEST.name,
-      method: INITIAL_REQUEST.method,
-    },
-  ]);
-
-  // Request form state
-  const [method, setMethod] = useState<HttpMethod>('GET');
-  const [url, setUrl] = useState<string>(INITIAL_REQUEST.url);
-  const [params, setParams] = useState<KeyValueRow[]>([]);
-  const [headers, setHeaders] = useState<KeyValueRow[]>([]);
-  const [authType, setAuthType] = useState<AuthType>('none');
-  const [bearerToken, setBearerToken] = useState<string>('');
-  const [basicUser, setBasicUser] = useState<string>('');
-  const [basicPass, setBasicPass] = useState<string>('');
-  const [apiKeyName, setApiKeyName] = useState<string>('');
-  const [apiKeyValue, setApiKeyValue] = useState<string>('');
-  const [bodyType, setBodyType] = useState<BodyType>('none');
-  const [bodyContent, setBodyContent] = useState<string>('');
-
-  // Execution state
-  const [loading, setLoading] = useState<boolean>(false);
-  const [activeExecutionId, setActiveExecutionId] = useState<string | null>(null);
-  const [result, setResult] = useState<ResponseResult | null>(null);
-  const [error, setError] = useState<{ message: string; cause?: string; action?: string } | null>(
-    null,
-  );
-  const [historyCount, setHistoryCount] = useState<number>(0);
+  const activeDraft = drafts[activeRequestId] || {
+    id: activeRequestId,
+    name: 'Untitled',
+    method: 'GET',
+    url: 'https://httpbin.org/get',
+    params: [],
+    headers: [],
+    authType: 'none',
+    bearerToken: '',
+    basicUser: '',
+    basicPass: '',
+    apiKeyName: '',
+    apiKeyValue: '',
+    apiKeyIn: 'header',
+    bodyType: 'none',
+    bodyContent: '',
+    bodyFormRows: [],
+    bodyMultipartRows: [],
+    isDirty: false,
+  };
 
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -77,24 +94,46 @@ export default function App(): React.JSX.Element {
       window.reqitApi.getVersion().then(v => setVersion(v));
       window.reqitApi.getTestUrl().then(testUrl => {
         if (testUrl) {
-          setUrl(testUrl);
-          setRequests(prev =>
-            prev.map(r => (r.id === INITIAL_REQUEST.id ? { ...r, url: testUrl } : r)),
-          );
+          updateActiveDraft({ url: testUrl });
         }
       });
     }
-  }, []);
+  }, [setVersion, updateActiveDraft]);
 
   // Theme toggle cycle: system -> light -> dark -> system
   const handleToggleTheme = () => {
     const nextTheme: ThemeMode =
       theme === 'system' ? 'light' : theme === 'light' ? 'dark' : 'system';
     setTheme(nextTheme);
-    applyTheme(nextTheme);
   };
 
-  // Execute request
+  // Bidirectional URL <-> Params sync
+  const handleUrlChange = useCallback(
+    (newUrl: string) => {
+      const newParams = parseUrlQueryParams(newUrl, activeDraft.params);
+      updateActiveDraft({ url: newUrl, params: newParams });
+    },
+    [activeDraft.params, updateActiveDraft],
+  );
+
+  const handleParamsChange = useCallback(
+    (newParams: KeyValueRow[]) => {
+      const syncedUrl = syncUrlWithParams(activeDraft.url, newParams);
+      updateActiveDraft({ params: newParams, url: syncedUrl });
+    },
+    [activeDraft.url, updateActiveDraft],
+  );
+
+  // Save active request
+  const handleSave = useCallback(() => {
+    saveActiveDraft();
+    addToast({
+      type: 'success',
+      message: 'Request saved',
+    });
+  }, [saveActiveDraft, addToast]);
+
+  // Send request execution
   const handleSend = useCallback(async () => {
     if (!window.reqitApi) {
       setError({
@@ -109,55 +148,69 @@ export default function App(): React.JSX.Element {
     setError(null);
     setResult(null);
 
-    // Build URL with enabled query params
-    let finalUrl = url;
-    const enabledParams = params.filter(p => p.enabled && p.key.trim() !== '');
-    if (enabledParams.length > 0) {
-      try {
-        const parsedUrl = new URL(url);
-        for (const p of enabledParams) {
-          parsedUrl.searchParams.append(p.key.trim(), p.value);
-        }
-        finalUrl = parsedUrl.toString();
-      } catch {
-        // Fallback if URL is relative or variable template
-      }
-    }
-
-    // Build headers and params arrays
-    const finalHeaders = headers
-      .filter(row => row.enabled && row.key.trim() !== '')
-      .map(row => ({ name: row.key.trim(), value: row.value, enabled: true }));
-
-    const finalParams = params
+    // Build headers array (only enabled with names)
+    const finalHeaders = activeDraft.headers
       .filter(row => row.enabled && row.key.trim() !== '')
       .map(row => ({ name: row.key.trim(), value: row.value, enabled: true }));
 
     // Prepare auth configuration
     let authConfig = undefined;
-    if (authType === 'bearer' && bearerToken) {
-      authConfig = { type: 'bearer' as const, token: bearerToken };
-    } else if (authType === 'basic' && (basicUser || basicPass)) {
-      authConfig = { type: 'basic' as const, username: basicUser, password: basicPass };
-    } else if (authType === 'apiKey' && apiKeyName) {
+    if (activeDraft.authType === 'bearer' && activeDraft.bearerToken) {
+      authConfig = { type: 'bearer' as const, token: activeDraft.bearerToken };
+    } else if (
+      activeDraft.authType === 'basic' &&
+      (activeDraft.basicUser || activeDraft.basicPass)
+    ) {
+      authConfig = {
+        type: 'basic' as const,
+        username: activeDraft.basicUser,
+        password: activeDraft.basicPass,
+      };
+    } else if (activeDraft.authType === 'apiKey' && activeDraft.apiKeyName) {
       authConfig = {
         type: 'apikey' as const,
-        key: apiKeyName,
-        value: apiKeyValue,
-        in: 'header' as const,
+        key: activeDraft.apiKeyName,
+        value: activeDraft.apiKeyValue,
+        in: activeDraft.apiKeyIn || ('header' as const),
       };
+    }
+
+    // Prepare body payload based on type
+    let bodyPayload = undefined;
+    if (activeDraft.bodyType === 'json' || activeDraft.bodyType === 'text') {
+      if (activeDraft.bodyContent) {
+        bodyPayload = { type: activeDraft.bodyType, content: activeDraft.bodyContent };
+      }
+    } else if (activeDraft.bodyType === 'form') {
+      const enabledForm = (activeDraft.bodyFormRows || [])
+        .filter(r => r.enabled && r.key.trim() !== '')
+        .map(r => ({ name: r.key.trim(), value: r.value, enabled: true }));
+      if (enabledForm.length > 0) {
+        bodyPayload = { type: 'form' as const, form: enabledForm };
+      }
+    } else if (activeDraft.bodyType === 'multipart') {
+      const enabledMultipart = (activeDraft.bodyMultipartRows || [])
+        .filter(r => r.enabled && r.key.trim() !== '')
+        .map(r => ({
+          name: r.key.trim(),
+          value: r.value,
+          type: r.type,
+          isFile: r.type === 'file',
+          enabled: true,
+        }));
+      if (enabledMultipart.length > 0) {
+        bodyPayload = { type: 'multipart' as const, form: enabledMultipart };
+      }
     }
 
     const { requestId, promise } = window.reqitApi.sendRequest({
       version: 1,
-      name: requests.find(r => r.id === activeRequestId)?.name || 'Smoke Test GET',
-      method,
-      url: finalUrl,
-      params: finalParams.length > 0 ? finalParams : undefined,
+      name: activeDraft.name,
+      method: activeDraft.method,
+      url: activeDraft.url,
       headers: finalHeaders.length > 0 ? finalHeaders : undefined,
       auth: authConfig,
-      body:
-        bodyType !== 'none' && bodyContent ? { type: bodyType, content: bodyContent } : undefined,
+      body: bodyPayload,
     });
 
     setActiveExecutionId(requestId);
@@ -165,7 +218,7 @@ export default function App(): React.JSX.Element {
     try {
       const res = await promise;
       setResult(res);
-      setHistoryCount(c => c + 1);
+      incrementHistoryCount();
     } catch (err: unknown) {
       const errStr = err instanceof Error ? err.message : String(err);
       let cause = 'Connection refused or request aborted.';
@@ -191,111 +244,103 @@ export default function App(): React.JSX.Element {
       setLoading(false);
       setActiveExecutionId(null);
     }
-  }, [
-    url,
-    method,
-    params,
-    headers,
-    authType,
-    bearerToken,
-    basicUser,
-    basicPass,
-    apiKeyName,
-    apiKeyValue,
-    bodyType,
-    bodyContent,
-    requests,
-    activeRequestId,
-  ]);
+  }, [activeDraft, setLoading, setError, setResult, setActiveExecutionId, incrementHistoryCount]);
 
-  // Cancel request
+  // Cancel request execution
   const handleCancel = useCallback(async () => {
     if (activeExecutionId && window.reqitApi) {
       await window.reqitApi.cancelRequest(activeExecutionId);
       setLoading(false);
       setActiveExecutionId(null);
     }
-  }, [activeExecutionId]);
+  }, [activeExecutionId, setLoading, setActiveExecutionId]);
 
-  // Keyboard shortcuts (Section 10.1)
+  // Keyboard shortcut registry listener (Section 10.1)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Ctrl/Cmd + Enter: Send
-      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+      // 1. Send request (Ctrl/Cmd + Enter)
+      if (matchesShortcut(e, 'Ctrl+Enter')) {
         e.preventDefault();
-        if (!loading) {
-          handleSend();
-        }
+        if (!loading) handleSend();
+        return;
       }
-      // Escape while in flight: Cancel
+
+      // 2. Cancel request (Escape while loading)
       if (e.key === 'Escape' && loading) {
         e.preventDefault();
         handleCancel();
+        return;
       }
-      // Ctrl/Cmd + B: Toggle Sidebar
-      if ((e.ctrlKey || e.metaKey) && (e.key === 'b' || e.key === 'B')) {
+
+      // 3. Save request (Ctrl/Cmd + S)
+      if (matchesShortcut(e, 'Ctrl+S')) {
         e.preventDefault();
-        setSidebarOpen(prev => !prev);
+        handleSave();
+        return;
       }
-      // Ctrl/Cmd + L: Focus URL bar
-      if ((e.ctrlKey || e.metaKey) && (e.key === 'l' || e.key === 'L')) {
+
+      // 4. Toggle sidebar (Ctrl/Cmd + B)
+      if (matchesShortcut(e, 'Ctrl+B')) {
+        e.preventDefault();
+        toggleSidebar();
+        return;
+      }
+
+      // 5. Focus URL bar (Ctrl/Cmd + L)
+      if (matchesShortcut(e, 'Ctrl+L')) {
         e.preventDefault();
         document.getElementById('url-input')?.focus();
+        return;
+      }
+
+      // 6. New request (Ctrl/Cmd + N)
+      if (matchesShortcut(e, 'Ctrl+N')) {
+        e.preventDefault();
+        createRequest();
+        return;
+      }
+
+      // 7. Close tab (Ctrl/Cmd + W)
+      if (matchesShortcut(e, 'Ctrl+W')) {
+        e.preventDefault();
+        closeTab(activeRequestId);
+        return;
+      }
+
+      // 8. Shortcuts cheat sheet (Ctrl/Cmd + /)
+      if (matchesShortcut(e, 'Ctrl+/')) {
+        e.preventDefault();
+        setShortcutsModalOpen(true);
+        return;
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [loading, handleSend, handleCancel]);
-
-  // New request handler
-  const handleNewRequest = () => {
-    const newId = `req-${Date.now()}`;
-    const newReq: RequestItem = {
-      id: newId,
-      name: `${strings.sidebar.newRequest} ${requests.length + 1}`,
-      method: 'GET',
-      url: 'https://httpbin.org/get',
-    };
-    setRequests(prev => [...prev, newReq]);
-    setTabs(prev => [...prev, { id: newId, name: newReq.name, method: 'GET' }]);
-    setActiveRequestId(newId);
-    setMethod('GET');
-    setUrl('https://httpbin.org/get');
-    setResult(null);
-    setError(null);
-  };
-
-  // Close tab handler
-  const handleCloseTab = (id: string) => {
-    if (tabs.length === 1) return; // Keep at least one tab open
-    const newTabs = tabs.filter(t => t.id !== id);
-    setTabs(newTabs);
-    if (activeRequestId === id) {
-      const nextActive = newTabs[newTabs.length - 1];
-      if (nextActive) {
-        setActiveRequestId(nextActive.id);
-        const req = requests.find(r => r.id === nextActive.id);
-        if (req) {
-          setMethod(req.method);
-          setUrl(req.url);
-        }
-      }
-    }
-  };
+  }, [
+    loading,
+    handleSend,
+    handleCancel,
+    handleSave,
+    toggleSidebar,
+    createRequest,
+    closeTab,
+    activeRequestId,
+    setShortcutsModalOpen,
+  ]);
 
   // Split resize handle
   const handleSplitResize = (e: React.MouseEvent) => {
     e.preventDefault();
     const startY = e.clientY;
-    const startHeight = requestSplitHeight;
+    const startHeight = splitHeight;
 
     const handleMouseMove = (moveEvent: MouseEvent) => {
       if (!containerRef.current) return;
       const totalHeight = containerRef.current.clientHeight;
       const delta = moveEvent.clientY - startY;
       const newHeight = Math.max(200, Math.min(totalHeight - 200, startHeight + delta));
-      setRequestSplitHeight(newHeight);
+      setSplitHeight(newHeight);
     };
 
     const handleMouseUp = () => {
@@ -307,16 +352,25 @@ export default function App(): React.JSX.Element {
     window.addEventListener('mouseup', handleMouseUp);
   };
 
+  const requestsList = Object.values(drafts).map(d => ({
+    id: d.id,
+    name: d.name,
+    method: d.method,
+    url: d.url,
+  }));
+
   return (
     <div className="flex flex-col h-screen w-screen overflow-hidden select-none bg-[var(--bg-base)] text-[var(--text-primary)]">
       {/* 1. Top Bar (40px) */}
       <TopBar
         sidebarOpen={sidebarOpen}
-        onToggleSidebar={() => setSidebarOpen(prev => !prev)}
+        onToggleSidebar={toggleSidebar}
         activeEnvironment={environment}
         onEnvironmentChange={setEnvironment}
         theme={theme}
         onToggleTheme={handleToggleTheme}
+        collectionName={activeCollection.name}
+        onOpenShortcuts={() => setShortcutsModalOpen(true)}
       />
 
       {/* 2. Middle Area: Sidebar + Main Content */}
@@ -326,20 +380,10 @@ export default function App(): React.JSX.Element {
           <Sidebar
             width={sidebarWidth}
             onWidthChange={setSidebarWidth}
-            requests={requests}
+            requests={requestsList}
             activeRequestId={activeRequestId}
-            onSelectRequest={id => {
-              setActiveRequestId(id);
-              const found = requests.find(r => r.id === id);
-              if (found) {
-                setMethod(found.method);
-                setUrl(found.url);
-                if (!tabs.some(t => t.id === id)) {
-                  setTabs(prev => [...prev, { id, name: found.name, method: found.method }]);
-                }
-              }
-            }}
-            onNewRequest={handleNewRequest}
+            onSelectRequest={openRequest}
+            onNewRequest={() => createRequest()}
           />
         )}
 
@@ -349,57 +393,58 @@ export default function App(): React.JSX.Element {
           <RequestTabs
             tabs={tabs}
             activeTabId={activeRequestId}
-            onSelectTab={id => {
-              setActiveRequestId(id);
-              const found = requests.find(r => r.id === id);
-              if (found) {
-                setMethod(found.method);
-                setUrl(found.url);
-              }
-            }}
-            onCloseTab={handleCloseTab}
-            onNewTab={handleNewRequest}
+            onSelectTab={openRequest}
+            onCloseTab={closeTab}
+            onNewTab={() => createRequest()}
           />
 
           {/* URL Bar (32px) */}
           <UrlBar
-            method={method}
-            onMethodChange={setMethod}
-            url={url}
-            onUrlChange={setUrl}
+            method={activeDraft.method}
+            onMethodChange={m => updateActiveDraft({ method: m })}
+            url={activeDraft.url}
+            onUrlChange={handleUrlChange}
             onSend={handleSend}
             onCancel={handleCancel}
             loading={loading}
+            knownVariables={KNOWN_VARIABLES}
           />
 
           {/* Split Panes: Request Panel (top) + Response Panel (bottom) */}
           <div ref={containerRef} className="flex-1 flex flex-col min-h-0 overflow-hidden relative">
             {/* Request Panel (min 200px) */}
             <div
-              style={{ height: `${requestSplitHeight}px` }}
+              style={{ height: `${splitHeight}px` }}
               className="shrink-0 flex flex-col min-h-[200px] overflow-hidden"
             >
               <RequestPanel
-                params={params}
-                onParamsChange={setParams}
-                headers={headers}
-                onHeadersChange={setHeaders}
-                authType={authType}
-                onAuthTypeChange={setAuthType}
-                bearerToken={bearerToken}
-                onBearerTokenChange={setBearerToken}
-                basicUser={basicUser}
-                onBasicUserChange={setBasicUser}
-                basicPass={basicPass}
-                onBasicPassChange={setBasicPass}
-                apiKeyName={apiKeyName}
-                onApiKeyNameChange={setApiKeyName}
-                apiKeyValue={apiKeyValue}
-                onApiKeyValueChange={setApiKeyValue}
-                bodyType={bodyType}
-                onBodyTypeChange={setBodyType}
-                bodyContent={bodyContent}
-                onBodyContentChange={setBodyContent}
+                params={activeDraft.params}
+                onParamsChange={handleParamsChange}
+                headers={activeDraft.headers}
+                onHeadersChange={h => updateActiveDraft({ headers: h })}
+                authType={activeDraft.authType}
+                onAuthTypeChange={a => updateActiveDraft({ authType: a })}
+                bearerToken={activeDraft.bearerToken}
+                onBearerTokenChange={t => updateActiveDraft({ bearerToken: t })}
+                basicUser={activeDraft.basicUser}
+                onBasicUserChange={u => updateActiveDraft({ basicUser: u })}
+                basicPass={activeDraft.basicPass}
+                onBasicPassChange={p => updateActiveDraft({ basicPass: p })}
+                apiKeyName={activeDraft.apiKeyName}
+                onApiKeyNameChange={k => updateActiveDraft({ apiKeyName: k })}
+                apiKeyValue={activeDraft.apiKeyValue}
+                onApiKeyValueChange={v => updateActiveDraft({ apiKeyValue: v })}
+                apiKeyIn={activeDraft.apiKeyIn || 'header'}
+                onApiKeyInChange={inLoc => updateActiveDraft({ apiKeyIn: inLoc })}
+                bodyType={activeDraft.bodyType}
+                onBodyTypeChange={b => updateActiveDraft({ bodyType: b })}
+                bodyContent={activeDraft.bodyContent}
+                onBodyContentChange={c => updateActiveDraft({ bodyContent: c })}
+                bodyFormRows={activeDraft.bodyFormRows || []}
+                onBodyFormRowsChange={rows => updateActiveDraft({ bodyFormRows: rows })}
+                bodyMultipartRows={activeDraft.bodyMultipartRows || []}
+                onBodyMultipartRowsChange={rows => updateActiveDraft({ bodyMultipartRows: rows })}
+                knownVariables={KNOWN_VARIABLES}
               />
             </div>
 
@@ -431,10 +476,14 @@ export default function App(): React.JSX.Element {
       {/* 3. Status Bar (24px) */}
       <StatusBar
         branch="master"
-        environmentName={environment === 'none' ? strings.topBar.noEnvironment : environment}
+        environmentName={environment === 'none' ? 'No environment' : environment}
         historyCount={historyCount}
         version={version}
       />
+
+      {/* 4. Global Modals and Toasts */}
+      <ToastContainer toasts={toasts} onDismiss={removeToast} />
+      <ShortcutsDialog isOpen={shortcutsModalOpen} onClose={() => setShortcutsModalOpen(false)} />
     </div>
   );
 }

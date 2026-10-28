@@ -1,6 +1,7 @@
 import React from 'react';
 import type { HttpMethod } from '@reqit/core';
 import { Button } from './ui/Button';
+import { VariableInput } from './ui/VariableInput';
 import { strings } from '../lib/strings';
 
 export interface UrlBarProps {
@@ -11,6 +12,7 @@ export interface UrlBarProps {
   onSend: () => void;
   onCancel: () => void;
   loading: boolean;
+  knownVariables?: string[];
 }
 
 const HTTP_METHODS: HttpMethod[] = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'];
@@ -23,6 +25,7 @@ export function UrlBar({
   onSend,
   onCancel,
   loading,
+  knownVariables,
 }: UrlBarProps): React.JSX.Element {
   return (
     <div
@@ -70,19 +73,14 @@ export function UrlBar({
         </div>
       </div>
 
-      {/* URL Input */}
-      <div
-        className="relative flex-1 flex items-center h-[32px] rounded-[4px] border px-3 transition-fast"
-        style={{
-          borderColor: 'var(--border-strong)',
-          backgroundColor: 'var(--bg-input)',
-        }}
-      >
-        <input
+      {/* URL Input with Variable Highlighting & {{ Autocomplete */}
+      <div className="flex-1 min-w-0">
+        <VariableInput
           id="url-input"
-          type="text"
+          inputSize="large"
           value={url}
-          onChange={e => onUrlChange(e.target.value)}
+          onChange={onUrlChange}
+          knownVariables={knownVariables}
           onKeyDown={e => {
             if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
               e.preventDefault();
@@ -90,8 +88,6 @@ export function UrlBar({
             }
           }}
           placeholder={strings.urlBar.urlPlaceholder}
-          className="w-full bg-transparent font-mono text-[13px] outline-none app-focus-ring overflow-x-auto whitespace-nowrap"
-          style={{ color: 'var(--text-primary)' }}
           aria-label="Request URL"
         />
       </div>

@@ -11,6 +11,7 @@ export interface IpcChannels {
   'app:getTestUrl': () => Promise<string>;
   'request:send': (payload: SendRequestPayload) => Promise<ResponseResult>;
   'request:cancel': (requestId: string) => Promise<boolean>;
+  'dialog:openFile': () => Promise<string | null>;
 }
 
 export type IpcChannelName = keyof IpcChannels;
@@ -27,4 +28,6 @@ export interface ReqitApi {
   ) => { requestId: string; promise: Promise<ResponseResult> };
   /** Cancels an in-flight request by requestId */
   cancelRequest: (requestId: string) => Promise<boolean>;
+  /** Opens native open file dialog and returns chosen file path or null */
+  openFileDialog: () => Promise<string | null>;
 }

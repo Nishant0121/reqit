@@ -41,6 +41,9 @@ const api: ReqitApi = {
   cancelRequest: (requestId: string): Promise<boolean> => {
     return ipcRenderer.invoke('request:cancel', requestId);
   },
+  openFileDialog: (): Promise<string | null> => {
+    return ipcRenderer.invoke('dialog:openFile');
+  },
 };
 
 // Expose safe, typed API in renderer window

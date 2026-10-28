@@ -2,6 +2,7 @@ import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { app, BrowserWindow, session } from 'electron';
 import { registerIpcHandlers } from './ipc.js';
+import { loadWindowState, saveWindowState } from './window-state.js';
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -30,9 +31,13 @@ function createWindow(): void {
     });
   });
 
+  const windowState = loadWindowState();
+
   mainWindow = new BrowserWindow({
-    width: 1200,
-    height: 800,
+    width: windowState.width,
+    height: windowState.height,
+    x: windowState.x,
+    y: windowState.y,
     minWidth: 960,
     minHeight: 600,
     title: 'Reqit',
@@ -43,6 +48,18 @@ function createWindow(): void {
       sandbox: false,
     },
   });
+
+  // Persist window state on resize and move (debounced)
+  let saveTimer: NodeJS.Timeout | null = null;
+  const debouncedSave = () => {
+    if (saveTimer) clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => {
+      if (mainWindow) saveWindowState(mainWindow);
+    }, 300);
+  };
+
+  mainWindow.on('resize', debouncedSave);
+  mainWindow.on('move', debouncedSave);
 
   // Register IPC handlers
   registerIpcHandlers();

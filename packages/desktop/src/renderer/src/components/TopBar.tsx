@@ -6,6 +6,7 @@ import {
   Laptop,
   PanelLeft,
   PanelLeftClose,
+  Keyboard,
   Settings as SettingsIcon,
 } from 'lucide-react';
 import { Button } from './ui/Button';
@@ -20,6 +21,7 @@ export interface TopBarProps {
   theme: ThemeMode;
   onToggleTheme: () => void;
   collectionName?: string;
+  onOpenShortcuts?: () => void;
 }
 
 export function TopBar({
@@ -30,6 +32,7 @@ export function TopBar({
   theme,
   onToggleTheme,
   collectionName = strings.topBar.defaultCollection,
+  onOpenShortcuts,
 }: TopBarProps): React.JSX.Element {
   const getThemeIcon = () => {
     switch (theme) {
@@ -135,6 +138,17 @@ export function TopBar({
             </option>
           </select>
         </div>
+
+        <Button
+          variant="ghost"
+          size="compact"
+          onClick={onOpenShortcuts}
+          title="Keyboard shortcuts (Ctrl+/)"
+          aria-label="Keyboard shortcuts"
+          className="w-7 h-7 p-0"
+        >
+          <Keyboard className="w-4 h-4" strokeWidth={1.5} />
+        </Button>
 
         <Button
           variant="ghost"
