@@ -44,6 +44,16 @@ const api: ReqitApi = {
   openFileDialog: (): Promise<string | null> => {
     return ipcRenderer.invoke('dialog:openFile');
   },
+  saveFileDialog: (payload: {
+    defaultName?: string;
+    content?: string;
+    sourceFilePath?: string;
+  }): Promise<string | null> => {
+    return ipcRenderer.invoke('dialog:saveFile', payload);
+  },
+  readBodyChunk: (payload: { filePath: string; startByte?: number; lengthBytes?: number }) => {
+    return ipcRenderer.invoke('response:readBodyChunk', payload);
+  },
 };
 
 // Expose safe, typed API in renderer window

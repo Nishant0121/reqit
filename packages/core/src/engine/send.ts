@@ -332,10 +332,41 @@ export async function sendRequest(
           const totalMs = Math.max(0, Math.round(endTime - startTime));
 
           let bodyContent: string | undefined = undefined;
+          let bodyBase64: string | undefined = undefined;
 
           if (!tempFilePath) {
             const fullBuffer = Buffer.concat(chunks);
-            bodyContent = fullBuffer.toString('utf-8');
+            const contentType = getHeader('content-type') || '';
+            const mime = contentType.toLowerCase().split(';')[0]?.trim() || '';
+            const isBinaryMime =
+              (mime.startsWith('image/') && mime !== 'image/svg+xml') ||
+              mime.startsWith('audio/') ||
+              mime.startsWith('video/') ||
+              mime === 'application/pdf' ||
+              mime === 'application/octet-stream';
+
+            const isBinaryMagic =
+              fullBuffer.length >= 4 &&
+              // PNG
+              ((fullBuffer[0] === 0x89 &&
+                fullBuffer[1] === 0x50 &&
+                fullBuffer[2] === 0x4e &&
+                fullBuffer[3] === 0x47) ||
+                // JPEG
+                (fullBuffer[0] === 0xff && fullBuffer[1] === 0xd8 && fullBuffer[2] === 0xff) ||
+                // GIF
+                (fullBuffer[0] === 0x47 && fullBuffer[1] === 0x49 && fullBuffer[2] === 0x46) ||
+                // WEBP
+                (fullBuffer.length >= 12 &&
+                  fullBuffer.toString('ascii', 0, 4) === 'RIFF' &&
+                  fullBuffer.toString('ascii', 8, 12) === 'WEBP'));
+
+            if (isBinaryMime || isBinaryMagic) {
+              bodyBase64 = fullBuffer.toString('base64');
+              bodyContent = bodyBase64;
+            } else {
+              bodyContent = fullBuffer.toString('utf-8');
+            }
           }
 
           const jsonHelper = <T = unknown>(): T => {
@@ -354,6 +385,7 @@ export async function sendRequest(
             statusText: res.statusMessage || '',
             headers: responseHeaders,
             body: bodyContent,
+            bodyBase64,
             bodyPath: tempFilePath || undefined,
             sizeBytes: totalBytes,
             totalMs,

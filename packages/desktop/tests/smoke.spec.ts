@@ -21,6 +21,13 @@ test.describe('Desktop App Shell Smoke Test (Phase 5)', () => {
   test.beforeAll(async () => {
     // 1. Start a local HTTP test server for the smoke test
     server = http.createServer((req, res) => {
+      if (req.url === '/image') {
+        const pngHex =
+          '89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c4890000000a49444154789c63000100000500010d0a2db40000000049454e44ae426082';
+        res.writeHead(200, { 'Content-Type': 'image/png' });
+        res.end(Buffer.from(pngHex, 'hex'));
+        return;
+      }
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(
         JSON.stringify({
@@ -50,6 +57,8 @@ test.describe('Desktop App Shell Smoke Test (Phase 5)', () => {
     });
 
     page = await app.firstWindow();
+    page.on('console', msg => console.log('PAGE LOG:', msg.text()));
+    page.on('pageerror', err => console.log('PAGE ERROR:', err));
   });
 
   test.afterAll(async () => {
@@ -245,5 +254,104 @@ test.describe('Desktop App Shell Smoke Test (Phase 5)', () => {
     const responseBox = page.locator('#response-result');
     await expect(responseBox).toBeVisible();
     await expect(responseBox).toContainText('200 OK');
+  });
+
+  test('verifies Phase 8 Response Viewer: status strip, body view modes, in-body search, searchable headers table, and timing waterfall', async () => {
+    await page.waitForLoadState('domcontentloaded');
+
+    // 1. Send test request to have a fresh response
+    const sendBtn = page.locator('#send-test-btn');
+    await sendBtn.click();
+
+    const responsePanel = page.locator('#response-result');
+    await expect(responsePanel).toBeVisible();
+
+    // 2. Status badge, duration, and size in header strip
+    await expect(responsePanel).toContainText('200 OK');
+    await expect(responsePanel.locator('span:has-text("ms")').first()).toBeVisible();
+    await expect(responsePanel.locator('span:has-text("B")').first()).toBeVisible();
+
+    // 3. In-body search button, search panel buttons and checkboxes
+    const searchBtn = responsePanel.locator('button[aria-label="Search response"]');
+    await expect(searchBtn).toBeVisible();
+    await searchBtn.click();
+    const searchPanel = page.locator('.cm-panel.cm-search');
+    await expect(searchPanel).toBeVisible();
+
+    const nextBtn = searchPanel.locator('button[name="next"]');
+    await expect(nextBtn).toBeVisible();
+    const prevBtn = searchPanel.locator('button[name="prev"]');
+    await expect(prevBtn).toBeVisible();
+    const selectBtn = searchPanel.locator('button[name="select"]');
+    await expect(selectBtn).toBeVisible();
+
+    // Verify search input and active match highlight
+    const searchInput = searchPanel.locator('input[name="search"]');
+    await searchInput.fill('engine');
+    await nextBtn.click();
+    await expect(page.locator('.cm-searchMatch-selected')).toBeVisible();
+
+    // 4. Body view format modes (Pretty / Raw / Preview)
+    const rawBtn = responsePanel.locator('button:has-text("Raw")');
+    await rawBtn.click();
+    await expect(rawBtn).toBeVisible();
+
+    const prettyBtn = responsePanel.locator('button:has-text("Pretty")');
+    await prettyBtn.click();
+    await expect(prettyBtn).toBeVisible();
+
+    const previewBtn = responsePanel.locator('button:has-text("Preview")');
+    await previewBtn.click();
+    await expect(previewBtn).toBeVisible();
+
+    // Switch back to Pretty
+    await prettyBtn.click();
+
+    // 5. Copy and Save action buttons
+    const copyBtn = responsePanel.locator('button[aria-label="Copy response"]');
+    await expect(copyBtn).toBeVisible();
+    await copyBtn.click();
+
+    const saveBtn = responsePanel.locator('button[aria-label="Save response"]');
+    await expect(saveBtn).toBeVisible();
+
+    // 6. Headers tab with searchable filter
+    const headersTab = responsePanel.locator('button[role="tab"]:has-text("Headers")').first();
+    await headersTab.click();
+
+    const headerFilterInput = responsePanel.locator('input[placeholder="Filter headers..."]');
+    await expect(headerFilterInput).toBeVisible();
+    await headerFilterInput.fill('content');
+
+    // Verify filtered table shows content-type
+    const headerRow = responsePanel.locator('td:has-text("content-type")');
+    await expect(headerRow).toBeVisible();
+
+    // Clear filter
+    const clearBtn = responsePanel.locator('button[title="Clear filter"]');
+    await clearBtn.click();
+    await expect(headerFilterInput).toHaveValue('');
+
+    // 7. Timing tab with waterfall chart
+    const timingTab = responsePanel.locator('button[role="tab"]:has-text("Timing")').first();
+    await timingTab.click();
+
+    await expect(responsePanel.locator('text=Timing breakdown')).toBeVisible();
+    await expect(responsePanel.locator('text=DNS lookup')).toBeVisible();
+    await expect(responsePanel.locator('text=TCP handshake')).toBeVisible();
+    await expect(responsePanel.locator('text=Time to first byte (TTFB)')).toBeVisible();
+    await expect(responsePanel.locator('text=Content download')).toBeVisible();
+
+    // 8. Image preview test
+    const urlInput = page.locator('#url-input');
+    await urlInput.fill(`http://127.0.0.1:${port}/image`);
+    const sendMainBtn = page.locator('#send-test-btn');
+    await sendMainBtn.click();
+
+    // Verify image preview renders an <img> with valid data URI
+    const imgPreview = responsePanel.locator('img[alt="Response preview"]');
+    await expect(imgPreview).toBeVisible();
+    const imgSrc = await imgPreview.getAttribute('src');
+    expect(imgSrc).toContain('data:image/png;base64,');
   });
 });

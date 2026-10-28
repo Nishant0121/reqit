@@ -205,14 +205,14 @@ This plan breaks the whole project into small phases. Each phase is meant to tak
 
 **Goal:** inspect responses properly.
 
-- [ ] Status badge (colored by class), time, and size in a header strip
-- [ ] **Body** tab: Pretty (JSON, XML, HTML), Raw, and Preview (for HTML and images)
-- [ ] Syntax highlighting, code folding, and in-body search (Ctrl/Cmd+F)
-- [ ] **Headers** tab with a searchable table
-- [ ] **Timing** tab with a waterfall bar chart from the Phase 4 data
-- [ ] Copy body, save body to file
-- [ ] Large-body handling: when the engine returns `bodyPath`, show the first part and a "Load more" or virtualized view, so the UI never freezes
-- [ ] Empty, loading, and error states (distinct and helpful)
+- [x] Status badge (colored by class), time, and size in a header strip
+- [x] **Body** tab: Pretty (JSON, XML, HTML), Raw, and Preview (for HTML and images)
+- [x] Syntax highlighting, code folding, and in-body search (Ctrl/Cmd+F)
+- [x] **Headers** tab with a searchable table
+- [x] **Timing** tab with a waterfall bar chart from the Phase 4 data
+- [x] Copy body, save body to file
+- [x] Large-body handling: when the engine returns `bodyPath`, show the first part and a "Load more" or virtualized view, so the UI never freezes
+- [x] Empty, loading, and error states (distinct and helpful)
 
 **Done when:** a 50 MB JSON response opens without freezing, and every tab works.
 

@@ -467,7 +467,13 @@ export default function App(): React.JSX.Element {
 
             {/* Response Panel (bottom pane, min 200px) */}
             <div className="flex-1 min-h-[200px] overflow-hidden">
-              <ResponsePanel result={result} error={error} loading={loading} onSend={handleSend} />
+              <ResponsePanel
+                result={result}
+                error={error}
+                loading={loading}
+                onSend={handleSend}
+                onCancel={handleCancel}
+              />
             </div>
           </div>
         </main>

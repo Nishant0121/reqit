@@ -45,6 +45,7 @@ export interface ResponseResult {
   statusText: string;
   headers: KeyValue[];
   body?: string;
+  bodyBase64?: string;
   bodyPath?: string;
   sizeBytes: number;
   totalMs: number;
