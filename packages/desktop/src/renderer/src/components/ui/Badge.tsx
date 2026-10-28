@@ -12,13 +12,13 @@ export const SHORT_METHOD_NAMES: Record<HttpMethod, string> = {
 };
 
 const METHOD_COLORS: Record<HttpMethod, string> = {
-  GET: 'var(--method-get)',
-  POST: 'var(--method-post)',
-  PUT: 'var(--method-put)',
-  PATCH: 'var(--method-patch)',
-  DELETE: 'var(--method-delete)',
-  HEAD: 'var(--method-head)',
-  OPTIONS: 'var(--method-options)',
+  GET: 'var(--success)',
+  POST: 'var(--warning)',
+  PUT: 'var(--info)',
+  PATCH: 'var(--info)',
+  DELETE: 'var(--danger)',
+  HEAD: 'var(--text-muted)',
+  OPTIONS: 'var(--text-muted)',
 };
 
 export interface MethodBadgeProps {
@@ -63,12 +63,12 @@ export function StatusBadge({
   className = '',
 }: StatusBadgeProps): React.JSX.Element {
   let color = 'var(--text-muted)';
-  let bg = 'var(--bg-muted)';
+  let bg = 'var(--bg-active)';
   let text = statusText || '';
 
   if (isCancelled) {
     color = 'var(--text-muted)';
-    bg = 'var(--bg-muted)';
+    bg = 'var(--bg-active)';
     text = text || 'Cancelled';
   } else if (isError) {
     color = 'var(--danger)';
@@ -122,7 +122,7 @@ export function CountBadge({ count, className = '' }: CountBadgeProps): React.JS
     <span
       className={`inline-flex items-center px-1.5 py-0.5 rounded-[4px] text-[11px] leading-[16px] font-medium select-none ${className}`}
       style={{
-        backgroundColor: 'var(--bg-muted)',
+        backgroundColor: 'var(--bg-elevated)',
         color: 'var(--text-secondary)',
       }}
     >

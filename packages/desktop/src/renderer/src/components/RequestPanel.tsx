@@ -118,13 +118,33 @@ export function RequestPanel({
                 style={{
                   borderColor: 'var(--border-strong)',
                   color: 'var(--text-primary)',
-                  backgroundColor: 'var(--bg-base)',
+                  backgroundColor: 'var(--bg-input)',
                 }}
               >
-                <option value="none">{strings.requestPanel.noAuth}</option>
-                <option value="bearer">{strings.requestPanel.bearerToken}</option>
-                <option value="basic">{strings.requestPanel.basicAuth}</option>
-                <option value="apiKey">{strings.requestPanel.apiKey}</option>
+                <option
+                  value="none"
+                  style={{ backgroundColor: 'var(--bg-elevated)', color: 'var(--text-primary)' }}
+                >
+                  {strings.requestPanel.noAuth}
+                </option>
+                <option
+                  value="bearer"
+                  style={{ backgroundColor: 'var(--bg-elevated)', color: 'var(--text-primary)' }}
+                >
+                  {strings.requestPanel.bearerToken}
+                </option>
+                <option
+                  value="basic"
+                  style={{ backgroundColor: 'var(--bg-elevated)', color: 'var(--text-primary)' }}
+                >
+                  {strings.requestPanel.basicAuth}
+                </option>
+                <option
+                  value="apiKey"
+                  style={{ backgroundColor: 'var(--bg-elevated)', color: 'var(--text-primary)' }}
+                >
+                  {strings.requestPanel.apiKey}
+                </option>
               </select>
             </div>
 

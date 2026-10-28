@@ -20,7 +20,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
     <div
       className={`relative inline-flex items-center ${heightClass}`}
       style={{
-        backgroundColor: 'var(--bg-base)',
+        backgroundColor: 'var(--bg-input)',
         border: '1px solid var(--border-strong)',
         borderRadius: 'var(--radius-sm)',
       }}

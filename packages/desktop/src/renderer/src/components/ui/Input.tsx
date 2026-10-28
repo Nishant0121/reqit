@@ -27,7 +27,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
       <div
         className={`relative flex items-center w-full transition-fast ${heightClass}`}
         style={{
-          backgroundColor: 'var(--bg-base)',
+          backgroundColor: 'var(--bg-input)',
           border: `1px solid ${error ? 'var(--danger)' : 'var(--border-strong)'}`,
           borderRadius: 'var(--radius-sm)',
         }}

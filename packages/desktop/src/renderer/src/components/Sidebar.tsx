@@ -62,7 +62,7 @@ export function Sidebar({
       className="relative flex flex-col h-full border-r select-none shrink-0"
       style={{
         width: `${width}px`,
-        backgroundColor: 'var(--bg-subtle)',
+        backgroundColor: 'var(--bg-surface)',
         borderColor: 'var(--border)',
       }}
     >
@@ -115,7 +115,7 @@ export function Sidebar({
         <div
           className="relative flex items-center h-[28px] rounded-[4px] border px-2 text-[12px]"
           style={{
-            backgroundColor: 'var(--bg-base)',
+            backgroundColor: 'var(--bg-input)',
             borderColor: 'var(--border-strong)',
           }}
         >
@@ -137,7 +137,7 @@ export function Sidebar({
             <button
               type="button"
               onClick={() => setFilterText('')}
-              className="p-0.5 rounded-[2px] hover:bg-[var(--bg-muted)] transition-fast"
+              className="p-0.5 rounded-[2px] hover:bg-[var(--bg-hover)] transition-fast"
               style={{ color: 'var(--text-muted)' }}
               title={strings.sidebar.clearFilter}
               aria-label={strings.sidebar.clearFilter}
@@ -192,7 +192,7 @@ export function Sidebar({
                   }}
                   onMouseEnter={e => {
                     if (!isSelected) {
-                      e.currentTarget.style.backgroundColor = 'var(--bg-muted)';
+                      e.currentTarget.style.backgroundColor = 'var(--bg-hover)';
                     }
                   }}
                   onMouseLeave={e => {

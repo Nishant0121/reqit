@@ -37,94 +37,180 @@ These rules are **strict**. Every UI change must follow them, and a pull request
 
 ## 2. Color System
 
+Palette name: **Terminal & Slate**. Deep slate surfaces, a single electric-cyan accent, and fixed semantic hues for HTTP methods, response statuses, test results, and Git state.
+
+**Dark is the primary design target.** Design and review every screen in dark first, then verify light.
+
 ### 2.1 Rules
 
-- Components MUST use **design tokens** (CSS variables) only. Raw hex, `rgb()`, or named colors in component code are forbidden. Tailwind arbitrary color values (`bg-[#fff]`) are forbidden.
-- Every token has a **light** and a **dark** value. A new token is not complete until both exist.
-- Text and essential UI elements MUST meet **WCAG AA**: 4.5:1 for normal text, 3:1 for large text (18px+ or 14px+ bold), icons, borders of inputs, and focus rings. Verify with a contrast tool before merging any new color.
-- **Color MUST NOT be the only way to convey information.** Pair color with text, an icon, or a shape (for example, a status badge shows the number and the text, not just a green dot).
-- One accent color only. No gradients anywhere.
+- Components MUST use **design tokens** (CSS variables) only. Raw hex, `rgb()`, or named colors in component code are forbidden. Tailwind arbitrary color values (`bg-[#fff]`) and Tailwind's default palette (`bg-blue-500`) are forbidden.
+- Every token has a **dark** and a **light** value. A new token is not complete until both exist.
+- Text and essential UI elements MUST meet **WCAG AA**: 4.5:1 for normal text, 3:1 for large text (18px+ or 14px+ bold), icons, input borders, and focus rings. Verify with a contrast tool before merging any new color.
+- **Color MUST NOT be the only way to convey information.** Pair color with text, an icon, or a shape (a status badge shows the number and the text, not just a colored dot).
+- **One accent color only: cyan.** Green, amber, blue, red, yellow, and indigo are reserved for meaning (methods, statuses, tests, Git) and never used for decoration.
+- No gradients anywhere.
+- **Two variants of each semantic hue.** The _base_ hue (your palette value) is identical in both themes and is used for **non-text marks** (status dots, waterfall bars, left-edge markers) that always sit next to text. The _text-safe_ variant is used whenever the color is applied to **text**. See 2.3.
+- Components MUST NOT use Tailwind `dark:` variants. The tokens switch themes by themselves.
 
-### 2.2 Neutral and accent tokens
+### 2.2 Surface, border, text, and accent tokens
+
+Dark values are the defaults, so the app is dark if no preference is available.
 
 ```css
-:root {
+:root,
+:root[data-theme='dark'] {
   /* Surfaces */
-  --bg-base: #ffffff; /* main content areas */
-  --bg-subtle: #f6f7f9; /* sidebar, panels */
-  --bg-muted: #edeff3; /* hover, table stripes, code background */
-  --bg-elevated: #ffffff; /* menus, modals, popovers */
-  --bg-overlay: rgba(15, 17, 21, 0.45); /* modal backdrop */
+  --bg-base: #0f1117; /* app shell, request editor area */
+  --bg-surface: #161922; /* sidebar, response panel, toolbars, tab bar */
+  --bg-elevated: #1e222e; /* menus, modals, popovers, tooltips, command palette */
+  --bg-hover: #1e222e; /* row hover on base/surface */
+  --bg-active: #2a2f3d; /* hover/pressed on elevated surfaces, pressed rows */
+  --bg-input: #0f1117; /* text inputs, selects */
+  --bg-overlay: rgba(0, 0, 0, 0.6); /* modal backdrop */
 
   /* Borders */
-  --border: #e1e4ea; /* dividers, panel edges */
-  --border-strong: #c9ced8; /* input borders */
+  --border: #2a2f3d; /* dividers, splitters, panel edges */
+  --border-strong: #6b7280; /* input and control borders (3:1 required) */
 
   /* Text */
-  --text-primary: #14171f;
-  --text-secondary: #4a5162;
-  --text-muted: #6b7384; /* hints, placeholders, timestamps */
-  --text-disabled: #9aa1b0; /* disabled controls only, exempt from AA */
+  --text-primary: #f3f4f6;
+  --text-secondary: #d1d5db;
+  --text-muted: #9ca3af; /* file sizes, timestamps, placeholders */
+  --text-disabled: #6b7280; /* disabled controls only, exempt from AA */
 
   /* Accent */
-  --accent: #2f5bea;
-  --accent-hover: #2449c4;
-  --accent-subtle: #e8eeff; /* selected row background */
-  --accent-fg: #ffffff; /* text on accent */
-  --focus-ring: #2f5bea;
+  --accent: #06b6d4; /* focus ring, active tab underline, icons, markers */
+  --accent-strong: #06b6d4; /* primary button fill, accent text and links */
+  --accent-hover: #0891b2; /* primary button hover */
+  --accent-subtle: rgba(6, 182, 212, 0.16); /* selected row background */
+  --accent-fg: #0f1117; /* text on --accent-strong (dark text, not white) */
+  --focus-ring: #06b6d4;
 }
 
-:root[data-theme='dark'] {
-  --bg-base: #0f1115;
-  --bg-subtle: #151820;
-  --bg-muted: #1d212b;
-  --bg-elevated: #1a1e27;
-  --bg-overlay: rgba(0, 0, 0, 0.6);
+:root[data-theme='light'] {
+  /* Surfaces */
+  --bg-base: #f9fafb;
+  --bg-surface: #ffffff;
+  --bg-elevated: #f3f4f6;
+  --bg-hover: #f3f4f6;
+  --bg-active: #e5e7eb;
+  --bg-input: #ffffff;
+  --bg-overlay: rgba(17, 24, 39, 0.45);
 
-  --border: #2a2f3b;
-  --border-strong: #3a4150;
+  /* Borders */
+  --border: #e5e7eb;
+  --border-strong: #8a919e;
 
-  --text-primary: #e8eaf0;
-  --text-secondary: #a9b0bf;
-  --text-muted: #8a92a3;
-  --text-disabled: #5b6272;
+  /* Text */
+  --text-primary: #111827;
+  --text-secondary: #4b5563;
+  --text-muted: #6b7280;
+  --text-disabled: #9ca3af;
 
-  --accent: #6c8cff;
-  --accent-hover: #8aa3ff;
-  --accent-subtle: #1e2745;
-  --accent-fg: #0f1115;
-  --focus-ring: #8aa3ff;
+  /* Accent */
+  --accent: #0891b2; /* focus ring, underline, icons (non-text only) */
+  --accent-strong: #0e7490; /* primary button fill, accent text and links */
+  --accent-hover: #155e75;
+  --accent-subtle: #cffafe;
+  --accent-fg: #ffffff;
+  --focus-ring: #0891b2;
 }
 ```
 
-### 2.3 Semantic tokens
+Surface roles at a glance:
 
-| Token              | Light     | Dark      | Use                              |
-| ------------------ | --------- | --------- | -------------------------------- |
-| `--success`        | `#1A7F4B` | `#4CC38A` | Passed tests, 2xx                |
-| `--success-subtle` | `#E4F5EC` | `#12281E` | Success backgrounds              |
-| `--warning`        | `#9A6700` | `#E3B341` | 4xx, caution, unsaved            |
-| `--warning-subtle` | `#FFF4D6` | `#2D2410` | Warning backgrounds              |
-| `--danger`         | `#C62F3E` | `#FF6B7A` | 5xx, errors, destructive actions |
-| `--danger-subtle`  | `#FDE8EA` | `#2E1519` | Error backgrounds                |
-| `--info`           | `#0B6BCB` | `#5AB0FF` | 1xx, 3xx, neutral notices        |
-| `--info-subtle`    | `#E3F0FD` | `#10243A` | Info backgrounds                 |
+| Role                                    | Dark      | Light     | Where                                      |
+| --------------------------------------- | --------- | --------- | ------------------------------------------ |
+| Base (Abyssal Slate / Canvas White)     | `#0F1117` | `#F9FAFB` | App shell, request editor area             |
+| Surface (Deep Charcoal / Pure White)    | `#161922` | `#FFFFFF` | Sidebar, response panel, toolbars, tab bar |
+| Elevated (Charcoal Lift / Light Gray)   | `#1E222E` | `#F3F4F6` | Menus, modals, tooltips, cards             |
+| Border (Subtle Grid / Border Gray)      | `#2A2F3D` | `#E5E7EB` | Dividers, splitters, tree lines            |
+| Text primary (Crisp White / Dark Slate) | `#F3F4F6` | `#111827` | Headings, active items, input text         |
+| Text muted (Slate Gray / Cool Gray)     | `#9CA3AF` | `#6B7280` | Metadata, placeholders                     |
+| Accent (Electric Cyan / Deep Cyan)      | `#06B6D4` | `#0891B2` | Focus, active states, markers              |
+
+### 2.3 Semantic hue tokens (HTTP, tests, Git)
+
+| Hue                    | Base (both themes, marks only) | Text on dark | Text on light | Subtle bg (dark)        | Subtle bg (light) |
+| ---------------------- | ------------------------------ | ------------ | ------------- | ----------------------- | ----------------- |
+| Green                  | `#10B981`                      | `#10B981`    | `#047857`     | `rgba(16,185,129,0.14)` | `#ECFDF5`         |
+| Amber                  | `#F59E0B`                      | `#F59E0B`    | `#92400E`     | `rgba(245,158,11,0.14)` | `#FFFBEB`         |
+| Blue                   | `#3B82F6`                      | `#60A5FA`    | `#1D4ED8`     | `rgba(59,130,246,0.16)` | `#EFF6FF`         |
+| Red                    | `#EF4444`                      | `#F87171`    | `#B91C1C`     | `rgba(239,68,68,0.14)`  | `#FEF2F2`         |
+| Yellow (Git modified)  | `#EAB308`                      | `#EAB308`    | `#854D0E`     | n/a                     | n/a               |
+| Green (Git staged)     | `#22C55E`                      | `#22C55E`    | `#166534`     | n/a                     | n/a               |
+| Indigo (Git untracked) | `#6366F1`                      | `#818CF8`    | `#4F46E5`     | n/a                     | n/a               |
+
+Semantic tokens (component code uses these names, never the hex):
+
+```css
+:root,
+:root[data-theme='dark'] {
+  --success: #10b981;
+  --success-mark: #10b981;
+  --success-subtle: rgba(16, 185, 129, 0.14);
+  --warning: #f59e0b;
+  --warning-mark: #f59e0b;
+  --warning-subtle: rgba(245, 158, 11, 0.14);
+  --info: #60a5fa;
+  --info-mark: #3b82f6;
+  --info-subtle: rgba(59, 130, 246, 0.16);
+  --danger: #f87171;
+  --danger-mark: #ef4444;
+  --danger-subtle: rgba(239, 68, 68, 0.14);
+
+  --danger-solid: #dc2626; /* destructive button fill, white text */
+  --danger-solid-hover: #b91c1c;
+
+  --git-modified: #eab308;
+  --git-staged: #22c55e;
+  --git-untracked: #818cf8;
+}
+
+:root[data-theme='light'] {
+  --success: #047857;
+  --success-mark: #10b981;
+  --success-subtle: #ecfdf5;
+  --warning: #92400e;
+  --warning-mark: #f59e0b;
+  --warning-subtle: #fffbeb;
+  --info: #1d4ed8;
+  --info-mark: #3b82f6;
+  --info-subtle: #eff6ff;
+  --danger: #b91c1c;
+  --danger-mark: #ef4444;
+  --danger-subtle: #fef2f2;
+
+  --danger-solid: #b91c1c;
+  --danger-solid-hover: #991b1b;
+
+  --git-modified: #854d0e;
+  --git-staged: #166534;
+  --git-untracked: #4f46e5;
+}
+```
+
+- Use `--success`, `--warning`, `--info`, `--danger` for **text and icons**.
+- Use the `-mark` tokens for **dots, bars, and chart fills** only.
+- Use `-subtle` for backgrounds of badges, banners, and test rows, with the text-safe color on top.
 
 ### 2.4 HTTP method colors
 
-Method labels MUST always be shown as **text** (for example `GET`) in the color below, in the monospace font, bold, uppercase.
+Method labels MUST always be shown as **text** (for example `GET`) in the monospace font, bold, uppercase.
 
-| Method    | Light     | Dark      |
-| --------- | --------- | --------- |
-| `GET`     | `#1A7F4B` | `#4CC38A` |
-| `POST`    | `#9A5B00` | `#F0A040` |
-| `PUT`     | `#2F5BEA` | `#6C8CFF` |
-| `PATCH`   | `#7A3FD1` | `#B28CFF` |
-| `DELETE`  | `#C62F3E` | `#FF6B7A` |
-| `HEAD`    | `#0E7C86` | `#4CC9D6` |
-| `OPTIONS` | `#6B7384` | `#8A92A3` |
+| Method    | Token          | Dark text | Light text | Mark      |
+| --------- | -------------- | --------- | ---------- | --------- |
+| `GET`     | `--success`    | `#10B981` | `#047857`  | `#10B981` |
+| `POST`    | `--warning`    | `#F59E0B` | `#92400E`  | `#F59E0B` |
+| `PUT`     | `--info`       | `#60A5FA` | `#1D4ED8`  | `#3B82F6` |
+| `PATCH`   | `--info`       | `#60A5FA` | `#1D4ED8`  | `#3B82F6` |
+| `DELETE`  | `--danger`     | `#F87171` | `#B91C1C`  | `#EF4444` |
+| `HEAD`    | `--text-muted` | `#9CA3AF` | `#6B7280`  | n/a       |
+| `OPTIONS` | `--text-muted` | `#9CA3AF` | `#6B7280`  | n/a       |
 
-In the sidebar, method labels are shortened to fit in a fixed 44px column: `GET`, `POST`, `PUT`, `PTCH`, `DEL`, `HEAD`, `OPT`.
+PUT and PATCH share blue, so the text label is what tells them apart. HEAD and OPTIONS are neutral so they never compete with the five hues above.
+
+In the sidebar, method labels are shortened to fit a fixed 44px column: `GET`, `POST`, `PUT`, `PTCH`, `DEL`, `HEAD`, `OPT`.
 
 ### 2.5 HTTP status colors
 
@@ -138,30 +224,141 @@ In the sidebar, method labels are shortened to fit in a fixed 44px column: `GET`
 | Network error (no response) | `--danger`     | `Network error`             |
 | Cancelled                   | `--text-muted` | `Cancelled`                 |
 
-The badge MUST show the numeric code **and** the status text.
+The badge MUST show the numeric code **and** the status text, on the matching `-subtle` background.
 
-### 2.6 Syntax highlighting tokens
+Test results use the same tokens: passed is `--success`, failed is `--danger`, skipped is `--text-muted`, and each has an icon and the words "Passed", "Failed", or "Skipped".
+
+### 2.6 Git and sync status colors
+
+Used in the sidebar tree, tabs, and the Git panel (Phase 27).
+
+| State                  | Marker | Token             | Meaning                                  |
+| ---------------------- | ------ | ----------------- | ---------------------------------------- |
+| Modified / uncommitted | `M`    | `--git-modified`  | File differs from the last commit        |
+| Staged / synced        | `S`    | `--git-staged`    | Staged for commit, or matches the remote |
+| Untracked              | `U`    | `--git-untracked` | New file Git does not know about yet     |
+| Deleted                | `D`    | `--danger`        | Removed from disk or staged for deletion |
+
+- The marker is a single letter in the monospace font (11px, bold) in a fixed 16px column at the right edge of the tree row. A tooltip gives the full word ("Modified").
+- Folders show a dot (`--git-modified`) when any child is modified.
+- Because Git staged green (`#22C55E`) is close to GET green (`#10B981`), the two never appear in the same place: Git markers sit only at the right edge of tree rows and in the Git panel, and method labels sit only at the left.
+
+### 2.7 Syntax highlighting tokens
 
 Editor colors come from a fixed set so JSON, XML, HTML, YAML, and script views match.
 
-| Token                  | Light                          | Dark                           |
-| ---------------------- | ------------------------------ | ------------------------------ |
-| Keys / properties      | `#1F4FBF`                      | `#8AA3FF`                      |
-| Strings                | `#1A7F4B`                      | `#4CC38A`                      |
-| Numbers                | `#9A5B00`                      | `#F0A040`                      |
-| Booleans / null        | `#7A3FD1`                      | `#B28CFF`                      |
-| Punctuation            | `#6B7384`                      | `#8A92A3`                      |
-| Comments               | `#6B7384` (italic)             | `#8A92A3` (italic)             |
-| Invalid / error        | `#C62F3E`                      | `#FF6B7A`                      |
-| `{{variable}}` known   | `#0E7C86` on `--accent-subtle` | `#4CC9D6` on `--accent-subtle` |
-| `{{variable}}` unknown | `#C62F3E` on `--danger-subtle` | `#FF6B7A` on `--danger-subtle` |
+| Token                  | Dark                            | Light                           |
+| ---------------------- | ------------------------------- | ------------------------------- |
+| Keys / properties      | `#22D3EE`                       | `#0E7490`                       |
+| Strings                | `#34D399`                       | `#047857`                       |
+| Numbers                | `#FBBF24`                       | `#92400E`                       |
+| Booleans / null        | `#818CF8`                       | `#4F46E5`                       |
+| Punctuation            | `#9CA3AF`                       | `#6B7280`                       |
+| Comments               | `#9CA3AF` (italic)              | `#6B7280` (italic)              |
+| Invalid / error        | `#F87171`                       | `#B91C1C`                       |
+| `{{variable}}` known   | `#22D3EE` on `--accent-subtle`  | `#0E7490` on `--accent-subtle`  |
+| `{{variable}}` unknown | `--danger` on `--danger-subtle` | `--danger` on `--danger-subtle` |
 
-### 2.7 Theme behavior
+The editor background is `--bg-base`. The response body background is `--bg-surface`. Selection uses `--accent-subtle`.
 
-- Three options: **System** (default), **Light**, **Dark**.
-- Switching themes MUST apply instantly without reloading and without a flash of the wrong theme at startup (read the saved theme before first paint).
-- No component may look broken in either theme. Both themes are tested.
-- High-contrast support: honor `forced-colors` (Windows High Contrast) by not relying on background colors for essential boundaries; keep borders on interactive elements.
+### 2.8 Theme behavior
+
+- Three options: **System** (default), **Light**, **Dark**. If the OS reports no preference, use **Dark**.
+- The saved theme MUST be applied (`data-theme` set on `<html>`) before first paint, so there is no flash of the wrong theme.
+- Switching themes applies instantly without reloading.
+- No component may look broken in either theme. Both are tested.
+- Support `forced-colors` (Windows High Contrast): keep borders on all interactive elements so boundaries do not depend on background colors.
+
+### 2.9 Contrast rules and deviations from the source palette
+
+The source palette is used as the base. The following adjustments are required because some of its pairs fall below WCAG AA. Ratios are approximate and MUST be re-checked with the CI contrast script (Section 14).
+
+| Issue in the source palette                                                                      | Approx. ratio | Rule in this document                                                                                                                                   |
+| ------------------------------------------------------------------------------------------------ | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| White text on Deep Cyan `#0891B2` (light primary button)                                         | ~3.7:1        | Light primary buttons use `--accent-strong` `#0E7490` with white text (~5.4:1). `#0891B2` stays for focus rings, underlines, and icons.                 |
+| Deep Cyan `#0891B2` as link text on white                                                        | ~3.7:1        | Accent text in light mode uses `--accent-strong`.                                                                                                       |
+| White text on Electric Cyan `#06B6D4` (dark primary button)                                      | ~2.4:1        | Dark primary buttons use dark text `--accent-fg` `#0F1117` (~7.8:1).                                                                                    |
+| Source method/status hues (`#10B981`, `#F59E0B`, `#3B82F6`, `#EF4444`) as text on light surfaces | ~2.1 to 3.8:1 | Light-mode text uses the darker text-safe variants in 2.3. The source hex values stay as the base for marks, and as dark-mode text for green and amber. |
+| Blue `#3B82F6` and red `#EF4444` as text on `--bg-elevated` in dark                              | ~4.2 to 4.3:1 | Dark-mode blue and red **text** uses `#60A5FA` and `#F87171`.                                                                                           |
+| Indigo `#6366F1` as text on dark surfaces                                                        | ~3.9:1        | Dark-mode untracked marker uses `#818CF8`.                                                                                                              |
+| Border `#2A2F3D` as an input outline on `#0F1117`                                                | ~1.4:1        | Control borders use `--border-strong`. `--border` is for dividers only.                                                                                 |
+| Muted text `#6B7280` on `#F3F4F6` (light elevated or hover)                                      | ~4.4:1        | In light mode, text on `--bg-elevated`, `--bg-hover`, or `--bg-active` uses `--text-secondary`, not `--text-muted`.                                     |
+| White text on source red `#EF4444` (destructive button)                                          | ~3.8:1        | Destructive buttons use `--danger-solid` with white text.                                                                                               |
+
+Colors added that are not in the source palette: `--text-secondary`, `--border-strong`, `--bg-hover`, `--bg-active`, `--bg-input`, `--bg-overlay`, `--accent-strong`, `--accent-subtle`, `--danger-solid`, the subtle backgrounds, the HEAD/OPTIONS and 1xx choices, and the Deleted and syntax colors.
+
+### 2.10 Tailwind mapping
+
+Do not use a config with fixed hex values. It cannot switch themes. Map Tailwind names to the CSS variables instead, and replace the default palette so stray colors cannot be used.
+
+```javascript
+// tailwind.config.js (Tailwind v3 syntax; in v4 declare the same names in @theme)
+module.exports = {
+  darkMode: ['selector', '[data-theme="dark"]'], // available, but components do not use dark:
+  theme: {
+    colors: {
+      // replaces the default palette on purpose
+      transparent: 'transparent',
+      current: 'currentColor',
+
+      base: 'var(--bg-base)',
+      surface: 'var(--bg-surface)',
+      elevated: 'var(--bg-elevated)',
+      hover: 'var(--bg-hover)',
+      active: 'var(--bg-active)',
+      input: 'var(--bg-input)',
+      overlay: 'var(--bg-overlay)',
+
+      line: 'var(--border)',
+      'line-strong': 'var(--border-strong)',
+
+      content: {
+        DEFAULT: 'var(--text-primary)',
+        secondary: 'var(--text-secondary)',
+        muted: 'var(--text-muted)',
+        disabled: 'var(--text-disabled)',
+      },
+
+      accent: {
+        DEFAULT: 'var(--accent)',
+        strong: 'var(--accent-strong)',
+        hover: 'var(--accent-hover)',
+        subtle: 'var(--accent-subtle)',
+        fg: 'var(--accent-fg)',
+      },
+
+      success: {
+        DEFAULT: 'var(--success)',
+        mark: 'var(--success-mark)',
+        subtle: 'var(--success-subtle)',
+      },
+      warning: {
+        DEFAULT: 'var(--warning)',
+        mark: 'var(--warning-mark)',
+        subtle: 'var(--warning-subtle)',
+      },
+      info: { DEFAULT: 'var(--info)', mark: 'var(--info-mark)', subtle: 'var(--info-subtle)' },
+      danger: {
+        DEFAULT: 'var(--danger)',
+        mark: 'var(--danger-mark)',
+        subtle: 'var(--danger-subtle)',
+        solid: 'var(--danger-solid)',
+        'solid-hover': 'var(--danger-solid-hover)',
+      },
+
+      git: {
+        modified: 'var(--git-modified)',
+        staged: 'var(--git-staged)',
+        untracked: 'var(--git-untracked)',
+      },
+    },
+  },
+};
+```
+
+Usage examples: `bg-surface text-content border-line`, `bg-accent-strong text-accent-fg hover:bg-accent-hover`, `text-success`, `bg-danger-subtle text-danger`.
+
+Opacity modifiers (`bg-accent/50`) do not work with these variables and are forbidden. If a tint is needed, add a named token for it.
 
 ---
 
@@ -278,12 +475,12 @@ All components live in `packages/desktop/src/renderer/components/ui/`. Do not bu
 
 ### 6.1 Buttons
 
-| Variant       | Look                                                | Use                                         |
-| ------------- | --------------------------------------------------- | ------------------------------------------- |
-| **Primary**   | `--accent` background, `--accent-fg` text           | One per view or dialog (Send, Save, Import) |
-| **Secondary** | `--bg-muted` background, `--text-primary`           | Default actions                             |
-| **Ghost**     | Transparent, `--text-secondary`, hover `--bg-muted` | Toolbars, icon buttons                      |
-| **Danger**    | `--danger` background, white text                   | Confirm destructive actions only            |
+| Variant       | Look                                                                                             | Use                                         |
+| ------------- | ------------------------------------------------------------------------------------------------ | ------------------------------------------- |
+| **Primary**   | `--accent-strong` background (`--accent-hover` on hover), `--accent-fg` text                     | One per view or dialog (Send, Save, Import) |
+| **Secondary** | `--bg-elevated` background, 1px `--border` border, `--text-primary` text, `--bg-active` on hover | Default actions                             |
+| **Ghost**     | Transparent, `--text-secondary`, hover `--bg-hover`                                              | Toolbars, icon buttons                      |
+| **Danger**    | `--danger-solid` background (`--danger-solid-hover` on hover), white text                        | Confirm destructive actions only            |
 
 - Only **one primary button** per dialog or view area.
 - Button labels are verbs: "Send", "Save", "Import", "Delete request". Never "OK" or "Yes".
@@ -293,7 +490,7 @@ All components live in `packages/desktop/src/renderer/components/ui/`. Do not bu
 
 ### 6.2 Inputs and selects
 
-- 28px high, 1px `--border-strong` border, `--bg-base` background, `--radius-sm`.
+- 28px high, 1px `--border-strong` border, `--bg-input` background, `--radius-sm`.
 - Focus: 2px `--focus-ring` outline with a 1px offset. The focus ring MUST NOT be removed anywhere.
 - Error state: `--danger` border plus an error message below, in `--text-sm`.
 - Placeholders use `--text-muted` and show an example, not an instruction ("https://api.example.com/users").
@@ -317,9 +514,9 @@ All components live in `packages/desktop/src/renderer/components/ui/`. Do not bu
 
 - Folder rows: chevron + folder icon + name. Request rows: method label (44px column) + name.
 - Selected row: `--accent-subtle` background plus a 2px `--accent` bar on the left.
-- Hover: `--bg-muted`. Right-click opens a context menu. F2 renames inline.
+- Hover: `--bg-hover`. Right-click opens a context menu. F2 renames inline.
 - Rows with a parse error show a `--danger` warning icon and a tooltip with the error.
-- Modified-on-disk files (Git changes, after Phase 27) show a small colored letter: `M`, `A`, `D`.
+- Files with Git changes (after Phase 27) show a status letter in a fixed 16px column at the right edge: `M`, `S`, `U`, or `D`, colored as defined in 2.6.
 
 ### 6.6 Response viewer
 
@@ -357,7 +554,7 @@ All components live in `packages/desktop/src/renderer/components/ui/`. Do not bu
 ### 6.11 Tooltips and context menus
 
 - Tooltip: appears after 500ms hover or immediately on keyboard focus, max width 280px, text only, never contains interactive content.
-- Context menus: 28px items, separators between groups, destructive items last and in `--danger`, keyboard navigable, shortcut shown right-aligned.
+- Context menus: `--bg-elevated` background, 1px `--border` border, hover and keyboard-focus items use `--bg-active`, 28px items, separators between groups, destructive items last and in `--danger`, keyboard navigable, shortcut shown right-aligned.
 
 ---
 
@@ -395,7 +592,7 @@ Filtering is a core feature. Every list that can grow past ~20 items MUST have a
 ### 7.3 Filter UI pattern
 
 - Filter inputs show a magnifier icon, the placeholder "Filter..." (or a specific one like "Filter requests"), and the shortcut hint when empty.
-- Filter chips (method, status class) are toggle buttons at 24px height. Selected chips use `--accent-subtle` background and `--accent` text. Selecting none means "all".
+- Filter chips (method, status class) are toggle buttons at 24px height. Selected chips use `--accent-subtle` background and `--accent-strong` text. Selecting none means "all".
 - Dropdown filters show the current selection in the button label ("Status: 4xx, 5xx").
 - Do not hide filters behind a menu when the list is visible. Place them directly above the list.
 
@@ -548,7 +745,8 @@ Rules to hit those limits:
 The following MUST NOT appear in the app.
 
 - Gradients, glassmorphism, blur effects, glow, neon colors, or decorative backgrounds.
-- More than one accent color.
+- More than one accent color, or using green, amber, blue, red, yellow, or indigo for decoration.
+- Base semantic hues (`--*-mark`) used as **text** color, or text-safe tokens used as large decorative fills.
 - Raw hex values, inline styles for color, or arbitrary Tailwind values in components.
 - Font sizes or spacing values outside the scales above.
 - Emoji in UI text.
@@ -572,7 +770,8 @@ The following MUST NOT appear in the app.
 
 - **ESLint/Stylelint rules** that fail on raw color values, arbitrary Tailwind values, `alert/confirm/prompt`, and non-token spacing.
 - **Token check script:** every token exists in both light and dark themes.
-- **Contrast check:** a script computes contrast for each text/background token pair and fails below the AA thresholds.
+- **Contrast check:** a script computes contrast for every text/background token pair in both themes (including each semantic text token on `--bg-base`, `--bg-surface`, `--bg-elevated`, and its own `-subtle` background; `--border-strong` and `--focus-ring` against all surfaces) and fails below AA (4.5:1 text, 3:1 non-text).
+- **No `dark:` variants and no Tailwind default colors:** a lint rule fails on `dark:` classes, arbitrary color values, and opacity modifiers on token colors.
 - **axe accessibility tests** in Playwright for the main screens in both themes.
 - **Visual regression screenshots** (Playwright) for the main screens in light and dark, at 100% and 150% zoom.
 - **Bundle check:** no external URLs in the renderer output.
@@ -581,7 +780,8 @@ The following MUST NOT appear in the app.
 
 Copy this into every UI pull request.
 
-- [ ] Uses tokens only. No raw colors, sizes, or arbitrary values
+- [ ] Uses tokens only. No raw colors, sizes, or arbitrary values, and no `dark:` variants
+- [ ] Semantic colors on text use the text-safe tokens (`--success`, `--danger`, ...), and `-mark` tokens only for dots and bars
 - [ ] Looks correct in **light and dark** themes
 - [ ] Works at **960 x 600** and at 150% zoom with no overflow or clipping
 - [ ] Fully usable with the keyboard, with visible focus

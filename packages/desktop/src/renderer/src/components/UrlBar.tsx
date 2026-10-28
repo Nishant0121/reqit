@@ -28,7 +28,7 @@ export function UrlBar({
     <div
       className="p-3 border-b flex items-center gap-2 select-none shrink-0"
       style={{
-        backgroundColor: 'var(--bg-base)',
+        backgroundColor: 'var(--bg-surface)',
         borderColor: 'var(--border)',
       }}
     >
@@ -37,7 +37,7 @@ export function UrlBar({
         className="relative flex items-center h-[32px] rounded-[4px] border shrink-0"
         style={{
           borderColor: 'var(--border-strong)',
-          backgroundColor: 'var(--bg-base)',
+          backgroundColor: 'var(--bg-input)',
         }}
       >
         <select
@@ -75,7 +75,7 @@ export function UrlBar({
         className="relative flex-1 flex items-center h-[32px] rounded-[4px] border px-3 transition-fast"
         style={{
           borderColor: 'var(--border-strong)',
-          backgroundColor: 'var(--bg-base)',
+          backgroundColor: 'var(--bg-input)',
         }}
       >
         <input

@@ -77,7 +77,7 @@ export function KeyValueTable({
             className="border-b"
             style={{
               borderColor: 'var(--border)',
-              backgroundColor: 'var(--bg-subtle)',
+              backgroundColor: 'var(--bg-surface)',
               color: 'var(--text-secondary)',
             }}
           >
@@ -101,8 +101,8 @@ export function KeyValueTable({
                 className="border-b last:border-b-0 transition-fast"
                 style={{
                   borderColor: 'var(--border)',
-                  backgroundColor: isDimmed ? 'var(--bg-subtle)' : 'var(--bg-base)',
-                  opacity: isDimmed ? 0.6 : 1,
+                  backgroundColor: 'var(--bg-base)',
+                  opacity: isDimmed ? 0.5 : 1,
                 }}
               >
                 {/* Enabled checkbox */}
@@ -167,7 +167,7 @@ export function KeyValueTable({
                     <button
                       type="button"
                       onClick={() => handleDelete(idx)}
-                      className="w-5 h-5 inline-flex items-center justify-center rounded-[4px] hover:bg-[var(--bg-muted)] transition-fast app-focus-ring"
+                      className="w-5 h-5 inline-flex items-center justify-center rounded-[4px] hover:bg-[var(--bg-hover)] transition-fast app-focus-ring"
                       style={{ color: 'var(--text-muted)' }}
                       title="Delete row"
                       aria-label="Delete row"

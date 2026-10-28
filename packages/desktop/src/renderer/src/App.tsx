@@ -409,7 +409,7 @@ export default function App(): React.JSX.Element {
               className="h-[5px] w-full border-t border-b cursor-row-resize hover:bg-[var(--accent)] transition-fast select-none shrink-0 relative z-10 flex items-center justify-center"
               style={{
                 borderColor: 'var(--border)',
-                backgroundColor: 'var(--bg-subtle)',
+                backgroundColor: 'var(--bg-surface)',
               }}
               title="Resize panels"
               aria-hidden="true"

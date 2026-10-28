@@ -57,7 +57,7 @@ export function TopBar({
     <header
       className="h-[40px] px-3 flex items-center justify-between border-b select-none shrink-0"
       style={{
-        backgroundColor: 'var(--bg-subtle)',
+        backgroundColor: 'var(--bg-surface)',
         borderColor: 'var(--border)',
       }}
     >
@@ -66,7 +66,7 @@ export function TopBar({
         <button
           type="button"
           onClick={onToggleSidebar}
-          className="w-7 h-7 inline-flex items-center justify-center rounded-[4px] hover:bg-[var(--bg-muted)] transition-fast app-focus-ring"
+          className="w-7 h-7 inline-flex items-center justify-center rounded-[4px] hover:bg-[var(--bg-hover)] transition-fast app-focus-ring"
           style={{ color: 'var(--text-secondary)' }}
           title={strings.topBar.toggleSidebar}
           aria-label={strings.topBar.toggleSidebar}
@@ -81,7 +81,7 @@ export function TopBar({
         <div
           className="w-5 h-5 rounded-[4px] flex items-center justify-center font-bold text-[11px] leading-none"
           style={{
-            backgroundColor: 'var(--accent)',
+            backgroundColor: 'var(--accent-strong)',
             color: 'var(--accent-fg)',
           }}
         >
@@ -110,14 +110,29 @@ export function TopBar({
             className="h-[28px] px-2 text-[12px] bg-transparent border rounded-[4px] app-focus-ring outline-none cursor-pointer"
             style={{
               borderColor: 'var(--border-strong)',
-              color: 'var(--text-secondary)',
-              backgroundColor: 'var(--bg-base)',
+              color: 'var(--text-primary)',
+              backgroundColor: 'var(--bg-input)',
             }}
             aria-label="Active environment"
           >
-            <option value="none">{strings.topBar.noEnvironment}</option>
-            <option value="dev">{strings.topBar.devEnvironment}</option>
-            <option value="prod">{strings.topBar.prodEnvironment}</option>
+            <option
+              value="none"
+              style={{ backgroundColor: 'var(--bg-elevated)', color: 'var(--text-primary)' }}
+            >
+              {strings.topBar.noEnvironment}
+            </option>
+            <option
+              value="dev"
+              style={{ backgroundColor: 'var(--bg-elevated)', color: 'var(--text-primary)' }}
+            >
+              {strings.topBar.devEnvironment}
+            </option>
+            <option
+              value="prod"
+              style={{ backgroundColor: 'var(--bg-elevated)', color: 'var(--text-primary)' }}
+            >
+              {strings.topBar.prodEnvironment}
+            </option>
           </select>
         </div>
 

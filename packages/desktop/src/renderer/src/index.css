@@ -2,59 +2,74 @@
 @import '@fontsource/jetbrains-mono/index.css';
 @import 'tailwindcss';
 
-:root {
+:root,
+:root[data-theme='dark'] {
   /* Surfaces */
-  --bg-base: #ffffff;
-  --bg-subtle: #f6f7f9;
-  --bg-muted: #edeff3;
-  --bg-elevated: #ffffff;
-  --bg-overlay: rgba(15, 17, 21, 0.45);
+  --bg-base: #0f1117; /* app shell, request editor area */
+  --bg-surface: #161922; /* sidebar, response panel, toolbars, tab bar */
+  --bg-elevated: #1e222e; /* menus, modals, popovers, tooltips, command palette */
+  --bg-hover: #1e222e; /* row hover on base/surface */
+  --bg-active: #2a2f3d; /* hover/pressed on elevated surfaces, pressed rows */
+  --bg-input: #0f1117; /* text inputs, selects */
+  --bg-overlay: rgba(0, 0, 0, 0.6); /* modal backdrop */
 
   /* Borders */
-  --border: #e1e4ea;
-  --border-strong: #c9ced8;
+  --border: #2a2f3d; /* dividers, splitters, panel edges */
+  --border-strong: #6b7280; /* input and control borders (3:1 required) */
 
   /* Text */
-  --text-primary: #14171f;
-  --text-secondary: #4a5162;
-  --text-muted: #6b7384;
-  --text-disabled: #9aa1b0;
+  --text-primary: #f3f4f6;
+  --text-secondary: #d1d5db;
+  --text-muted: #9ca3af; /* file sizes, timestamps, placeholders */
+  --text-disabled: #6b7280; /* disabled controls only, exempt from AA */
 
   /* Accent */
-  --accent: #2f5bea;
-  --accent-hover: #2449c4;
-  --accent-subtle: #e8eeff;
-  --accent-fg: #ffffff;
-  --focus-ring: #2f5bea;
+  --accent: #06b6d4; /* focus ring, active tab underline, icons, markers */
+  --accent-strong: #06b6d4; /* primary button fill, accent text and links */
+  --accent-hover: #0891b2; /* primary button hover */
+  --accent-subtle: rgba(6, 182, 212, 0.16); /* selected row background */
+  --accent-fg: #0f1117; /* text on --accent-strong (dark text, not white) */
+  --focus-ring: #06b6d4;
 
-  /* Semantics */
-  --success: #1a7f4b;
-  --success-subtle: #e4f5ec;
-  --warning: #9a6700;
-  --warning-subtle: #fff4d6;
-  --danger: #c62f3e;
-  --danger-subtle: #fde8ea;
-  --info: #0b6bcb;
-  --info-subtle: #e3f0fd;
+  /* Semantic tokens */
+  --success: #10b981;
+  --success-mark: #10b981;
+  --success-subtle: rgba(16, 185, 129, 0.14);
+  --warning: #f59e0b;
+  --warning-mark: #f59e0b;
+  --warning-subtle: rgba(245, 158, 11, 0.14);
+  --info: #60a5fa;
+  --info-mark: #3b82f6;
+  --info-subtle: rgba(59, 130, 246, 0.16);
+  --danger: #f87171;
+  --danger-mark: #ef4444;
+  --danger-subtle: rgba(239, 68, 68, 0.14);
 
-  /* HTTP Methods */
-  --method-get: #1a7f4b;
-  --method-post: #9a5b00;
-  --method-put: #2f5bea;
-  --method-patch: #7a3fd1;
-  --method-delete: #c62f3e;
-  --method-head: #0e7c86;
-  --method-options: #6b7384;
+  --danger-solid: #dc2626; /* destructive button fill, white text */
+  --danger-solid-hover: #b91c1c;
+
+  --git-modified: #eab308;
+  --git-staged: #22c55e;
+  --git-untracked: #818cf8;
+
+  /* HTTP Method Tokens */
+  --method-get: var(--success);
+  --method-post: var(--warning);
+  --method-put: var(--info);
+  --method-patch: var(--info);
+  --method-delete: var(--danger);
+  --method-head: var(--text-muted);
+  --method-options: var(--text-muted);
 
   /* Syntax Highlighting */
-  --syntax-key: #1f4fbf;
-  --syntax-string: #1a7f4b;
-  --syntax-number: #9a5b00;
-  --syntax-bool: #7a3fd1;
-  --syntax-punct: #6b7384;
-  --syntax-comment: #6b7384;
-  --var-known: #0e7c86;
-  --var-unknown: #c62f3e;
+  --syntax-key: #22d3ee;
+  --syntax-string: #34d399;
+  --syntax-number: #fbbf24;
+  --syntax-bool: #818cf8;
+  --syntax-punct: #9ca3af;
+  --syntax-comment: #9ca3af;
+  --var-known: #22d3ee;
+  --var-unknown: #f87171;
 
   /* Sizing & Spacing */
   --space-0-5: 2px;
@@ -72,7 +87,7 @@
   --radius-full: 999px;
 
   /* Elevation */
-  --shadow-elevation: 0 4px 16px rgba(0, 0, 0, 0.12);
+  --shadow-elevation: 0 4px 16px rgba(0, 0, 0, 0.5);
 
   /* Fonts */
   --font-ui: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
@@ -93,54 +108,113 @@
   --line-xl: 28px;
 }
 
-:root[data-theme='dark'] {
-  --bg-base: #0f1115;
-  --bg-subtle: #151820;
-  --bg-muted: #1d212b;
-  --bg-elevated: #1a1e27;
-  --bg-overlay: rgba(0, 0, 0, 0.6);
+:root[data-theme='light'] {
+  /* Surfaces */
+  --bg-base: #f9fafb;
+  --bg-surface: #ffffff;
+  --bg-elevated: #f3f4f6;
+  --bg-hover: #f3f4f6;
+  --bg-active: #e5e7eb;
+  --bg-input: #ffffff;
+  --bg-overlay: rgba(17, 24, 39, 0.45);
 
-  --border: #2a2f3b;
-  --border-strong: #3a4150;
+  /* Borders */
+  --border: #e5e7eb;
+  --border-strong: #8a919e;
 
-  --text-primary: #e8eaf0;
-  --text-secondary: #a9b0bf;
-  --text-muted: #8a92a3;
-  --text-disabled: #5b6272;
+  /* Text */
+  --text-primary: #111827;
+  --text-secondary: #4b5563;
+  --text-muted: #6b7280;
+  --text-disabled: #9ca3af;
 
-  --accent: #6c8cff;
-  --accent-hover: #8aa3ff;
-  --accent-subtle: #1e2745;
-  --accent-fg: #0f1115;
-  --focus-ring: #8aa3ff;
+  /* Accent */
+  --accent: #0891b2;
+  --accent-strong: #0e7490;
+  --accent-hover: #155e75;
+  --accent-subtle: #cffafe;
+  --accent-fg: #ffffff;
+  --focus-ring: #0891b2;
 
-  --success: #4cc38a;
-  --success-subtle: #12281e;
-  --warning: #e3b341;
-  --warning-subtle: #2d2410;
-  --danger: #ff6b7a;
-  --danger-subtle: #2e1519;
-  --info: #5ab0ff;
-  --info-subtle: #10243a;
+  /* Semantic tokens */
+  --success: #047857;
+  --success-mark: #10b981;
+  --success-subtle: #ecfdf5;
+  --warning: #92400e;
+  --warning-mark: #f59e0b;
+  --warning-subtle: #fffbeb;
+  --info: #1d4ed8;
+  --info-mark: #3b82f6;
+  --info-subtle: #eff6ff;
+  --danger: #b91c1c;
+  --danger-mark: #ef4444;
+  --danger-subtle: #fef2f2;
 
-  --method-get: #4cc38a;
-  --method-post: #f0a040;
-  --method-put: #6c8cff;
-  --method-patch: #b28cff;
-  --method-delete: #ff6b7a;
-  --method-head: #4cc9d6;
-  --method-options: #8a92a3;
+  --danger-solid: #b91c1c;
+  --danger-solid-hover: #991b1b;
 
-  --syntax-key: #8aa3ff;
-  --syntax-string: #4cc38a;
-  --syntax-number: #f0a040;
-  --syntax-bool: #b28cff;
-  --syntax-punct: #8a92a3;
-  --syntax-comment: #8a92a3;
-  --var-known: #4cc9d6;
-  --var-unknown: #ff6b7a;
+  --git-modified: #854d0e;
+  --git-staged: #166534;
+  --git-untracked: #4f46e5;
 
-  --shadow-elevation: 0 4px 16px rgba(0, 0, 0, 0.5);
+  /* Syntax Highlighting */
+  --syntax-key: #0e7490;
+  --syntax-string: #047857;
+  --syntax-number: #92400e;
+  --syntax-bool: #4f46e5;
+  --syntax-punct: #6b7280;
+  --syntax-comment: #6b7280;
+  --var-known: #0e7490;
+  --var-unknown: #b91c1c;
+
+  /* Elevation */
+  --shadow-elevation: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+@theme {
+  --color-base: var(--bg-base);
+  --color-surface: var(--bg-surface);
+  --color-elevated: var(--bg-elevated);
+  --color-hover: var(--bg-hover);
+  --color-active: var(--bg-active);
+  --color-input: var(--bg-input);
+  --color-overlay: var(--bg-overlay);
+
+  --color-line: var(--border);
+  --color-line-strong: var(--border-strong);
+
+  --color-content: var(--text-primary);
+  --color-content-secondary: var(--text-secondary);
+  --color-content-muted: var(--text-muted);
+  --color-content-disabled: var(--text-disabled);
+
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-subtle: var(--accent-subtle);
+  --color-accent-fg: var(--accent-fg);
+
+  --color-success: var(--success);
+  --color-success-mark: var(--success-mark);
+  --color-success-subtle: var(--success-subtle);
+
+  --color-warning: var(--warning);
+  --color-warning-mark: var(--warning-mark);
+  --color-warning-subtle: var(--warning-subtle);
+
+  --color-info: var(--info);
+  --color-info-mark: var(--info-mark);
+  --color-info-subtle: var(--info-subtle);
+
+  --color-danger: var(--danger);
+  --color-danger-mark: var(--danger-mark);
+  --color-danger-subtle: var(--danger-subtle);
+  --color-danger-solid: var(--danger-solid);
+  --color-danger-solid-hover: var(--danger-solid-hover);
+
+  --color-git-modified: var(--git-modified);
+  --color-git-staged: var(--git-staged);
+  --color-git-untracked: var(--git-untracked);
 }
 
 html,
@@ -180,7 +254,7 @@ code,
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--border-strong);
+  background: var(--border);
   border-radius: var(--radius-sm);
   border: 2px solid var(--bg-base);
 }

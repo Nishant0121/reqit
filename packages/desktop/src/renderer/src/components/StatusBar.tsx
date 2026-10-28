@@ -19,7 +19,7 @@ export function StatusBar({
     <footer
       className="h-[24px] px-3 flex items-center justify-between border-t text-[11px] leading-[16px] select-none shrink-0"
       style={{
-        backgroundColor: 'var(--bg-subtle)',
+        backgroundColor: 'var(--bg-surface)',
         borderColor: 'var(--border)',
         color: 'var(--text-muted)',
       }}

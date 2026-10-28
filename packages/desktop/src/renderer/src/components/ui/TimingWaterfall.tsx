@@ -8,11 +8,11 @@ export interface TimingWaterfallProps {
 
 export function TimingWaterfall({ timing, totalMs }: TimingWaterfallProps): React.JSX.Element {
   const phases = [
-    { label: 'DNS lookup', ms: timing.dnsMs, color: 'var(--method-head)' },
-    { label: 'TCP handshake', ms: timing.tcpMs, color: 'var(--method-put)' },
-    { label: 'TLS negotiation', ms: timing.tlsMs, color: 'var(--method-patch)' },
-    { label: 'Time to first byte (TTFB)', ms: timing.ttfbMs, color: 'var(--method-post)' },
-    { label: 'Content download', ms: timing.downloadMs, color: 'var(--method-get)' },
+    { label: 'DNS lookup', ms: timing.dnsMs, color: 'var(--info-mark)' },
+    { label: 'TCP handshake', ms: timing.tcpMs, color: 'var(--accent)' },
+    { label: 'TLS negotiation', ms: timing.tlsMs, color: 'var(--git-untracked)' },
+    { label: 'Time to first byte (TTFB)', ms: timing.ttfbMs, color: 'var(--warning-mark)' },
+    { label: 'Content download', ms: timing.downloadMs, color: 'var(--success-mark)' },
   ];
 
   const safeTotal = totalMs > 0 ? totalMs : 1;
@@ -47,7 +47,7 @@ export function TimingWaterfall({ timing, totalMs }: TimingWaterfallProps): Reac
               </span>
               <div
                 className="w-full h-3 rounded-[2px] overflow-hidden"
-                style={{ backgroundColor: 'var(--bg-muted)' }}
+                style={{ backgroundColor: 'var(--bg-active)' }}
               >
                 <div
                   className="h-full rounded-[2px] transition-panel"

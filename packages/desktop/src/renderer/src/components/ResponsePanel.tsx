@@ -174,13 +174,13 @@ export function ResponsePanel({
     <div
       id="response-result"
       className="flex flex-col h-full overflow-hidden"
-      style={{ backgroundColor: 'var(--bg-base)' }}
+      style={{ backgroundColor: 'var(--bg-surface)' }}
     >
       {/* Response Header Strip (Section 6.6) */}
       <div
         className="flex items-center justify-between px-3 h-[36px] border-b select-none shrink-0"
         style={{
-          backgroundColor: 'var(--bg-subtle)',
+          backgroundColor: 'var(--bg-surface)',
           borderColor: 'var(--border)',
         }}
       >
@@ -251,7 +251,7 @@ export function ResponsePanel({
               onClick={() => setFormatMode('pretty')}
               className="px-2 py-0.5 rounded-[4px] font-medium transition-fast app-focus-ring"
               style={{
-                backgroundColor: formatMode === 'pretty' ? 'var(--bg-muted)' : 'transparent',
+                backgroundColor: formatMode === 'pretty' ? 'var(--bg-active)' : 'transparent',
                 color: formatMode === 'pretty' ? 'var(--text-primary)' : 'var(--text-muted)',
               }}
             >
@@ -262,7 +262,7 @@ export function ResponsePanel({
               onClick={() => setFormatMode('raw')}
               className="px-2 py-0.5 rounded-[4px] font-medium transition-fast app-focus-ring"
               style={{
-                backgroundColor: formatMode === 'raw' ? 'var(--bg-muted)' : 'transparent',
+                backgroundColor: formatMode === 'raw' ? 'var(--bg-active)' : 'transparent',
                 color: formatMode === 'raw' ? 'var(--text-primary)' : 'var(--text-muted)',
               }}
             >
@@ -291,7 +291,7 @@ export function ResponsePanel({
             <pre
               className="p-3 font-mono text-[12px] leading-relaxed select-text outline-none rounded-[4px] border whitespace-pre-wrap break-all"
               style={{
-                backgroundColor: 'var(--bg-subtle)',
+                backgroundColor: 'var(--bg-surface)',
                 borderColor: 'var(--border)',
                 color: 'var(--text-primary)',
               }}
@@ -306,7 +306,7 @@ export function ResponsePanel({
             <div
               className="relative flex items-center h-[28px] max-w-sm rounded-[4px] border px-2 text-[12px]"
               style={{
-                backgroundColor: 'var(--bg-base)',
+                backgroundColor: 'var(--bg-input)',
                 borderColor: 'var(--border-strong)',
               }}
             >

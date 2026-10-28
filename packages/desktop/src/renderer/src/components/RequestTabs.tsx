@@ -32,7 +32,7 @@ export function RequestTabs({
       aria-label="Request tabs"
       className="flex items-center h-[32px] border-b select-none overflow-x-auto shrink-0"
       style={{
-        backgroundColor: 'var(--bg-subtle)',
+        backgroundColor: 'var(--bg-surface)',
         borderColor: 'var(--border)',
       }}
     >
@@ -79,7 +79,7 @@ export function RequestTabs({
                 e.stopPropagation();
                 onCloseTab(tab.id);
               }}
-              className="ml-1.5 p-0.5 rounded-[2px] opacity-0 group-hover:opacity-100 hover:bg-[var(--bg-muted)] transition-fast shrink-0"
+              className="ml-1.5 p-0.5 rounded-[2px] opacity-0 group-hover:opacity-100 hover:bg-[var(--bg-hover)] transition-fast shrink-0"
               style={{ color: 'var(--text-muted)' }}
               title={strings.tabs.closeTab}
               aria-label={strings.tabs.closeTab}
@@ -94,7 +94,7 @@ export function RequestTabs({
       <button
         type="button"
         onClick={onNewTab}
-        className="flex items-center justify-center w-[32px] h-full hover:bg-[var(--bg-muted)] transition-fast app-focus-ring"
+        className="flex items-center justify-center w-[32px] h-full hover:bg-[var(--bg-hover)] transition-fast app-focus-ring"
         style={{ color: 'var(--text-muted)' }}
         title={strings.tabs.newTab}
         aria-label={strings.tabs.newTab}

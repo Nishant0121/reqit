@@ -16,14 +16,13 @@ export function getStoredTheme(): ThemeMode {
 
 export function applyTheme(mode: ThemeMode): void {
   const root = document.documentElement;
-  const isDark =
-    mode === 'dark' ||
-    (mode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  const prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+  const isLight = mode === 'light' || (mode === 'system' && prefersLight);
 
-  if (isDark) {
-    root.setAttribute('data-theme', 'dark');
+  if (isLight) {
+    root.setAttribute('data-theme', 'light');
   } else {
-    root.removeAttribute('data-theme');
+    root.setAttribute('data-theme', 'dark');
   }
 
   try {
@@ -37,7 +36,7 @@ export function initTheme(): ThemeMode {
   const mode = getStoredTheme();
   applyTheme(mode);
 
-  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+  window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => {
     if (getStoredTheme() === 'system') {
       applyTheme('system');
     }
