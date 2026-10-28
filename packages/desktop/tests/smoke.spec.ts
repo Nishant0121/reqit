@@ -1,5 +1,7 @@
 import * as http from 'node:http';
 import * as path from 'node:path';
+import * as fs from 'node:fs';
+import * as os from 'node:os';
 import { fileURLToPath } from 'node:url';
 import {
   _electron as electron,
@@ -186,7 +188,8 @@ test.describe('Desktop App Shell Smoke Test (Phase 5)', () => {
     await expect(urlInput).toHaveValue('http://127.0.0.1/{{baseUrl}}');
 
     // Type text after variable and verify trailing text is fully visible (not hidden by opacity-0)
-    await urlInput.pressSequentially('/api/v1/users');
+    await page.keyboard.press('End');
+    await page.keyboard.type('/api/v1/users');
     await expect(urlInput).toHaveValue('http://127.0.0.1/{{baseUrl}}/api/v1/users');
     const trailingSpan = page.locator('span:has-text("/api/v1/users")');
     await expect(trailingSpan).toBeVisible();
@@ -353,5 +356,110 @@ test.describe('Desktop App Shell Smoke Test (Phase 5)', () => {
     await expect(imgPreview).toBeVisible();
     const imgSrc = await imgPreview.getAttribute('src');
     expect(imgSrc).toContain('data:image/png;base64,');
+  });
+
+  test('verifies Phase 9 collection and request management on disk', async () => {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'reqit-smoke-col-'));
+    try {
+      // 1. Create collection on disk via reqitApi
+      const tree = await page.evaluate(async dir => {
+        return window.reqitApi.createCollection({ name: 'Smoke Collection', targetDir: dir });
+      }, tmpDir);
+      expect(tree).toBeTruthy();
+      expect(tree?.collection.name).toBe('Smoke Collection');
+
+      // Verify reqit.yaml was created on disk
+      expect(fs.existsSync(path.join(tmpDir, 'reqit.yaml'))).toBe(true);
+
+      // 2. Open collection
+      const opened = await page.evaluate(async dir => {
+        return window.reqitApi.openCollection(dir);
+      }, tmpDir);
+      expect(opened).toBeTruthy();
+      expect(opened?.rootPath).toBe(path.resolve(tmpDir));
+
+      // 3. Create request on disk
+      const reqNode = await page.evaluate(async dir => {
+        return window.reqitApi.createRequest({ parentDir: dir, name: 'Get Users' });
+      }, tmpDir);
+      expect(reqNode).toBeTruthy();
+      expect(reqNode.name).toBe('Get Users');
+
+      // Verify yaml file created on disk
+      expect(fs.existsSync(reqNode.path)).toBe(true);
+
+      // 4. Create folder on disk
+      const folderNode = await page.evaluate(async dir => {
+        return window.reqitApi.createFolder({ parentDir: dir, name: 'Auth' });
+      }, tmpDir);
+      expect(folderNode).toBeTruthy();
+      expect(fs.existsSync(path.join(folderNode.path, 'folder.yaml'))).toBe(true);
+
+      // 5. Rename request
+      const renameRes = await page.evaluate(async p => {
+        return window.reqitApi.renameItem({ itemPath: p, newName: 'Fetch Users List' });
+      }, reqNode.path);
+      expect(renameRes.newName).toBe('Fetch Users List');
+      expect(fs.existsSync(renameRes.newPath)).toBe(true);
+      expect(fs.existsSync(reqNode.path)).toBe(false);
+
+      // 6. Move request into folder
+      const moveRes = await page.evaluate(
+        async ({ src, target }) => {
+          return window.reqitApi.moveItem({ sourcePath: src, targetDirPath: target });
+        },
+        { src: renameRes.newPath, target: folderNode.path },
+      );
+      expect(fs.existsSync(moveRes.newPath)).toBe(true);
+
+      // 7. Save modified request to disk
+      await page.evaluate(async filePath => {
+        return window.reqitApi.saveRequest({
+          filePath,
+          request: {
+            version: 1,
+            name: 'Fetch Users List',
+            method: 'POST',
+            url: 'https://httpbin.org/post',
+          },
+        });
+      }, moveRes.newPath);
+
+      const content = fs.readFileSync(moveRes.newPath, 'utf-8');
+      expect(content).toContain('method: POST');
+      expect(content).toContain('https://httpbin.org/post');
+
+      // 8. Delete request
+      const deleted = await page.evaluate(async p => {
+        return window.reqitApi.deleteItem(p);
+      }, moveRes.newPath);
+      expect(deleted).toBe(true);
+      expect(fs.existsSync(moveRes.newPath)).toBe(false);
+    } finally {
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    }
+  });
+
+  test('verifies live method badge update in sidebar', async () => {
+    const methodSelect = page.locator('#method-select');
+    await expect(methodSelect).toBeVisible();
+
+    // Change method to POST
+    await methodSelect.selectOption('POST');
+
+    // Sidebar should reflect POST immediately
+    const sidebar = page.locator('aside');
+    const postBadge = sidebar.locator('span:has-text("POST")').first();
+    await expect(postBadge).toBeVisible();
+
+    // Change method to DELETE
+    await methodSelect.selectOption('DELETE');
+    const deleteBadge = sidebar.locator('span:has-text("DEL")').first();
+    await expect(deleteBadge).toBeVisible();
+
+    // Revert back to GET
+    await methodSelect.selectOption('GET');
+    const getBadge = sidebar.locator('span:has-text("GET")').first();
+    await expect(getBadge).toBeVisible();
   });
 });

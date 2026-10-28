@@ -1,4 +1,10 @@
-import type { RequestFile, ResponseResult, SendOptions } from '@reqit/core';
+import type {
+  RequestFile,
+  ResponseResult,
+  SendOptions,
+  CollectionTree,
+  CollectionTreeNode,
+} from '@reqit/core';
 
 export interface SendRequestPayload {
   requestId: string;
@@ -26,6 +32,42 @@ export interface SaveFilePayload {
   isBase64?: boolean;
 }
 
+export interface CreateCollectionPayload {
+  targetDir?: string;
+  name: string;
+}
+
+export interface CreateRequestPayload {
+  parentDir: string;
+  name: string;
+  data?: Partial<RequestFile>;
+}
+
+export interface CreateFolderPayload {
+  parentDir: string;
+  name: string;
+}
+
+export interface RenameItemPayload {
+  itemPath: string;
+  newName: string;
+}
+
+export interface MoveItemPayload {
+  sourcePath: string;
+  targetDirPath: string;
+}
+
+export interface ReorderFolderPayload {
+  folderPath: string;
+  order: string[];
+}
+
+export interface SaveRequestPayload {
+  filePath: string;
+  request: RequestFile;
+}
+
 export interface IpcChannels {
   'app:getVersion': () => Promise<string>;
   'app:getTestUrl': () => Promise<string>;
@@ -34,6 +76,21 @@ export interface IpcChannels {
   'dialog:openFile': () => Promise<string | null>;
   'dialog:saveFile': (payload: SaveFilePayload) => Promise<string | null>;
   'response:readBodyChunk': (payload: ReadBodyChunkPayload) => Promise<ReadBodyChunkResult>;
+  'collection:open': (folderPath?: string) => Promise<CollectionTree | null>;
+  'collection:create': (payload: CreateCollectionPayload) => Promise<CollectionTree | null>;
+  'collection:getRecent': () => Promise<string[]>;
+  'collection:createRequest': (payload: CreateRequestPayload) => Promise<CollectionTreeNode>;
+  'collection:createFolder': (payload: CreateFolderPayload) => Promise<CollectionTreeNode>;
+  'collection:renameItem': (
+    payload: RenameItemPayload,
+  ) => Promise<{ newPath: string; newName: string }>;
+  'collection:duplicateRequest': (sourcePath: string) => Promise<CollectionTreeNode>;
+  'collection:deleteItem': (itemPath: string) => Promise<boolean>;
+  'collection:moveItem': (
+    payload: MoveItemPayload,
+  ) => Promise<{ newPath: string; newSlug: string }>;
+  'collection:reorder': (payload: ReorderFolderPayload) => Promise<boolean>;
+  'collection:saveRequest': (payload: SaveRequestPayload) => Promise<boolean>;
 }
 
 export type IpcChannelName = keyof IpcChannels;
@@ -56,4 +113,26 @@ export interface ReqitApi {
   saveFileDialog: (payload: SaveFilePayload) => Promise<string | null>;
   /** Reads a slice of a large response file on disk */
   readBodyChunk: (payload: ReadBodyChunkPayload) => Promise<ReadBodyChunkResult>;
+  /** Opens a collection folder or launches openDirectory dialog */
+  openCollection: (folderPath?: string) => Promise<CollectionTree | null>;
+  /** Creates a new collection directory on disk */
+  createCollection: (payload: CreateCollectionPayload) => Promise<CollectionTree | null>;
+  /** Returns list of recently opened collection directory paths */
+  getRecentCollections: () => Promise<string[]>;
+  /** Creates a new request file in parentDir */
+  createRequest: (payload: CreateRequestPayload) => Promise<CollectionTreeNode>;
+  /** Creates a new folder in parentDir with folder.yaml */
+  createFolder: (payload: CreateFolderPayload) => Promise<CollectionTreeNode>;
+  /** Renames a request or folder */
+  renameItem: (payload: RenameItemPayload) => Promise<{ newPath: string; newName: string }>;
+  /** Duplicates an existing request file */
+  duplicateRequest: (sourcePath: string) => Promise<CollectionTreeNode>;
+  /** Moves an item to trash (or unlinks if trash unavailable) */
+  deleteItem: (itemPath: string) => Promise<boolean>;
+  /** Moves an item to a target directory */
+  moveItem: (payload: MoveItemPayload) => Promise<{ newPath: string; newSlug: string }>;
+  /** Reorders children of a folder by updating folder.yaml */
+  reorderFolder: (payload: ReorderFolderPayload) => Promise<boolean>;
+  /** Saves a request directly to its YAML file */
+  saveRequest: (payload: SaveRequestPayload) => Promise<boolean>;
 }

@@ -1,8 +1,9 @@
 import { create } from 'zustand';
-import type { HttpMethod, ResponseResult } from '@reqit/core';
+import type { HttpMethod, ResponseResult, RequestFile } from '@reqit/core';
 import type { KeyValueRow } from '../components/ui/KeyValueTable';
 import type { AuthType, BodyType } from '../components/RequestPanel';
 import type { TabItemData } from '../components/RequestTabs';
+import { requestFileToDraft } from '../lib/request-mapper';
 
 export interface MultipartRow {
   id: string;
@@ -16,6 +17,7 @@ export interface MultipartRow {
 
 export interface RequestDraft {
   id: string;
+  filePath?: string;
   name: string;
   method: HttpMethod;
   url: string;
@@ -33,6 +35,8 @@ export interface RequestDraft {
   bodyFormRows: KeyValueRow[];
   bodyMultipartRows: MultipartRow[];
   isDirty?: boolean;
+  parseError?: string;
+  rawRequest?: RequestFile;
 }
 
 export interface RequestState {
@@ -47,6 +51,9 @@ export interface RequestState {
 
   createRequest: (initialUrl?: string) => string;
   openRequest: (id: string) => void;
+  openDraftFromFile: (filePath: string, file: RequestFile) => void;
+  onItemRenamed: (oldPath: string, newPath: string, newName: string) => void;
+  onItemDeleted: (deletedPath: string) => void;
   closeTab: (id: string) => void;
   updateActiveDraft: (updates: Partial<RequestDraft>) => void;
   saveActiveDraft: () => void;
@@ -146,6 +153,90 @@ export const useRequestStore = create<RequestState>((set, get) => ({
           ? state.tabs
           : [...state.tabs, { id, name: draft.name, method: draft.method }],
       };
+    });
+  },
+
+  openDraftFromFile: (filePath: string, file: RequestFile) => {
+    const existingDraft = get().drafts[filePath];
+    const draft =
+      existingDraft && existingDraft.isDirty
+        ? existingDraft
+        : requestFileToDraft(file, filePath, filePath);
+
+    set(state => {
+      const tabExists = state.tabs.some(t => t.id === filePath);
+      return {
+        drafts: { ...state.drafts, [filePath]: draft },
+        tabs: tabExists
+          ? state.tabs
+          : [...state.tabs, { id: filePath, name: draft.name, method: draft.method }],
+        activeRequestId: filePath,
+        result: null,
+        error: null,
+      };
+    });
+  },
+
+  onItemRenamed: (oldPath: string, newPath: string, newName: string) => {
+    const { drafts, tabs, activeRequestId } = get();
+    const existing = drafts[oldPath];
+    if (!existing) return;
+
+    const newDrafts = { ...drafts };
+    delete newDrafts[oldPath];
+    newDrafts[newPath] = {
+      ...existing,
+      id: newPath,
+      filePath: newPath,
+      name: newName,
+    };
+
+    const newTabs = tabs.map(t => {
+      if (t.id === oldPath) {
+        return { ...t, id: newPath, name: newName };
+      }
+      return t;
+    });
+
+    set({
+      drafts: newDrafts,
+      tabs: newTabs,
+      activeRequestId: activeRequestId === oldPath ? newPath : activeRequestId,
+    });
+  },
+
+  onItemDeleted: (deletedPath: string) => {
+    const { drafts, tabs, activeRequestId } = get();
+    const nextTabs = tabs.filter(
+      t =>
+        t.id !== deletedPath &&
+        !t.id.startsWith(deletedPath + '/') &&
+        !t.id.startsWith(deletedPath + '\\'),
+    );
+    const newDrafts = { ...drafts };
+    Object.keys(newDrafts).forEach(k => {
+      if (
+        k === deletedPath ||
+        k.startsWith(deletedPath + '/') ||
+        k.startsWith(deletedPath + '\\')
+      ) {
+        delete newDrafts[k];
+      }
+    });
+
+    let nextActiveId = activeRequestId;
+    if (
+      activeRequestId === deletedPath ||
+      activeRequestId.startsWith(deletedPath + '/') ||
+      activeRequestId.startsWith(deletedPath + '\\')
+    ) {
+      nextActiveId = nextTabs.length > 0 ? (nextTabs[nextTabs.length - 1]?.id ?? '') : '';
+    }
+
+    set({
+      drafts: newDrafts,
+      tabs: nextTabs,
+      activeRequestId: nextActiveId,
     });
   },
 

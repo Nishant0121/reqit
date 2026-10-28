@@ -1,11 +1,19 @@
 import { app, ipcMain, dialog } from 'electron';
 import fs from 'node:fs';
 import { sendRequest } from '@reqit/core';
+import { fileService } from './services/file-service.js';
 import type {
   SendRequestPayload,
   ReadBodyChunkPayload,
   ReadBodyChunkResult,
   SaveFilePayload,
+  CreateCollectionPayload,
+  CreateRequestPayload,
+  CreateFolderPayload,
+  RenameItemPayload,
+  MoveItemPayload,
+  ReorderFolderPayload,
+  SaveRequestPayload,
 } from '../shared/ipc-types.js';
 
 const activeRequests = new Map<string, AbortController>();
@@ -134,5 +142,60 @@ export function registerIpcHandlers(): void {
       return true;
     }
     return false;
+  });
+
+  // 8. collection:open
+  ipcMain.handle('collection:open', async (_event, folderPath?: string) => {
+    return fileService.openCollection(folderPath);
+  });
+
+  // 9. collection:create
+  ipcMain.handle('collection:create', async (_event, payload: CreateCollectionPayload) => {
+    return fileService.createCollection(payload);
+  });
+
+  // 10. collection:getRecent
+  ipcMain.handle('collection:getRecent', async () => {
+    return fileService.getRecentCollections();
+  });
+
+  // 11. collection:createRequest
+  ipcMain.handle('collection:createRequest', async (_event, payload: CreateRequestPayload) => {
+    return fileService.createRequest(payload);
+  });
+
+  // 12. collection:createFolder
+  ipcMain.handle('collection:createFolder', async (_event, payload: CreateFolderPayload) => {
+    return fileService.createFolder(payload);
+  });
+
+  // 13. collection:renameItem
+  ipcMain.handle('collection:renameItem', async (_event, payload: RenameItemPayload) => {
+    return fileService.renameItem(payload);
+  });
+
+  // 14. collection:duplicateRequest
+  ipcMain.handle('collection:duplicateRequest', async (_event, sourcePath: string) => {
+    return fileService.duplicateRequest(sourcePath);
+  });
+
+  // 15. collection:deleteItem
+  ipcMain.handle('collection:deleteItem', async (_event, itemPath: string) => {
+    return fileService.deleteItem(itemPath);
+  });
+
+  // 16. collection:moveItem
+  ipcMain.handle('collection:moveItem', async (_event, payload: MoveItemPayload) => {
+    return fileService.moveItem(payload);
+  });
+
+  // 17. collection:reorder
+  ipcMain.handle('collection:reorder', async (_event, payload: ReorderFolderPayload) => {
+    return fileService.reorderFolder(payload);
+  });
+
+  // 18. collection:saveRequest
+  ipcMain.handle('collection:saveRequest', async (_event, payload: SaveRequestPayload) => {
+    return fileService.saveRequest(payload);
   });
 }

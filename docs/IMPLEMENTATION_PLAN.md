@@ -224,22 +224,22 @@ This plan breaks the whole project into small phases. Each phase is meant to tak
 
 **Goal:** requests live as files in a folder.
 
-- [ ] `FileService` in main: open a collection folder, scan recursively, parse all request, folder, and collection files
-- [ ] "Open Collection" and "New Collection" actions (creates `reqit.yaml`)
-- [ ] Sidebar tree built from the folder structure, ordered by `folder.yaml` then alphabetically
-- [ ] Actions: new request, new folder, rename, duplicate, delete (to trash), move (drag and drop)
-- [ ] Slug generation for filenames, with collision handling (`create-user-2.yaml`)
-- [ ] Renaming changes `name` in the file and renames the file separately
-- [ ] Save writes through `serializeRequest` (Ctrl/Cmd+S)
-- [ ] Drag-and-drop reordering updates `folder.yaml` only
-- [ ] Show parse errors per file in the sidebar (red marker) without breaking the rest
-- [ ] Remember recent collections and reopen the last one at startup
+- [x] `FileService` in main: open a collection folder, scan recursively, parse all request, folder, and collection files
+- [x] "Open Collection" and "New Collection" actions (creates `reqit.yaml`)
+- [x] Sidebar tree built from the folder structure, ordered by `folder.yaml` then alphabetically
+- [x] Actions: new request, new folder, rename, duplicate, delete (to trash), move (drag and drop)
+- [x] Slug generation for filenames, with collision handling (`create-user-2.yaml`)
+- [x] Renaming changes `name` in the file and renames the file separately
+- [x] Save writes through `serializeRequest` (Ctrl/Cmd+S)
+- [x] Drag-and-drop reordering updates `folder.yaml` only
+- [x] Show parse errors per file in the sidebar (red marker) without breaking the rest
+- [x] Remember recent collections and reopen the last one at startup
 
 **Tests**
 
-- [ ] Create, rename, move, and delete leave the folder in a valid state
-- [ ] A corrupt file does not stop the collection from loading
-- [ ] Saving an untouched request produces no Git diff
+- [x] Create, rename, move, and delete leave the folder in a valid state
+- [x] A corrupt file does not stop the collection from loading
+- [x] Saving an untouched request produces no Git diff
 
 **Done when:** you can create a collection, add requests, restart the app, and everything is still there as plain YAML files.
 

@@ -44,6 +44,7 @@ export function UrlBar({
         }}
       >
         <select
+          id="method-select"
           value={method}
           onChange={e => onMethodChange(e.target.value as HttpMethod)}
           className="h-full pl-3 pr-7 text-[12px] font-mono font-bold uppercase bg-transparent outline-none cursor-pointer app-focus-ring appearance-none"

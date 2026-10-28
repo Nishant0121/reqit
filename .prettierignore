@@ -7,3 +7,4 @@ pnpm-lock.yaml
 .git/
 .reqit/
 **/tests/fixtures/**
+test_api/

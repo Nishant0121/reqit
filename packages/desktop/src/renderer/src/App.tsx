@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { TopBar } from './components/TopBar';
 import { Sidebar } from './components/Sidebar';
 import { RequestTabs } from './components/RequestTabs';
@@ -8,13 +8,16 @@ import { ResponsePanel } from './components/ResponsePanel';
 import { StatusBar } from './components/StatusBar';
 import { ToastContainer } from './components/ui/Toast';
 import { ShortcutsDialog } from './components/ShortcutsDialog';
+import { NewCollectionModal } from './components/NewCollectionModal';
 import { useAppStore } from './stores/appStore';
 import { useCollectionStore } from './stores/collectionStore';
 import { useRequestStore } from './stores/requestStore';
 import { matchesShortcut } from './lib/shortcuts';
 import { parseUrlQueryParams, syncUrlWithParams } from './lib/url-sync';
+import { draftToRequestFile } from './lib/request-mapper';
 import type { ThemeMode } from './lib/theme';
 import type { KeyValueRow } from './components/ui/KeyValueTable';
+import type { CollectionTreeNode } from '@reqit/core';
 
 const KNOWN_VARIABLES = ['baseUrl', 'token', 'userId', 'apiKey', 'env', 'apiVersion', 'port'];
 
@@ -40,8 +43,17 @@ export default function App(): React.JSX.Element {
     setShortcutsModalOpen,
   } = useAppStore();
 
+  const [newCollectionModalOpen, setNewCollectionModalOpen] = useState(false);
+
   // 2. Collection store
-  const { activeCollection } = useCollectionStore();
+  const {
+    currentTree,
+    activeCollection,
+    recentCollections,
+    loadCollection,
+    createCollection,
+    saveRequest: storeSaveRequest,
+  } = useCollectionStore();
 
   // 3. Request store
   const {
@@ -55,6 +67,7 @@ export default function App(): React.JSX.Element {
     historyCount,
     createRequest,
     openRequest,
+    openDraftFromFile,
     closeTab,
     updateActiveDraft,
     saveActiveDraft,
@@ -97,8 +110,13 @@ export default function App(): React.JSX.Element {
           updateActiveDraft({ url: testUrl });
         }
       });
+      window.reqitApi.getRecentCollections().then(recents => {
+        if (recents && recents.length > 0 && recents[0]) {
+          loadCollection(recents[0]);
+        }
+      });
     }
-  }, [setVersion, updateActiveDraft]);
+  }, [setVersion, updateActiveDraft, loadCollection]);
 
   // Theme toggle cycle: system -> light -> dark -> system
   const handleToggleTheme = () => {
@@ -125,13 +143,30 @@ export default function App(): React.JSX.Element {
   );
 
   // Save active request
-  const handleSave = useCallback(() => {
-    saveActiveDraft();
-    addToast({
-      type: 'success',
-      message: 'Request saved',
-    });
-  }, [saveActiveDraft, addToast]);
+  const handleSave = useCallback(async () => {
+    if (activeDraft.filePath) {
+      const reqFile = draftToRequestFile(activeDraft);
+      try {
+        await storeSaveRequest(activeDraft.filePath, reqFile);
+        saveActiveDraft();
+        addToast({
+          type: 'success',
+          message: `Saved ${activeDraft.name}`,
+        });
+      } catch (err: unknown) {
+        addToast({
+          type: 'error',
+          message: `Failed to save: ${err instanceof Error ? err.message : String(err)}`,
+        });
+      }
+    } else {
+      saveActiveDraft();
+      addToast({
+        type: 'success',
+        message: 'Request saved',
+      });
+    }
+  }, [activeDraft, storeSaveRequest, saveActiveDraft, addToast]);
 
   // Send request execution
   const handleSend = useCallback(async () => {
@@ -148,70 +183,8 @@ export default function App(): React.JSX.Element {
     setError(null);
     setResult(null);
 
-    // Build headers array (only enabled with names)
-    const finalHeaders = activeDraft.headers
-      .filter(row => row.enabled && row.key.trim() !== '')
-      .map(row => ({ name: row.key.trim(), value: row.value, enabled: true }));
-
-    // Prepare auth configuration
-    let authConfig = undefined;
-    if (activeDraft.authType === 'bearer' && activeDraft.bearerToken) {
-      authConfig = { type: 'bearer' as const, token: activeDraft.bearerToken };
-    } else if (
-      activeDraft.authType === 'basic' &&
-      (activeDraft.basicUser || activeDraft.basicPass)
-    ) {
-      authConfig = {
-        type: 'basic' as const,
-        username: activeDraft.basicUser,
-        password: activeDraft.basicPass,
-      };
-    } else if (activeDraft.authType === 'apiKey' && activeDraft.apiKeyName) {
-      authConfig = {
-        type: 'apikey' as const,
-        key: activeDraft.apiKeyName,
-        value: activeDraft.apiKeyValue,
-        in: activeDraft.apiKeyIn || ('header' as const),
-      };
-    }
-
-    // Prepare body payload based on type
-    let bodyPayload = undefined;
-    if (activeDraft.bodyType === 'json' || activeDraft.bodyType === 'text') {
-      if (activeDraft.bodyContent) {
-        bodyPayload = { type: activeDraft.bodyType, content: activeDraft.bodyContent };
-      }
-    } else if (activeDraft.bodyType === 'form') {
-      const enabledForm = (activeDraft.bodyFormRows || [])
-        .filter(r => r.enabled && r.key.trim() !== '')
-        .map(r => ({ name: r.key.trim(), value: r.value, enabled: true }));
-      if (enabledForm.length > 0) {
-        bodyPayload = { type: 'form' as const, form: enabledForm };
-      }
-    } else if (activeDraft.bodyType === 'multipart') {
-      const enabledMultipart = (activeDraft.bodyMultipartRows || [])
-        .filter(r => r.enabled && r.key.trim() !== '')
-        .map(r => ({
-          name: r.key.trim(),
-          value: r.value,
-          type: r.type,
-          isFile: r.type === 'file',
-          enabled: true,
-        }));
-      if (enabledMultipart.length > 0) {
-        bodyPayload = { type: 'multipart' as const, form: enabledMultipart };
-      }
-    }
-
-    const { requestId, promise } = window.reqitApi.sendRequest({
-      version: 1,
-      name: activeDraft.name,
-      method: activeDraft.method,
-      url: activeDraft.url,
-      headers: finalHeaders.length > 0 ? finalHeaders : undefined,
-      auth: authConfig,
-      body: bodyPayload,
-    });
+    const reqFile = draftToRequestFile(activeDraft);
+    const { requestId, promise } = window.reqitApi.sendRequest(reqFile);
 
     setActiveExecutionId(requestId);
 
@@ -307,7 +280,14 @@ export default function App(): React.JSX.Element {
         return;
       }
 
-      // 8. Shortcuts cheat sheet (Ctrl/Cmd + /)
+      // 8. Open collection (Ctrl/Cmd + O)
+      if (matchesShortcut(e, 'Ctrl+O')) {
+        e.preventDefault();
+        loadCollection();
+        return;
+      }
+
+      // 9. Shortcuts cheat sheet (Ctrl/Cmd + /)
       if (matchesShortcut(e, 'Ctrl+/')) {
         e.preventDefault();
         setShortcutsModalOpen(true);
@@ -327,7 +307,25 @@ export default function App(): React.JSX.Element {
     closeTab,
     activeRequestId,
     setShortcutsModalOpen,
+    loadCollection,
   ]);
+
+  // Request node selection handler
+  const handleSelectRequestNode = useCallback(
+    (node: CollectionTreeNode) => {
+      if (node.parseError) {
+        addToast({
+          type: 'error',
+          message: `YAML Parse Error in ${node.name}: ${node.parseError}`,
+        });
+        return;
+      }
+      if (node.request) {
+        openDraftFromFile(node.path, node.request);
+      }
+    },
+    [addToast, openDraftFromFile],
+  );
 
   // Split resize handle
   const handleSplitResize = (e: React.MouseEvent) => {
@@ -370,7 +368,12 @@ export default function App(): React.JSX.Element {
         theme={theme}
         onToggleTheme={handleToggleTheme}
         collectionName={activeCollection.name}
+        collectionPath={activeCollection.path}
         onOpenShortcuts={() => setShortcutsModalOpen(true)}
+        onOpenCollection={() => loadCollection()}
+        onNewCollection={() => setNewCollectionModalOpen(true)}
+        recentCollections={recentCollections}
+        onSelectRecentCollection={p => loadCollection(p)}
       />
 
       {/* 2. Middle Area: Sidebar + Main Content */}
@@ -380,8 +383,10 @@ export default function App(): React.JSX.Element {
           <Sidebar
             width={sidebarWidth}
             onWidthChange={setSidebarWidth}
-            requests={requestsList}
+            tree={currentTree}
             activeRequestId={activeRequestId}
+            onSelectRequestNode={handleSelectRequestNode}
+            requests={requestsList}
             onSelectRequest={openRequest}
             onNewRequest={() => createRequest()}
           />
@@ -490,6 +495,13 @@ export default function App(): React.JSX.Element {
       {/* 4. Global Modals and Toasts */}
       <ToastContainer toasts={toasts} onDismiss={removeToast} />
       <ShortcutsDialog isOpen={shortcutsModalOpen} onClose={() => setShortcutsModalOpen(false)} />
+      <NewCollectionModal
+        isOpen={newCollectionModalOpen}
+        onClose={() => setNewCollectionModalOpen(false)}
+        onCreate={async (name, targetDir) => {
+          await createCollection(name, targetDir);
+        }}
+      />
     </div>
   );
 }

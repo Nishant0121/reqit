@@ -1,6 +1,9 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   Folder,
+  FolderPlus,
+  FolderOpen,
+  ChevronDown,
   Sun,
   Moon,
   Laptop,
@@ -21,7 +24,12 @@ export interface TopBarProps {
   theme: ThemeMode;
   onToggleTheme: () => void;
   collectionName?: string;
+  collectionPath?: string;
   onOpenShortcuts?: () => void;
+  onOpenCollection?: () => void;
+  onNewCollection?: () => void;
+  recentCollections?: string[];
+  onSelectRecentCollection?: (path: string) => void;
 }
 
 export function TopBar({
@@ -32,8 +40,30 @@ export function TopBar({
   theme,
   onToggleTheme,
   collectionName = strings.topBar.defaultCollection,
+  collectionPath,
   onOpenShortcuts,
+  onOpenCollection,
+  onNewCollection,
+  recentCollections = [],
+  onSelectRecentCollection,
 }: TopBarProps): React.JSX.Element {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    if (menuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [menuOpen]);
+
   const getThemeIcon = () => {
     switch (theme) {
       case 'dark':
@@ -64,7 +94,7 @@ export function TopBar({
         borderColor: 'var(--border)',
       }}
     >
-      {/* Left: App Logo, Sidebar Toggle, Collection Name */}
+      {/* Left: App Logo, Sidebar Toggle, Collection Menu */}
       <div className="flex items-center gap-2">
         <button
           type="button"
@@ -90,12 +120,106 @@ export function TopBar({
           R
         </div>
 
-        <div
-          className="flex items-center gap-1.5 ml-1 text-[13px] font-medium"
-          style={{ color: 'var(--text-primary)' }}
-        >
-          <Folder className="w-4 h-4" style={{ color: 'var(--text-muted)' }} strokeWidth={1.75} />
-          <span>{collectionName}</span>
+        {/* Collection Dropdown Trigger */}
+        <div className="relative ml-1" ref={menuRef}>
+          <button
+            type="button"
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="flex items-center gap-1.5 px-2 py-1 rounded-[var(--radius-sm)] text-[13px] font-medium hover:bg-[var(--bg-hover)] transition-fast app-focus-ring"
+            style={{ color: 'var(--text-primary)' }}
+            title={collectionPath ? `${collectionName}\n${collectionPath}` : collectionName}
+          >
+            <Folder className="w-4 h-4" style={{ color: 'var(--accent)' }} strokeWidth={1.75} />
+            <span className="max-w-[180px] truncate">{collectionName}</span>
+            <ChevronDown
+              className="w-3.5 h-3.5"
+              style={{ color: 'var(--text-muted)' }}
+              strokeWidth={1.75}
+            />
+          </button>
+
+          {/* Collection Menu Dropdown */}
+          {menuOpen && (
+            <div
+              className="absolute left-0 mt-1 w-64 rounded-[var(--radius-md)] border shadow-lg py-1 z-50 text-[12px]"
+              style={{
+                backgroundColor: 'var(--bg-elevated)',
+                borderColor: 'var(--border-strong)',
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuOpen(false);
+                  onOpenCollection?.();
+                }}
+                className="w-full px-3 py-1.5 flex items-center gap-2 hover:bg-[var(--bg-hover)] text-left transition-fast"
+                style={{ color: 'var(--text-primary)' }}
+              >
+                <FolderOpen className="w-4 h-4 text-[var(--accent)]" />
+                <span className="flex-1 font-medium">Open Collection Folder...</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuOpen(false);
+                  onNewCollection?.();
+                }}
+                className="w-full px-3 py-1.5 flex items-center gap-2 hover:bg-[var(--bg-hover)] text-left transition-fast"
+                style={{ color: 'var(--text-primary)' }}
+              >
+                <FolderPlus className="w-4 h-4 text-[var(--accent)]" />
+                <span className="flex-1 font-medium">New Collection...</span>
+              </button>
+
+              {recentCollections.length > 0 && (
+                <>
+                  <div className="my-1 border-t" style={{ borderColor: 'var(--border)' }} />
+                  <div
+                    className="px-3 py-1 text-[11px] font-semibold tracking-wider uppercase"
+                    style={{ color: 'var(--text-muted)' }}
+                  >
+                    Recent Collections
+                  </div>
+                  {recentCollections.map(p => {
+                    const basename =
+                      p
+                        .replace(/[\\/]$/, '')
+                        .split(/[\\/]/)
+                        .pop() || p;
+                    const isCurrent = p === collectionPath;
+                    return (
+                      <button
+                        key={p}
+                        type="button"
+                        onClick={() => {
+                          setMenuOpen(false);
+                          onSelectRecentCollection?.(p);
+                        }}
+                        className="w-full px-3 py-1.5 flex flex-col items-start hover:bg-[var(--bg-hover)] text-left transition-fast"
+                        style={{
+                          backgroundColor: isCurrent ? 'var(--accent-subtle)' : 'transparent',
+                          color: isCurrent ? 'var(--accent)' : 'var(--text-primary)',
+                        }}
+                        title={p}
+                      >
+                        <span className="font-medium text-[12px] truncate max-w-full">
+                          {basename}
+                        </span>
+                        <span
+                          className="font-mono text-[10px] truncate max-w-full"
+                          style={{ color: 'var(--text-muted)' }}
+                        >
+                          {p}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </>
+              )}
+            </div>
+          )}
         </div>
       </div>
 

@@ -1,6 +1,16 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import type { RequestFile, ResponseResult, SendOptions } from '@reqit/core';
-import type { ReqitApi, SendRequestPayload } from '../shared/ipc-types.js';
+import type {
+  ReqitApi,
+  SendRequestPayload,
+  CreateCollectionPayload,
+  CreateRequestPayload,
+  CreateFolderPayload,
+  RenameItemPayload,
+  MoveItemPayload,
+  ReorderFolderPayload,
+  SaveRequestPayload,
+} from '../shared/ipc-types.js';
 
 const api: ReqitApi = {
   getVersion: (): Promise<string> => {
@@ -53,6 +63,39 @@ const api: ReqitApi = {
   },
   readBodyChunk: (payload: { filePath: string; startByte?: number; lengthBytes?: number }) => {
     return ipcRenderer.invoke('response:readBodyChunk', payload);
+  },
+  openCollection: (folderPath?: string) => {
+    return ipcRenderer.invoke('collection:open', folderPath);
+  },
+  createCollection: (payload: CreateCollectionPayload) => {
+    return ipcRenderer.invoke('collection:create', payload);
+  },
+  getRecentCollections: () => {
+    return ipcRenderer.invoke('collection:getRecent');
+  },
+  createRequest: (payload: CreateRequestPayload) => {
+    return ipcRenderer.invoke('collection:createRequest', payload);
+  },
+  createFolder: (payload: CreateFolderPayload) => {
+    return ipcRenderer.invoke('collection:createFolder', payload);
+  },
+  renameItem: (payload: RenameItemPayload) => {
+    return ipcRenderer.invoke('collection:renameItem', payload);
+  },
+  duplicateRequest: (sourcePath: string) => {
+    return ipcRenderer.invoke('collection:duplicateRequest', sourcePath);
+  },
+  deleteItem: (itemPath: string) => {
+    return ipcRenderer.invoke('collection:deleteItem', itemPath);
+  },
+  moveItem: (payload: MoveItemPayload) => {
+    return ipcRenderer.invoke('collection:moveItem', payload);
+  },
+  reorderFolder: (payload: ReorderFolderPayload) => {
+    return ipcRenderer.invoke('collection:reorder', payload);
+  },
+  saveRequest: (payload: SaveRequestPayload) => {
+    return ipcRenderer.invoke('collection:saveRequest', payload);
   },
 };
 
