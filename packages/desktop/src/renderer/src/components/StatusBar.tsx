@@ -26,13 +26,13 @@ export function StatusBar({
     >
       {/* Left: Branch and Environment */}
       <div className="flex items-center gap-4">
-        <div className="flex items-center gap-1 hover:text-[var(--text-primary)] transition-fast cursor-default">
-          <GitBranch className="w-3.5 h-3.5" strokeWidth={1.5} />
+        <div className="flex items-center gap-1.5 hover:text-[var(--text-primary)] transition-fast cursor-default">
+          <GitBranch className="w-4 h-4" strokeWidth={1.75} />
           <span>{branch}</span>
         </div>
 
-        <div className="flex items-center gap-1 hover:text-[var(--text-primary)] transition-fast cursor-default">
-          <Globe className="w-3.5 h-3.5" strokeWidth={1.5} />
+        <div className="flex items-center gap-1.5 hover:text-[var(--text-primary)] transition-fast cursor-default">
+          <Globe className="w-4 h-4" strokeWidth={1.75} />
           <span>{environmentName}</span>
         </div>
       </div>

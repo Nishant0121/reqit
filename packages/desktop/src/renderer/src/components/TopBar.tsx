@@ -37,11 +37,11 @@ export function TopBar({
   const getThemeIcon = () => {
     switch (theme) {
       case 'dark':
-        return <Moon className="w-4 h-4" strokeWidth={1.5} />;
+        return <Moon className="w-5 h-5" strokeWidth={1.75} />;
       case 'light':
-        return <Sun className="w-4 h-4" strokeWidth={1.5} />;
+        return <Sun className="w-5 h-5" strokeWidth={1.75} />;
       default:
-        return <Laptop className="w-4 h-4" strokeWidth={1.5} />;
+        return <Laptop className="w-5 h-5" strokeWidth={1.75} />;
     }
   };
 
@@ -58,7 +58,7 @@ export function TopBar({
 
   return (
     <header
-      className="h-[40px] px-3 flex items-center justify-between border-b select-none shrink-0"
+      className="h-[42px] px-3 flex items-center justify-between border-b select-none shrink-0"
       style={{
         backgroundColor: 'var(--bg-surface)',
         borderColor: 'var(--border)',
@@ -69,20 +69,19 @@ export function TopBar({
         <button
           type="button"
           onClick={onToggleSidebar}
-          className="w-7 h-7 inline-flex items-center justify-center rounded-[4px] hover:bg-[var(--bg-hover)] transition-fast app-focus-ring"
-          style={{ color: 'var(--text-secondary)' }}
+          className="w-8 h-8 inline-flex items-center justify-center rounded-[var(--radius-sm)] hover:bg-[var(--bg-hover)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-fast app-focus-ring"
           title={strings.topBar.toggleSidebar}
           aria-label={strings.topBar.toggleSidebar}
         >
           {sidebarOpen ? (
-            <PanelLeftClose className="w-4 h-4" strokeWidth={1.5} />
+            <PanelLeftClose className="w-5 h-5" strokeWidth={1.75} />
           ) : (
-            <PanelLeft className="w-4 h-4" strokeWidth={1.5} />
+            <PanelLeft className="w-5 h-5" strokeWidth={1.75} />
           )}
         </button>
 
         <div
-          className="w-5 h-5 rounded-[4px] flex items-center justify-center font-bold text-[11px] leading-none"
+          className="w-6 h-6 rounded-[var(--radius-sm)] flex items-center justify-center font-bold text-[12px] leading-none"
           style={{
             backgroundColor: 'var(--accent-strong)',
             color: 'var(--accent-fg)',
@@ -95,17 +94,13 @@ export function TopBar({
           className="flex items-center gap-1.5 ml-1 text-[13px] font-medium"
           style={{ color: 'var(--text-primary)' }}
         >
-          <Folder
-            className="w-3.5 h-3.5"
-            style={{ color: 'var(--text-muted)' }}
-            strokeWidth={1.5}
-          />
+          <Folder className="w-4 h-4" style={{ color: 'var(--text-muted)' }} strokeWidth={1.75} />
           <span>{collectionName}</span>
         </div>
       </div>
 
       {/* Right: Environment Selector, Theme Toggle, Settings */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1.5">
         <div className="flex items-center gap-1">
           <select
             value={activeEnvironment}
@@ -145,9 +140,9 @@ export function TopBar({
           onClick={onOpenShortcuts}
           title="Keyboard shortcuts (Ctrl+/)"
           aria-label="Keyboard shortcuts"
-          className="w-7 h-7 p-0"
+          className="w-8 h-8 p-0 flex items-center justify-center rounded-[var(--radius-sm)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] transition-fast"
         >
-          <Keyboard className="w-4 h-4" strokeWidth={1.5} />
+          <Keyboard className="w-5 h-5" strokeWidth={1.75} />
         </Button>
 
         <Button
@@ -156,7 +151,7 @@ export function TopBar({
           onClick={onToggleTheme}
           title={getThemeTooltip()}
           aria-label={strings.topBar.themeToggle}
-          className="w-7 h-7 p-0"
+          className="w-8 h-8 p-0 flex items-center justify-center rounded-[var(--radius-sm)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] transition-fast"
         >
           {getThemeIcon()}
         </Button>
@@ -166,9 +161,9 @@ export function TopBar({
           size="compact"
           title={strings.topBar.settings}
           aria-label={strings.topBar.settings}
-          className="w-7 h-7 p-0"
+          className="w-8 h-8 p-0 flex items-center justify-center rounded-[var(--radius-sm)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] transition-fast"
         >
-          <SettingsIcon className="w-4 h-4" strokeWidth={1.5} />
+          <SettingsIcon className="w-5 h-5" strokeWidth={1.75} />
         </Button>
       </div>
     </header>

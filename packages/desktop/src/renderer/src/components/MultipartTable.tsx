@@ -211,7 +211,10 @@ export function MultipartTable({
                           color: 'var(--text-primary)',
                         }}
                       >
-                        <FolderOpen className="w-3 h-3 text-[var(--accent)]" />
+                        <FolderOpen
+                          className="w-3.5 h-3.5 text-[var(--accent)]"
+                          strokeWidth={1.75}
+                        />
                         <span>Choose file...</span>
                       </button>
 
@@ -227,10 +230,10 @@ export function MultipartTable({
                           <button
                             type="button"
                             onClick={() => handleUpdate(idx, { value: '', fileName: undefined })}
-                            className="p-0.5 rounded hover:bg-[var(--bg-hover)] transition-fast text-[var(--text-muted)]"
+                            className="p-0.5 rounded hover:bg-[var(--bg-hover)] transition-fast text-[var(--text-muted)] hover:text-[var(--text-primary)]"
                             title="Remove file"
                           >
-                            <X className="w-3 h-3" />
+                            <X className="w-3.5 h-3.5" strokeWidth={1.75} />
                           </button>
                         </div>
                       ) : (
@@ -256,12 +259,11 @@ export function MultipartTable({
                     <button
                       type="button"
                       onClick={() => handleDelete(idx)}
-                      className="w-5 h-5 inline-flex items-center justify-center rounded-[4px] hover:bg-[var(--bg-hover)] transition-fast app-focus-ring"
-                      style={{ color: 'var(--text-muted)' }}
+                      className="w-6 h-6 inline-flex items-center justify-center rounded-[var(--radius-sm)] hover:bg-[var(--bg-hover)] text-[var(--text-muted)] hover:text-[var(--danger)] transition-fast app-focus-ring"
                       title="Delete row"
                       aria-label="Delete row"
                     >
-                      <Trash2 className="w-3.5 h-3.5" strokeWidth={1.5} />
+                      <Trash2 className="w-4 h-4" strokeWidth={1.75} />
                     </button>
                   )}
                 </td>

@@ -25,22 +25,32 @@ export function ToastContainer({ toasts, onDismiss }: ToastProps): React.JSX.Ele
     switch (type) {
       case 'success':
         return (
-          <CheckCircle className="w-4 h-4" style={{ color: 'var(--success)' }} strokeWidth={1.5} />
+          <CheckCircle
+            className="w-5 h-5 shrink-0"
+            style={{ color: 'var(--success)' }}
+            strokeWidth={1.75}
+          />
         );
       case 'warning':
         return (
           <AlertTriangle
-            className="w-4 h-4"
+            className="w-5 h-5 shrink-0"
             style={{ color: 'var(--warning)' }}
-            strokeWidth={1.5}
+            strokeWidth={1.75}
           />
         );
       case 'error':
         return (
-          <AlertCircle className="w-4 h-4" style={{ color: 'var(--danger)' }} strokeWidth={1.5} />
+          <AlertCircle
+            className="w-5 h-5 shrink-0"
+            style={{ color: 'var(--danger)' }}
+            strokeWidth={1.75}
+          />
         );
       default:
-        return <Info className="w-4 h-4" style={{ color: 'var(--info)' }} strokeWidth={1.5} />;
+        return (
+          <Info className="w-5 h-5 shrink-0" style={{ color: 'var(--info)' }} strokeWidth={1.75} />
+        );
     }
   };
 
@@ -89,7 +99,7 @@ export function ToastContainer({ toasts, onDismiss }: ToastProps): React.JSX.Ele
               title="Dismiss notification"
               aria-label="Dismiss notification"
             >
-              <X className="w-3.5 h-3.5" strokeWidth={1.5} />
+              <X className="w-4 h-4" strokeWidth={1.75} />
             </button>
           </div>
         </div>

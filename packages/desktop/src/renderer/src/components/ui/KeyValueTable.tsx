@@ -364,12 +364,11 @@ export function KeyValueTable({
                     <button
                       type="button"
                       onClick={() => handleDelete(idx)}
-                      className="w-5 h-5 inline-flex items-center justify-center rounded-[4px] hover:bg-[var(--bg-hover)] transition-fast app-focus-ring"
-                      style={{ color: 'var(--text-muted)' }}
+                      className="w-6 h-6 inline-flex items-center justify-center rounded-[var(--radius-sm)] hover:bg-[var(--bg-hover)] text-[var(--text-muted)] hover:text-[var(--danger)] transition-fast app-focus-ring"
                       title="Delete row"
                       aria-label="Delete row"
                     >
-                      <Trash2 className="w-3.5 h-3.5" strokeWidth={1.5} />
+                      <Trash2 className="w-4 h-4" strokeWidth={1.75} />
                     </button>
                   )}
                 </td>

@@ -84,7 +84,7 @@ export function RequestTabs({
               title={strings.tabs.closeTab}
               aria-label={strings.tabs.closeTab}
             >
-              <X className="w-3 h-3" strokeWidth={1.5} />
+              <X className="w-3.5 h-3.5" strokeWidth={1.75} />
             </button>
           </div>
         );
@@ -99,7 +99,7 @@ export function RequestTabs({
         title={strings.tabs.newTab}
         aria-label={strings.tabs.newTab}
       >
-        <Plus className="w-3.5 h-3.5" strokeWidth={1.5} />
+        <Plus className="w-4 h-4" strokeWidth={1.75} />
       </button>
     </div>
   );

@@ -67,7 +67,7 @@ export function TimingWaterfall({
                 color: 'var(--accent)',
               }}
             >
-              <Zap className="w-3 h-3" />
+              <Zap className="w-3.5 h-3.5" />
               <span>Connection reused (keep-alive)</span>
             </span>
           )}
@@ -153,7 +153,10 @@ export function TimingWaterfall({
                 className="flex items-center gap-2 text-[12px] font-mono px-2 py-1 rounded-[4px]"
                 style={{ backgroundColor: 'var(--bg-input)' }}
               >
-                <CornerDownRight className="w-3.5 h-3.5 text-[var(--text-muted)] shrink-0" />
+                <CornerDownRight
+                  className="w-4 h-4 text-[var(--text-muted)] shrink-0"
+                  strokeWidth={1.75}
+                />
                 <span className="truncate flex-1" style={{ color: 'var(--text-primary)' }}>
                   Hop {index + 1}
                 </span>

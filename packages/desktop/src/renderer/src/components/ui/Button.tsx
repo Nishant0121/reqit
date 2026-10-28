@@ -71,7 +71,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
     >
       {loading ? (
         <>
-          <Loader2 className="w-3.5 h-3.5 animate-spin spin-allowed" strokeWidth={1.5} />
+          <Loader2 className="w-4 h-4 animate-spin spin-allowed" strokeWidth={1.75} />
           {children}
         </>
       ) : (

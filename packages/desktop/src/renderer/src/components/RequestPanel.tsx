@@ -387,7 +387,7 @@ export function RequestPanel({
                           className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10"
                         />
                         <Icon
-                          className="w-3.5 h-3.5 shrink-0 transition-fast pointer-events-none relative z-0"
+                          className="w-4 h-4 shrink-0 transition-fast pointer-events-none relative z-0"
                           style={{
                             color: isSelected ? 'var(--accent)' : 'var(--text-muted)',
                           }}
@@ -412,7 +412,7 @@ export function RequestPanel({
                   }}
                   title="Format and prettify JSON"
                 >
-                  <Sparkles className="w-3.5 h-3.5 text-[var(--accent)]" />
+                  <Sparkles className="w-4 h-4 text-[var(--accent)]" strokeWidth={1.75} />
                   <span>Beautify</span>
                 </button>
               )}
@@ -428,7 +428,7 @@ export function RequestPanel({
                   color: 'var(--danger)',
                 }}
               >
-                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                <AlertCircle className="w-4 h-4 shrink-0" strokeWidth={1.75} />
                 <span>Invalid JSON: {jsonFormatError}</span>
               </div>
             )}

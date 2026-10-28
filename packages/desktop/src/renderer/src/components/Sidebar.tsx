@@ -104,9 +104,9 @@ export function Sidebar({
           onClick={onNewRequest}
           title={strings.sidebar.newRequest}
           aria-label={strings.sidebar.newRequest}
-          className="w-6 h-6 p-0"
+          className="w-7 h-7 p-0 flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
         >
-          <Plus className="w-3.5 h-3.5" strokeWidth={1.5} />
+          <Plus className="w-4 h-4" strokeWidth={1.75} />
         </Button>
       </div>
 
@@ -120,9 +120,9 @@ export function Sidebar({
           }}
         >
           <Search
-            className="w-3.5 h-3.5 mr-1.5 shrink-0"
+            className="w-4 h-4 mr-1.5 shrink-0"
             style={{ color: 'var(--text-muted)' }}
-            strokeWidth={1.5}
+            strokeWidth={1.75}
           />
           <input
             type="text"
@@ -142,7 +142,7 @@ export function Sidebar({
               title={strings.sidebar.clearFilter}
               aria-label={strings.sidebar.clearFilter}
             >
-              <X className="w-3 h-3" strokeWidth={1.5} />
+              <X className="w-3.5 h-3.5" strokeWidth={1.75} />
             </button>
           )}
         </div>

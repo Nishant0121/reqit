@@ -605,8 +605,9 @@ export function ResponsePanel({
                     }}
                   >
                     <Icon
-                      className="w-3 h-3"
+                      className="w-3.5 h-3.5"
                       style={{ color: isSelected ? 'var(--accent)' : 'inherit' }}
+                      strokeWidth={1.75}
                     />
                     <span>{opt.label}</span>
                   </button>
@@ -715,9 +716,9 @@ export function ResponsePanel({
                         }}
                       >
                         {imageZoomFit ? (
-                          <ZoomIn className="w-3.5 h-3.5" />
+                          <ZoomIn className="w-4 h-4" strokeWidth={1.75} />
                         ) : (
-                          <Maximize2 className="w-3.5 h-3.5" />
+                          <Maximize2 className="w-4 h-4" strokeWidth={1.75} />
                         )}
                         <span>{imageZoomFit ? 'Fit' : '100%'}</span>
                       </button>
@@ -816,9 +817,9 @@ export function ResponsePanel({
                 }}
               >
                 <Search
-                  className="w-3.5 h-3.5 mr-1.5 shrink-0"
+                  className="w-4 h-4 mr-1.5 shrink-0"
                   style={{ color: 'var(--text-muted)' }}
-                  strokeWidth={1.5}
+                  strokeWidth={1.75}
                 />
                 <input
                   type="text"
@@ -836,7 +837,7 @@ export function ResponsePanel({
                     className="p-0.5 rounded text-[var(--text-muted)] hover:text-[var(--text-primary)]"
                     title="Clear filter"
                   >
-                    <X className="w-3 h-3" />
+                    <X className="w-3.5 h-3.5" strokeWidth={1.75} />
                   </button>
                 )}
               </div>

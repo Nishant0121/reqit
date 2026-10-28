@@ -110,12 +110,11 @@ export function Modal({
           <button
             type="button"
             onClick={onClose}
-            className="w-7 h-7 inline-flex items-center justify-center rounded-[4px] hover:bg-[var(--bg-hover)] transition-fast app-focus-ring"
-            style={{ color: 'var(--text-muted)' }}
+            className="w-8 h-8 inline-flex items-center justify-center rounded-[var(--radius-sm)] hover:bg-[var(--bg-hover)] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-fast app-focus-ring"
             title="Close dialog (Escape)"
             aria-label="Close dialog"
           >
-            <X className="w-4 h-4" strokeWidth={1.5} />
+            <X className="w-5 h-5" strokeWidth={1.75} />
           </button>
         </div>
 
