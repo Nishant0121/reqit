@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Modal } from './ui/Modal';
 import { Folder } from 'lucide-react';
 
@@ -17,6 +17,19 @@ export function NewCollectionModal({
   const [targetDir, setTargetDir] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const nameInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      setName('');
+      setTargetDir('');
+      setError(null);
+      setTimeout(() => {
+        nameInputRef.current?.focus();
+        nameInputRef.current?.select();
+      }, 50);
+    }
+  }, [isOpen]);
 
   const handleSubmit = async () => {
     if (!name.trim()) {
@@ -65,9 +78,13 @@ export function NewCollectionModal({
             Collection Name
           </label>
           <input
+            ref={nameInputRef}
             type="text"
             value={name}
             onChange={e => setName(e.target.value)}
+            onKeyDown={e => {
+              if (e.key === 'Enter') handleSubmit();
+            }}
             placeholder="e.g. My API Services"
             className="w-full h-[32px] px-2.5 rounded-[var(--radius-sm)] border text-[13px] bg-transparent outline-none app-focus-ring"
             style={{

@@ -459,7 +459,7 @@ export function Sidebar({
                   }}
                   className="p-1 rounded hover:bg-[var(--bg-elevated)] text-[var(--text-muted)] hover:text-[var(--text-primary)]"
                 >
-                  <Plus className="w-3 h-3" />
+                  <Plus className="w-5 h-5" strokeWidth={1.75} />
                 </button>
                 <button
                   type="button"
@@ -472,7 +472,7 @@ export function Sidebar({
                   }}
                   className="p-1 rounded hover:bg-[var(--bg-elevated)] text-[var(--text-muted)] hover:text-[var(--text-primary)]"
                 >
-                  <FolderPlus className="w-3 h-3" />
+                  <FolderPlus className="w-5 h-5" strokeWidth={1.75} />
                 </button>
               </>
             )}
@@ -485,7 +485,7 @@ export function Sidebar({
               }}
               className="p-1 rounded hover:bg-[var(--bg-elevated)] text-[var(--text-muted)] hover:text-[var(--text-primary)]"
             >
-              <MoreVertical className="w-3 h-3" />
+              <MoreVertical className="w-5 h-5" strokeWidth={1.75} />
             </button>
           </div>
         </div>
@@ -599,7 +599,7 @@ export function Sidebar({
               aria-label="New Folder"
               className="w-7 h-7 p-0 flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
             >
-              <FolderPlus className="w-4 h-4" strokeWidth={1.75} />
+              <FolderPlus className="w-5 h-5" strokeWidth={1.75} />
             </Button>
           )}
 
@@ -618,7 +618,7 @@ export function Sidebar({
             aria-label={strings.sidebar.newRequest}
             className="w-7 h-7 p-0 flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
           >
-            <Plus className="w-4 h-4" strokeWidth={1.75} />
+            <Plus className="w-5 h-5" strokeWidth={1.75} />
           </Button>
         </div>
       </div>

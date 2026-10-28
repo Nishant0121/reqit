@@ -462,4 +462,32 @@ test.describe('Desktop App Shell Smoke Test (Phase 5)', () => {
     const getBadge = sidebar.locator('span:has-text("GET")').first();
     await expect(getBadge).toBeVisible();
   });
+
+  test('verifies typing full collection name in New Collection modal without losing focus or characters', async () => {
+    // 1. Open collection dropdown in topbar
+    const colMenuBtn = page.locator('header button:has(svg.lucide-folder)');
+    await colMenuBtn.click();
+
+    // 2. Click "New Collection..."
+    const newColBtn = page.locator('button:has-text("New Collection...")');
+    await expect(newColBtn).toBeVisible();
+    await newColBtn.click();
+
+    // 3. Modal opens
+    const modalTitle = page.locator('#modal-title');
+    await expect(modalTitle).toHaveText('Create New Collection');
+
+    // 4. Type collection name continuously
+    const nameInput = page.locator('input[placeholder="e.g. My API Services"]');
+    await expect(nameInput).toBeVisible();
+    await nameInput.click();
+    await page.keyboard.type('Production API Service');
+
+    // Verify all characters are retained without being reset or truncated to 1 character
+    await expect(nameInput).toHaveValue('Production API Service');
+
+    // 5. Close modal
+    await page.keyboard.press('Escape');
+    await expect(modalTitle).not.toBeVisible();
+  });
 });

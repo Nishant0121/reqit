@@ -156,7 +156,7 @@ export function TopBar({
                 className="w-full px-3 py-1.5 flex items-center gap-2 hover:bg-[var(--bg-hover)] text-left transition-fast"
                 style={{ color: 'var(--text-primary)' }}
               >
-                <FolderOpen className="w-4 h-4 text-[var(--accent)]" />
+                <FolderOpen className="w-5 h-5 text-[var(--accent)]" strokeWidth={1.75} />
                 <span className="flex-1 font-medium">Open Collection Folder...</span>
               </button>
 
@@ -169,7 +169,7 @@ export function TopBar({
                 className="w-full px-3 py-1.5 flex items-center gap-2 hover:bg-[var(--bg-hover)] text-left transition-fast"
                 style={{ color: 'var(--text-primary)' }}
               >
-                <FolderPlus className="w-4 h-4 text-[var(--accent)]" />
+                <FolderPlus className="w-5 h-5 text-[var(--accent)]" strokeWidth={1.75} />
                 <span className="flex-1 font-medium">New Collection...</span>
               </button>
 

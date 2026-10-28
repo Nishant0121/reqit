@@ -35,26 +35,36 @@ export function Modal({
   const modalRef = useRef<HTMLDivElement>(null);
   const previouslyFocusedRef = useRef<HTMLElement | null>(null);
 
+  const primaryActionRef = useRef(primaryAction);
+  primaryActionRef.current = primaryAction;
+
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+
   useEffect(() => {
     if (isOpen) {
       previouslyFocusedRef.current = document.activeElement as HTMLElement | null;
-      modalRef.current?.focus();
+
+      // Only focus the dialog wrapper if activeElement is outside the modal
+      if (!modalRef.current?.contains(document.activeElement)) {
+        modalRef.current?.focus();
+      }
 
       const handleKeyDown = (e: KeyboardEvent) => {
         if (e.key === 'Escape') {
           e.preventDefault();
-          onClose();
+          onCloseRef.current();
         }
         if (
           e.key === 'Enter' &&
-          primaryAction &&
-          !primaryAction.disabled &&
-          !primaryAction.loading
+          primaryActionRef.current &&
+          !primaryActionRef.current.disabled &&
+          !primaryActionRef.current.loading
         ) {
           const target = e.target as HTMLElement;
           if (target.tagName !== 'TEXTAREA' && target.tagName !== 'BUTTON') {
             e.preventDefault();
-            primaryAction.onClick();
+            primaryActionRef.current.onClick();
           }
         }
       };
@@ -65,7 +75,7 @@ export function Modal({
         previouslyFocusedRef.current?.focus();
       };
     }
-  }, [isOpen, onClose, primaryAction]);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
