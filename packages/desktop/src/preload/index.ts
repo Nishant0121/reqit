@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron';
-import type { RequestFile, ResponseResult, SendOptions } from '@reqit/core';
+import type { RequestFile, ResponseResult, SendOptions, WatcherChangeEvent } from '@reqit/core';
 import type {
   ReqitApi,
   SendRequestPayload,
@@ -96,6 +96,15 @@ const api: ReqitApi = {
   },
   saveRequest: (payload: SaveRequestPayload) => {
     return ipcRenderer.invoke('collection:saveRequest', payload);
+  },
+  onCollectionChange: (callback: (event: WatcherChangeEvent) => void) => {
+    const handler = (_event: Electron.IpcRendererEvent, data: WatcherChangeEvent) => {
+      callback(data);
+    };
+    ipcRenderer.on('collection:watchChange', handler);
+    return () => {
+      ipcRenderer.removeListener('collection:watchChange', handler);
+    };
   },
 };
 

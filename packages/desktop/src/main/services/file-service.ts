@@ -1,6 +1,6 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { app, dialog, shell } from 'electron';
+import { app, dialog, shell, BrowserWindow } from 'electron';
 import {
   createCollection,
   createFolder,
@@ -12,8 +12,11 @@ import {
   reorderFolder,
   saveRequest,
   scanCollection,
+  serializeRequest,
+  CollectionWatcher,
   type CollectionTree,
   type CollectionTreeNode,
+  type WatcherChangeEvent,
 } from '@reqit/core';
 import type {
   CreateCollectionPayload,
@@ -64,6 +67,20 @@ export function addRecentCollection(folderPath: string): string[] {
 }
 
 export class FileService {
+  private watcher = new CollectionWatcher();
+
+  private broadcastChange(event: WatcherChangeEvent): void {
+    BrowserWindow.getAllWindows().forEach(window => {
+      if (!window.isDestroyed()) {
+        window.webContents.send('collection:watchChange', event);
+      }
+    });
+  }
+
+  async stopWatcher(): Promise<void> {
+    await this.watcher.stop();
+  }
+
   /**
    * Opens an existing collection folder or prompts the user with an Electron openDirectory dialog.
    */
@@ -88,6 +105,13 @@ export class FileService {
 
     const tree = await scanCollection(target);
     addRecentCollection(target);
+
+    // Watch target folder if not already watching it
+    const normalizedTarget = path.resolve(target);
+    if (this.watcher.getRootPath() !== normalizedTarget) {
+      await this.watcher.start(normalizedTarget, event => this.broadcastChange(event));
+    }
+
     return tree;
   }
 
@@ -113,6 +137,12 @@ export class FileService {
     const { rootPath } = await createCollection(targetDir, name);
     const tree = await scanCollection(rootPath);
     addRecentCollection(rootPath);
+
+    const normalizedRoot = path.resolve(rootPath);
+    if (this.watcher.getRootPath() !== normalizedRoot) {
+      await this.watcher.start(normalizedRoot, event => this.broadcastChange(event));
+    }
+
     return tree;
   }
 
@@ -121,25 +151,37 @@ export class FileService {
   }
 
   async createRequest(payload: CreateRequestPayload): Promise<CollectionTreeNode> {
-    return createRequest(payload.parentDir, payload.name, payload.data);
+    const node = await createRequest(payload.parentDir, payload.name, payload.data);
+    this.watcher.registerAppWrite(node.path);
+    return node;
   }
 
   async createFolder(payload: CreateFolderPayload): Promise<CollectionTreeNode> {
-    return createFolder(payload.parentDir, payload.name);
+    const node = await createFolder(payload.parentDir, payload.name);
+    this.watcher.registerAppWrite(node.path);
+    this.watcher.registerAppWrite(path.join(node.path, 'folder.yaml'));
+    return node;
   }
 
   async renameItem(payload: RenameItemPayload): Promise<{ newPath: string; newName: string }> {
-    return renameItem(payload.itemPath, payload.newName);
+    this.watcher.registerAppWrite(payload.itemPath);
+    const result = await renameItem(payload.itemPath, payload.newName);
+    this.watcher.registerAppWrite(result.newPath);
+    return result;
   }
 
   async duplicateRequest(sourcePath: string): Promise<CollectionTreeNode> {
-    return duplicateRequest(sourcePath);
+    const node = await duplicateRequest(sourcePath);
+    this.watcher.registerAppWrite(node.path);
+    return node;
   }
 
   async deleteItem(itemPath: string): Promise<boolean> {
     const resolved = path.resolve(itemPath);
     const parentDir = path.dirname(resolved);
     const slug = path.basename(resolved);
+
+    this.watcher.registerAppWrite(resolved);
 
     // 1. Remove from parent order
     await removeSlugFromOrder(parentDir, slug);
@@ -161,15 +203,21 @@ export class FileService {
   }
 
   async moveItem(payload: MoveItemPayload): Promise<{ newPath: string; newSlug: string }> {
-    return moveItem(payload.sourcePath, payload.targetDirPath);
+    this.watcher.registerAppWrite(payload.sourcePath);
+    const result = await moveItem(payload.sourcePath, payload.targetDirPath);
+    this.watcher.registerAppWrite(result.newPath);
+    return result;
   }
 
   async reorderFolder(payload: ReorderFolderPayload): Promise<boolean> {
+    this.watcher.registerAppWrite(path.join(payload.folderPath, 'folder.yaml'));
     await reorderFolder(payload.folderPath, payload.order);
     return true;
   }
 
   async saveRequest(payload: SaveRequestPayload): Promise<boolean> {
+    const yaml = serializeRequest(payload.request);
+    this.watcher.registerAppWrite(payload.filePath, yaml);
     await saveRequest(payload.filePath, payload.request);
     return true;
   }

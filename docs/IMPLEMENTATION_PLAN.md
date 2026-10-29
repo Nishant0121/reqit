@@ -249,19 +249,19 @@ This plan breaks the whole project into small phases. Each phase is meant to tak
 
 **Goal:** changes made outside the app appear instantly.
 
-- [ ] Watch the collection folder with chokidar, debounced
-- [ ] Ignore the app's own writes (track a write token or hash per save)
-- [ ] Handle editors that save through temp-file-and-rename
-- [ ] Handle bulk changes (`git checkout`, `git pull`) without flicker or crashes
-- [ ] Update the sidebar tree incrementally
-- [ ] If the open request changed on disk and has no unsaved edits, reload it silently
-- [ ] If it has unsaved edits, show a conflict banner with "Keep mine", "Load disk version", and "View diff"
-- [ ] Handle a file or folder deleted while open
+- [x] Watch the collection folder with chokidar, debounced
+- [x] Ignore the app's own writes (track a write token or hash per save)
+- [x] Handle editors that save through temp-file-and-rename
+- [x] Handle bulk changes (`git checkout`, `git pull`) without flicker or crashes
+- [x] Update the sidebar tree incrementally
+- [x] If the open request changed on disk and has no unsaved edits, reload it silently
+- [x] If it has unsaved edits, show a conflict banner with "Keep mine", "Load disk version", and "View diff"
+- [x] Handle a file or folder deleted while open
 
 **Tests**
 
-- [ ] Automated: modify, add, delete, and rename files externally and assert the store updates
-- [ ] Automated: the app's own save does not cause a reload loop
+- [x] Automated: modify, add, delete, and rename files externally and assert the store updates
+- [x] Automated: the app's own save does not cause a reload loop
 
 **Done when:** running `git checkout other-branch` in a terminal updates the sidebar within a second.
 

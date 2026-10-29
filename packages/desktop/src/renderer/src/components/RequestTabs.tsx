@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, X } from 'lucide-react';
+import { Plus, X, AlertTriangle, Trash2 } from 'lucide-react';
 import type { HttpMethod } from '@reqit/core';
 import { MethodBadge } from './ui/Badge';
 import { strings } from '../lib/strings';
@@ -9,6 +9,8 @@ export interface TabItemData {
   name: string;
   method: HttpMethod;
   isDirty?: boolean;
+  hasConflict?: boolean;
+  isDeleted?: boolean;
 }
 
 export interface RequestTabsProps {
@@ -64,14 +66,22 @@ export function RequestTabs({
               {tab.name}
             </span>
 
-            {/* Unsaved indicator or close button */}
-            {tab.isDirty && (
+            {/* Conflict or Deleted or Unsaved indicator */}
+            {tab.hasConflict ? (
+              <span title="External conflict detected" className="ml-1.5 shrink-0">
+                <AlertTriangle className="w-3 h-3 text-amber-500" />
+              </span>
+            ) : tab.isDeleted ? (
+              <span title="File deleted on disk" className="ml-1.5 shrink-0">
+                <Trash2 className="w-3 h-3 text-red-500" />
+              </span>
+            ) : tab.isDirty ? (
               <span
                 className="w-1.5 h-1.5 rounded-full ml-1.5 shrink-0"
                 style={{ backgroundColor: 'var(--warning)' }}
                 title={strings.tabs.unsavedChanges}
               />
-            )}
+            ) : null}
 
             <button
               type="button"

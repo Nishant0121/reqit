@@ -83,11 +83,10 @@ export const VariableInput = forwardRef<HTMLInputElement, VariableInputProps>(
         setAutocompleteOpen(false);
 
         // Put cursor after inserted variable
-        setTimeout(() => {
-          const newPos = prefix.length + varName.length + 4;
-          input.setSelectionRange(newPos, newPos);
-          input.focus();
-        }, 0);
+        const newPos = prefix.length + varName.length + 4;
+        input.value = inserted;
+        input.setSelectionRange(newPos, newPos);
+        input.focus();
       }
     };
 

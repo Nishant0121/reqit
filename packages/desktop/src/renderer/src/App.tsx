@@ -9,12 +9,16 @@ import { StatusBar } from './components/StatusBar';
 import { ToastContainer } from './components/ui/Toast';
 import { ShortcutsDialog } from './components/ShortcutsDialog';
 import { NewCollectionModal } from './components/NewCollectionModal';
+import { ConflictBanner } from './components/ConflictBanner';
+import { DeletedBanner } from './components/DeletedBanner';
+import { DiffModal } from './components/DiffModal';
 import { useAppStore } from './stores/appStore';
 import { useCollectionStore } from './stores/collectionStore';
 import { useRequestStore } from './stores/requestStore';
 import { matchesShortcut } from './lib/shortcuts';
 import { parseUrlQueryParams, syncUrlWithParams } from './lib/url-sync';
 import { draftToRequestFile } from './lib/request-mapper';
+import { serializeRequest } from '@reqit/core/format';
 import type { ThemeMode } from './lib/theme';
 import type { KeyValueRow } from './components/ui/KeyValueTable';
 import type { CollectionTreeNode } from '@reqit/core';
@@ -44,6 +48,7 @@ export default function App(): React.JSX.Element {
   } = useAppStore();
 
   const [newCollectionModalOpen, setNewCollectionModalOpen] = useState(false);
+  const [diffModalOpen, setDiffModalOpen] = useState(false);
 
   // 2. Collection store
   const {
@@ -53,6 +58,7 @@ export default function App(): React.JSX.Element {
     loadCollection,
     createCollection,
     saveRequest: storeSaveRequest,
+    applyWatcherChange,
   } = useCollectionStore();
 
   // 3. Request store
@@ -76,6 +82,8 @@ export default function App(): React.JSX.Element {
     setError,
     setActiveExecutionId,
     incrementHistoryCount,
+    resolveConflictKeepMine,
+    resolveConflictLoadDisk,
   } = useRequestStore();
 
   const activeDraft = drafts[activeRequestId] || {
@@ -117,6 +125,17 @@ export default function App(): React.JSX.Element {
       });
     }
   }, [setVersion, updateActiveDraft, loadCollection]);
+
+  // Subscribe to live file watcher changes from main process (Phase 10)
+  useEffect(() => {
+    if (!window.reqitApi?.onCollectionChange) return;
+    const unsubscribe = window.reqitApi.onCollectionChange(event => {
+      applyWatcherChange(event);
+    });
+    return () => {
+      unsubscribe();
+    };
+  }, [applyWatcherChange]);
 
   // Theme toggle cycle: system -> light -> dark -> system
   const handleToggleTheme = () => {
@@ -165,6 +184,26 @@ export default function App(): React.JSX.Element {
         type: 'success',
         message: 'Request saved',
       });
+    }
+  }, [activeDraft, storeSaveRequest, saveActiveDraft, addToast]);
+
+  // Re-create a deleted file on disk (Phase 10)
+  const handleRecreateFile = useCallback(async () => {
+    if (activeDraft.filePath) {
+      const reqFile = draftToRequestFile(activeDraft);
+      try {
+        await storeSaveRequest(activeDraft.filePath, reqFile);
+        saveActiveDraft();
+        addToast({
+          type: 'success',
+          message: `Re-created ${activeDraft.name} on disk`,
+        });
+      } catch (err: unknown) {
+        addToast({
+          type: 'error',
+          message: `Failed to recreate file: ${err instanceof Error ? err.message : String(err)}`,
+        });
+      }
     }
   }, [activeDraft, storeSaveRequest, saveActiveDraft, addToast]);
 
@@ -357,6 +396,16 @@ export default function App(): React.JSX.Element {
     url: d.url,
   }));
 
+  const tabsWithStatus = tabs.map(tab => {
+    const draft = drafts[tab.id];
+    return {
+      ...tab,
+      isDirty: draft?.isDirty,
+      hasConflict: Boolean(draft?.conflict),
+      isDeleted: Boolean(draft?.isDeletedOnDisk),
+    };
+  });
+
   return (
     <div className="flex flex-col h-screen w-screen overflow-hidden select-none bg-[var(--bg-base)] text-[var(--text-primary)]">
       {/* 1. Top Bar (40px) */}
@@ -396,12 +445,30 @@ export default function App(): React.JSX.Element {
         <main className="flex-1 flex flex-col min-w-0 overflow-hidden bg-[var(--bg-base)]">
           {/* Request Tabs (32px) */}
           <RequestTabs
-            tabs={tabs}
+            tabs={tabsWithStatus}
             activeTabId={activeRequestId}
             onSelectTab={openRequest}
             onCloseTab={closeTab}
             onNewTab={() => createRequest()}
           />
+
+          {/* Conflict Banner (Phase 10) */}
+          {activeDraft.conflict && (
+            <ConflictBanner
+              onKeepMine={() => resolveConflictKeepMine(activeDraft.id)}
+              onLoadDisk={() => resolveConflictLoadDisk(activeDraft.id)}
+              onViewDiff={() => setDiffModalOpen(true)}
+            />
+          )}
+
+          {/* Deleted On Disk Banner (Phase 10) */}
+          {activeDraft.isDeletedOnDisk && (
+            <DeletedBanner
+              filePath={activeDraft.filePath}
+              onRecreate={handleRecreateFile}
+              onCloseTab={() => closeTab(activeDraft.id)}
+            />
+          )}
 
           {/* URL Bar (32px) */}
           <UrlBar
@@ -502,6 +569,18 @@ export default function App(): React.JSX.Element {
           await createCollection(name, targetDir);
         }}
       />
+      {activeDraft.conflict && (
+        <DiffModal
+          isOpen={diffModalOpen}
+          onClose={() => setDiffModalOpen(false)}
+          requestName={activeDraft.name}
+          filePath={activeDraft.filePath}
+          diskContent={activeDraft.conflict.diskContent}
+          localContent={serializeRequest(draftToRequestFile(activeDraft))}
+          onKeepMine={() => resolveConflictKeepMine(activeDraft.id)}
+          onLoadDisk={() => resolveConflictLoadDisk(activeDraft.id)}
+        />
+      )}
     </div>
   );
 }

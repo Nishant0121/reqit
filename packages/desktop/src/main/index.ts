@@ -2,6 +2,7 @@ import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { app, BrowserWindow, session } from 'electron';
 import { registerIpcHandlers } from './ipc.js';
+import { fileService } from './services/file-service.js';
 import { loadWindowState, saveWindowState } from './window-state.js';
 
 let mainWindow: BrowserWindow | null = null;
@@ -90,4 +91,8 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit();
   }
+});
+
+app.on('will-quit', async () => {
+  await fileService.stopWatcher();
 });

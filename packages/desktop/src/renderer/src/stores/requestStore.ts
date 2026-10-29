@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { HttpMethod, ResponseResult, RequestFile } from '@reqit/core';
+import type { HttpMethod, ResponseResult, RequestFile, WatcherChangedFile } from '@reqit/core';
 import type { KeyValueRow } from '../components/ui/KeyValueTable';
 import type { AuthType, BodyType } from '../components/RequestPanel';
 import type { TabItemData } from '../components/RequestTabs';
@@ -13,6 +13,11 @@ export interface MultipartRow {
   value: string; // text value or file path
   fileName?: string;
   description?: string;
+}
+
+export interface RequestConflict {
+  diskContent: string;
+  diskRequest: RequestFile;
 }
 
 export interface RequestDraft {
@@ -37,6 +42,8 @@ export interface RequestDraft {
   isDirty?: boolean;
   parseError?: string;
   rawRequest?: RequestFile;
+  conflict?: RequestConflict | null;
+  isDeletedOnDisk?: boolean;
 }
 
 export interface RequestState {
@@ -54,6 +61,11 @@ export interface RequestState {
   openDraftFromFile: (filePath: string, file: RequestFile) => void;
   onItemRenamed: (oldPath: string, newPath: string, newName: string) => void;
   onItemDeleted: (deletedPath: string) => void;
+  handleWatcherFileChange: (changedPath: string, fileDetails: WatcherChangedFile) => void;
+  handleWatcherFileDelete: (deletedPath: string) => void;
+  resolveConflictKeepMine: (id: string) => void;
+  resolveConflictLoadDisk: (id: string) => void;
+  clearDeletedFlag: (id: string) => void;
   closeTab: (id: string) => void;
   updateActiveDraft: (updates: Partial<RequestDraft>) => void;
   saveActiveDraft: () => void;
@@ -240,6 +252,138 @@ export const useRequestStore = create<RequestState>((set, get) => ({
     });
   },
 
+  handleWatcherFileChange: (changedPath: string, fileDetails: WatcherChangedFile) => {
+    const { drafts, tabs } = get();
+    const normChanged = changedPath.replace(/\\/g, '/').toLowerCase();
+    const draftEntry = Object.entries(drafts).find(([, d]) => {
+      if (!d.filePath) return false;
+      return d.filePath.replace(/\\/g, '/').toLowerCase() === normChanged;
+    });
+
+    if (!draftEntry) return;
+    const [draftId, draft] = draftEntry;
+
+    if (!fileDetails.request) {
+      if (fileDetails.parseError) {
+        set(state => ({
+          drafts: {
+            ...state.drafts,
+            [draftId]: { ...draft, parseError: fileDetails.parseError },
+          },
+        }));
+      }
+      return;
+    }
+
+    if (!draft.isDirty) {
+      // Silent reload: disk version updates draft seamlessly
+      const reloaded = requestFileToDraft(fileDetails.request, draft.filePath, draft.id);
+      const updatedTabs = tabs.map(t =>
+        t.id === draftId
+          ? { ...t, name: reloaded.name, method: reloaded.method, isDirty: false }
+          : t,
+      );
+      set(state => ({
+        drafts: {
+          ...state.drafts,
+          [draftId]: {
+            ...reloaded,
+            conflict: null,
+            isDeletedOnDisk: false,
+          },
+        },
+        tabs: updatedTabs,
+      }));
+    } else {
+      // Unsaved local edits present -> trigger conflict banner
+      set(state => ({
+        drafts: {
+          ...state.drafts,
+          [draftId]: {
+            ...draft,
+            conflict: {
+              diskContent: fileDetails.content ?? '',
+              diskRequest: fileDetails.request!,
+            },
+            isDeletedOnDisk: false,
+          },
+        },
+      }));
+    }
+  },
+
+  handleWatcherFileDelete: (deletedPath: string) => {
+    const { drafts } = get();
+    const normDeleted = deletedPath.replace(/\\/g, '/').toLowerCase();
+    const matchingEntries = Object.entries(drafts).filter(([, d]) => {
+      if (!d.filePath) return false;
+      const dNorm = d.filePath.replace(/\\/g, '/').toLowerCase();
+      return (
+        dNorm === normDeleted ||
+        dNorm.startsWith(normDeleted + '/') ||
+        dNorm.startsWith(normDeleted + '\\')
+      );
+    });
+
+    if (matchingEntries.length === 0) return;
+
+    set(state => {
+      const nextDrafts = { ...state.drafts };
+      for (const [draftId, draft] of matchingEntries) {
+        nextDrafts[draftId] = {
+          ...draft,
+          isDeletedOnDisk: true,
+        };
+      }
+      return { drafts: nextDrafts };
+    });
+  },
+
+  resolveConflictKeepMine: (id: string) => {
+    const draft = get().drafts[id];
+    if (!draft) return;
+    set(state => ({
+      drafts: {
+        ...state.drafts,
+        [id]: { ...draft, conflict: null },
+      },
+    }));
+  },
+
+  resolveConflictLoadDisk: (id: string) => {
+    const { drafts, tabs } = get();
+    const draft = drafts[id];
+    if (!draft || !draft.conflict?.diskRequest) return;
+
+    const reloaded = requestFileToDraft(draft.conflict.diskRequest, draft.filePath, draft.id);
+    const updatedTabs = tabs.map(t =>
+      t.id === id ? { ...t, name: reloaded.name, method: reloaded.method, isDirty: false } : t,
+    );
+
+    set({
+      drafts: {
+        ...drafts,
+        [id]: {
+          ...reloaded,
+          conflict: null,
+          isDeletedOnDisk: false,
+        },
+      },
+      tabs: updatedTabs,
+    });
+  },
+
+  clearDeletedFlag: (id: string) => {
+    const draft = get().drafts[id];
+    if (!draft) return;
+    set(state => ({
+      drafts: {
+        ...state.drafts,
+        [id]: { ...draft, isDeletedOnDisk: false },
+      },
+    }));
+  },
+
   closeTab: (id: string) => {
     const { tabs, activeRequestId } = get();
     if (tabs.length === 1) return; // Keep at least one tab open
@@ -287,7 +431,7 @@ export const useRequestStore = create<RequestState>((set, get) => ({
     const current = drafts[activeRequestId];
     if (!current) return;
 
-    const savedDraft = { ...current, isDirty: false };
+    const savedDraft = { ...current, isDirty: false, isDeletedOnDisk: false };
     const updatedTabs = tabs.map(t => (t.id === activeRequestId ? { ...t, isDirty: false } : t));
 
     set({

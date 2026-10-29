@@ -1,5 +1,10 @@
 import { create } from 'zustand';
-import type { CollectionTree, CollectionTreeNode, RequestFile } from '@reqit/core';
+import type {
+  CollectionTree,
+  CollectionTreeNode,
+  RequestFile,
+  WatcherChangeEvent,
+} from '@reqit/core';
 import { useRequestStore } from './requestStore';
 
 export interface CollectionItem {
@@ -20,6 +25,7 @@ export interface CollectionState {
   loadCollection: (folderPath?: string) => Promise<CollectionTree | null>;
   createCollection: (name: string, targetDir?: string) => Promise<CollectionTree | null>;
   refreshTree: () => Promise<void>;
+  applyWatcherChange: (event: WatcherChangeEvent) => void;
   createRequest: (parentDir: string, name: string) => Promise<CollectionTreeNode | null>;
   createFolder: (parentDir: string, name: string) => Promise<CollectionTreeNode | null>;
   renameItem: (itemPath: string, newName: string) => Promise<boolean>;
@@ -119,6 +125,34 @@ export const useCollectionStore = create<CollectionState>((set, get) => ({
       }
     } catch {
       // ignore transient refresh failure
+    }
+  },
+
+  applyWatcherChange: (event: WatcherChangeEvent): void => {
+    // 1. Update collection tree incrementally
+    set({
+      currentTree: event.tree,
+      activeCollection: {
+        id: event.tree.rootPath,
+        name: event.tree.collection.name,
+        path: event.tree.rootPath,
+      },
+    });
+
+    // 2. Dispatch file events to requestStore
+    const requestStore = useRequestStore.getState();
+
+    // Handle deleted files and folders
+    for (const deletedPath of event.deletedPaths) {
+      requestStore.handleWatcherFileDelete(deletedPath);
+    }
+
+    // Handle changed files (ignore app's internal saves for that specific file)
+    for (const changedPath of event.changedPaths) {
+      const detail = event.details[changedPath];
+      if (detail && !detail.isAppWrite && !event.isAppWrite) {
+        requestStore.handleWatcherFileChange(changedPath, detail);
+      }
     }
   },
 

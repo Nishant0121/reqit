@@ -4,6 +4,7 @@ import type {
   SendOptions,
   CollectionTree,
   CollectionTreeNode,
+  WatcherChangeEvent,
 } from '@reqit/core';
 
 export interface SendRequestPayload {
@@ -135,4 +136,6 @@ export interface ReqitApi {
   reorderFolder: (payload: ReorderFolderPayload) => Promise<boolean>;
   /** Saves a request directly to its YAML file */
   saveRequest: (payload: SaveRequestPayload) => Promise<boolean>;
+  /** Subscribes to live collection file watcher changes */
+  onCollectionChange: (callback: (event: WatcherChangeEvent) => void) => () => void;
 }

@@ -441,6 +441,17 @@ test.describe('Desktop App Shell Smoke Test (Phase 5)', () => {
   });
 
   test('verifies live method badge update in sidebar', async () => {
+    // If no request is in the sidebar, create one
+    const sidebarItem = page.locator('aside [role="treeitem"]');
+    if ((await sidebarItem.count()) === 0) {
+      const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'reqit-badge-col-'));
+      await page.evaluate(async dir => {
+        await window.reqitApi.createCollection({ name: 'Badge Collection', targetDir: dir });
+        await window.reqitApi.createRequest({ parentDir: dir, name: 'Badge Test' });
+      }, tmpDir);
+      await page.locator('aside [role="treeitem"]').first().click();
+    }
+
     const methodSelect = page.locator('#method-select');
     await expect(methodSelect).toBeVisible();
 
@@ -489,5 +500,97 @@ test.describe('Desktop App Shell Smoke Test (Phase 5)', () => {
     // 5. Close modal
     await page.keyboard.press('Escape');
     await expect(modalTitle).not.toBeVisible();
+  });
+
+  test('verifies Phase 10 File Watcher, silent reload, conflict banner, diff view, and file deletion handling', async () => {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'reqit-phase10-smoke-'));
+    try {
+      // 1. Create a collection and open it
+      await page.evaluate(async dir => {
+        return window.reqitApi.createCollection({ name: 'Live Reload Col', targetDir: dir });
+      }, tmpDir);
+
+      // Create a request file
+      const reqNode = await page.evaluate(async dir => {
+        return window.reqitApi.createRequest({ parentDir: dir, name: 'Live Request' });
+      }, tmpDir);
+
+      // Select it in the sidebar so it's open in active tab
+      const treeItem = page.locator('aside [role="treeitem"]:has-text("Live Request")');
+      await expect(treeItem).toBeVisible();
+      await treeItem.click();
+
+      const urlInput = page.locator('#url-input');
+      await expect(urlInput).toBeVisible();
+
+      // 2. Modify file externally without unsaved edits (silent reload)
+      const externalYaml1 = [
+        'version: 1',
+        'name: Live Request',
+        'method: POST',
+        `url: http://127.0.0.1:${port}/silent-reloaded`,
+        '',
+      ].join('\n');
+      fs.writeFileSync(reqNode.path, externalYaml1, 'utf-8');
+
+      // Should reload silently without clicking anything
+      await expect(urlInput).toHaveValue(`http://127.0.0.1:${port}/silent-reloaded`, {
+        timeout: 4000,
+      });
+      const methodSelect = page.locator('#method-select');
+      await expect(methodSelect).toHaveValue('POST');
+
+      // 3. Make an unsaved edit in Reqit (draft is dirty)
+      await urlInput.fill(`http://127.0.0.1:${port}/local-unsaved-edit`);
+
+      // 4. Modify file externally while draft is dirty -> conflict banner must appear
+      const externalYaml2 = [
+        'version: 1',
+        'name: Live Request',
+        'method: PUT',
+        `url: http://127.0.0.1:${port}/disk-conflict-version`,
+        '',
+      ].join('\n');
+      fs.writeFileSync(reqNode.path, externalYaml2, 'utf-8');
+
+      const conflictBanner = page.locator('#conflict-banner');
+      await expect(conflictBanner).toBeVisible({ timeout: 4000 });
+      await expect(conflictBanner).toContainText('Conflict detected');
+
+      // Local unsaved edit should NOT be overwritten
+      await expect(urlInput).toHaveValue(`http://127.0.0.1:${port}/local-unsaved-edit`);
+
+      // 5. Click "View diff" -> DiffModal opens
+      const viewDiffBtn = page.locator('#conflict-view-diff-btn');
+      await viewDiffBtn.click();
+
+      const diffModal = page.locator('#modal-title:has-text("Diff:")');
+      await expect(diffModal).toBeVisible();
+
+      // Modal should show additions / removals
+      await expect(page.locator('text=disk-conflict-version')).toBeVisible();
+      await expect(page.locator('text=local-unsaved-edit')).toBeVisible();
+
+      // Click "Keep My Edits" in modal
+      const keepMineModalBtn = page.locator('#diff-modal-keep-mine-btn');
+      await keepMineModalBtn.click();
+      await expect(diffModal).not.toBeVisible();
+      await expect(conflictBanner).not.toBeVisible();
+
+      // 6. External deletion while open -> deleted banner appears
+      fs.unlinkSync(reqNode.path);
+
+      const deletedBanner = page.locator('#deleted-banner');
+      await expect(deletedBanner).toBeVisible({ timeout: 4000 });
+      await expect(deletedBanner).toContainText('File deleted on disk');
+
+      // 7. Click "Re-create file" -> recreates on disk and dismisses banner
+      const recreateBtn = page.locator('#deleted-recreate-btn');
+      await recreateBtn.click();
+      await expect(deletedBanner).not.toBeVisible();
+      expect(fs.existsSync(reqNode.path)).toBe(true);
+    } finally {
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    }
   });
 });

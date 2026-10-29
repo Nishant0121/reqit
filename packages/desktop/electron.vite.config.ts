@@ -40,6 +40,10 @@ export default defineConfig({
   },
   renderer: {
     root: resolve(__dirname, 'src/renderer'),
+    define: {
+      'process.env': {},
+      'process.platform': JSON.stringify(process.platform),
+    },
     plugins: [devCspPlugin(), react(), tailwindcss()],
     build: {
       rollupOptions: {
