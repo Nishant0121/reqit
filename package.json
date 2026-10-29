@@ -1,6 +1,7 @@
 {
   "name": "reqit-root",
   "version": "0.1.0",
+  "repository": "https://github.com/Nishant0121/reqit.git",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@12.15.0",

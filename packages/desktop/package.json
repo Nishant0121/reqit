@@ -1,6 +1,13 @@
 {
   "name": "@reqit/desktop",
   "version": "0.1.0",
+  "description": "Git-native, local-first API client",
+  "author": "Reqit Contributors",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Nishant0121/reqit.git"
+  },
   "private": true,
   "type": "module",
   "exports": {
@@ -14,10 +21,10 @@
     "dev": "electron-vite dev",
     "build": "electron-vite build",
     "preview": "electron-vite preview",
-    "package": "electron-builder",
-    "package:win": "electron-builder --win",
-    "package:mac": "electron-builder --mac",
-    "package:linux": "electron-builder --linux",
+    "package": "electron-builder --publish never",
+    "package:win": "electron-builder --win --publish never",
+    "package:mac": "electron-builder --mac --publish never",
+    "package:linux": "electron-builder --linux --publish never",
     "test:smoke": "playwright test",
     "typecheck": "tsc --noEmit"
   },
@@ -50,6 +57,7 @@
     "@vitejs/plugin-react": "^6.1.2",
     "autoprefixer": "^10.6.1",
     "electron": "^45.0.0",
+    "electron-builder": "^26.18.0",
     "electron-vite": "^6.0.0",
     "postcss": "^8.5.31",
     "tailwindcss": "^4.3.3",

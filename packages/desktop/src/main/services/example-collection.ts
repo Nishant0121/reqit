@@ -73,7 +73,7 @@ environments:
   if (!fs.existsSync(httpMethodsDir)) fs.mkdirSync(httpMethodsDir, { recursive: true });
 
   fs.writeFileSync(
-    path.join(httpMethodsDir, 'Get Request.yaml'),
+    path.join(httpMethodsDir, 'GET Request.yaml'),
     `version: 1
 name: GET Request
 method: GET
@@ -90,7 +90,7 @@ params:
   );
 
   fs.writeFileSync(
-    path.join(httpMethodsDir, 'Post JSON.yaml'),
+    path.join(httpMethodsDir, 'POST JSON.yaml'),
     `version: 1
 name: POST JSON
 method: POST
@@ -112,7 +112,7 @@ body:
   );
 
   fs.writeFileSync(
-    path.join(httpMethodsDir, 'Put Request.yaml'),
+    path.join(httpMethodsDir, 'PUT Request.yaml'),
     `version: 1
 name: PUT Request
 method: PUT
@@ -133,7 +133,7 @@ body:
   );
 
   fs.writeFileSync(
-    path.join(httpMethodsDir, 'Delete Request.yaml'),
+    path.join(httpMethodsDir, 'DELETE Request.yaml'),
     `version: 1
 name: DELETE Request
 method: DELETE
