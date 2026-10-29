@@ -48,6 +48,12 @@ jobs:
       - name: Build packages
         run: pnpm --filter @reqit/desktop run build
 
+      - name: Install Linux build dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libfuse2t64 || sudo apt-get install -y libfuse2 || true
+
       - name: Package application
         run: ${{ matrix.package-cmd }}
         env:
