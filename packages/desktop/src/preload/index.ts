@@ -14,6 +14,8 @@ import type {
   DeleteEnvironmentPayload,
   SaveSecretsPayload,
   EnsureSecretsGitignoredResult,
+  HistoryListFilter,
+  HistorySettings,
 } from '../shared/ipc-types.js';
 
 const api: ReqitApi = {
@@ -133,6 +135,24 @@ const api: ReqitApi = {
     return () => {
       ipcRenderer.removeListener('collection:watchChange', handler);
     };
+  },
+  getHistory: (filter?: HistoryListFilter) => {
+    return ipcRenderer.invoke('history:list', filter);
+  },
+  getHistoryDetail: (id: string) => {
+    return ipcRenderer.invoke('history:getById', id);
+  },
+  deleteHistoryEntry: (id: string) => {
+    return ipcRenderer.invoke('history:delete', id);
+  },
+  clearHistory: () => {
+    return ipcRenderer.invoke('history:clear');
+  },
+  getHistorySettings: () => {
+    return ipcRenderer.invoke('history:getSettings');
+  },
+  updateHistorySettings: (settings: Partial<HistorySettings>) => {
+    return ipcRenderer.invoke('history:updateSettings', settings);
   },
 };
 

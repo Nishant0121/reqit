@@ -4,6 +4,7 @@ import type { KeyValueRow } from '../components/ui/KeyValueTable';
 import type { AuthType, BodyType } from '../components/RequestPanel';
 import type { TabItemData } from '../components/RequestTabs';
 import { requestFileToDraft } from '../lib/request-mapper';
+import type { HistoryEntryDetail } from '../../../shared/ipc-types.js';
 
 export interface MultipartRow {
   id: string;
@@ -57,6 +58,7 @@ export interface RequestState {
   historyCount: number;
 
   createRequest: (initialUrl?: string) => string;
+  createRequestFromHistory: (historyDetail: HistoryEntryDetail) => string;
   openRequest: (id: string) => void;
   openDraftFromFile: (filePath: string, file: RequestFile) => void;
   onItemRenamed: (oldPath: string, newPath: string, newName: string) => void;
@@ -145,6 +147,49 @@ export const useRequestStore = create<RequestState>((set, get) => ({
     set(state => ({
       drafts: { ...state.drafts, [id]: newDraft },
       tabs: [...state.tabs, { id, name, method: 'GET' }],
+      activeRequestId: id,
+      result: null,
+      error: null,
+    }));
+
+    return id;
+  },
+
+  createRequestFromHistory: (historyDetail: HistoryEntryDetail) => {
+    const id = `req-${Date.now()}`;
+    const reqSummary = historyDetail.requestSummary;
+    const reqName = `${historyDetail.requestName || 'Request'} (copy)`;
+
+    const reqFile: RequestFile = {
+      version: 1,
+      name: reqName,
+      method: historyDetail.method,
+      url: historyDetail.url,
+      headers: reqSummary.headers?.map(h => ({
+        name: h.name,
+        value: h.value,
+        enabled: h.enabled ?? true,
+      })),
+      params: reqSummary.params?.map(p => ({
+        name: p.name,
+        value: p.value,
+        enabled: p.enabled ?? true,
+      })),
+      auth: reqSummary.auth as RequestFile['auth'],
+      body: reqSummary.bodyType
+        ? {
+            type: reqSummary.bodyType,
+            content: reqSummary.bodyContent,
+          }
+        : undefined,
+    };
+
+    const draft = requestFileToDraft(reqFile, undefined, id);
+    draft.isDirty = true;
+
+    set(state => ({
+      drafts: { ...state.drafts, [id]: draft },
+      tabs: [...state.tabs, { id, name: reqName, method: historyDetail.method }],
       activeRequestId: id,
       result: null,
       error: null,

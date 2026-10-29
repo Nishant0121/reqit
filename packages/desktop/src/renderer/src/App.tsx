@@ -13,9 +13,13 @@ import { ConflictBanner } from './components/ConflictBanner';
 import { DeletedBanner } from './components/DeletedBanner';
 import { DiffModal } from './components/DiffModal';
 import { EnvironmentSecretsModal } from './components/EnvironmentSecretsModal';
+import { HistoryDetailModal } from './components/HistoryDetailModal';
+import { HistorySettingsModal } from './components/HistorySettingsModal';
+import { ClearHistoryConfirmModal } from './components/ClearHistoryConfirmModal';
 import { useAppStore } from './stores/appStore';
 import { useCollectionStore } from './stores/collectionStore';
 import { useRequestStore } from './stores/requestStore';
+import { useHistoryStore } from './stores/historyStore';
 import { matchesShortcut } from './lib/shortcuts';
 import { parseUrlQueryParams, syncUrlWithParams } from './lib/url-sync';
 import { draftToRequestFile } from './lib/request-mapper';
@@ -101,6 +105,8 @@ export default function App(): React.JSX.Element {
     resolveConflictKeepMine,
     resolveConflictLoadDisk,
   } = useRequestStore();
+
+  const loadHistoryEntries = useHistoryStore(s => s.loadEntries);
 
   const activeDraft = drafts[activeRequestId] || {
     id: activeRequestId,
@@ -269,7 +275,9 @@ export default function App(): React.JSX.Element {
       const res = await promise;
       setResult(res);
       incrementHistoryCount();
+      loadHistoryEntries();
     } catch (err: unknown) {
+      loadHistoryEntries();
       const errStr = err instanceof Error ? err.message : String(err);
       let cause = 'Connection refused or request aborted.';
       let action = 'Check that the destination server is running and accessible.';
@@ -307,6 +315,7 @@ export default function App(): React.JSX.Element {
     setResult,
     setActiveExecutionId,
     incrementHistoryCount,
+    loadHistoryEntries,
   ]);
 
   // Cancel request execution
@@ -644,6 +653,9 @@ export default function App(): React.JSX.Element {
           onLoadDisk={() => resolveConflictLoadDisk(activeDraft.id)}
         />
       )}
+      <HistoryDetailModal />
+      <HistorySettingsModal />
+      <ClearHistoryConfirmModal />
     </div>
   );
 }

@@ -700,4 +700,70 @@ test.describe('Desktop App Shell Smoke Test (Phase 5)', () => {
       fs.rmSync(tmpDir, { recursive: true, force: true });
     }
   });
+
+  test('verifies Phase 12: Request history panel, day grouping, inspection modal, open as new request, settings, and clear history', async () => {
+    // 1. Switch to the History tab
+    const historyTabBtn = page.locator('button:has-text("History")');
+    await expect(historyTabBtn).toBeVisible();
+    await historyTabBtn.click();
+
+    // 2. Search input and filters are visible
+    const searchInput = page.locator('input[aria-label="Search history"]');
+    await expect(searchInput).toBeVisible();
+
+    // 3. Sent requests appear under "Today"
+    const todayHeader = page.locator('div:has-text("Today")').first();
+    await expect(todayHeader).toBeVisible();
+
+    // 4. Click the top history entry to inspect it
+    const firstHistoryRow = page.locator('div[role="button"]:has-text("GET")').first();
+    await expect(firstHistoryRow).toBeVisible();
+    await firstHistoryRow.click();
+
+    // 5. History Inspection modal opens
+    const inspectionModal = page.locator('#modal-title:has-text("Request History Inspection")');
+    await expect(inspectionModal).toBeVisible();
+
+    // Verify response body or URL is rendered inside the modal
+    const modalContent = page.locator('div[role="dialog"]');
+    await expect(modalContent).toContainText('Status:');
+
+    // 6. Test "Open as new request"
+    const openNewBtn = page.locator('button:has-text("Open as new request")');
+    await expect(openNewBtn).toBeVisible();
+    await openNewBtn.click();
+
+    // Modal closes and new tab appears
+    await expect(inspectionModal).not.toBeVisible();
+    const tabs = page.locator('[role="tab"]');
+    expect(await tabs.count()).toBeGreaterThanOrEqual(2);
+
+    // Switch back to History tab
+    await historyTabBtn.click();
+
+    // 7. Open History Settings
+    const settingsBtn = page.locator('button[aria-label="History Settings"]');
+    await expect(settingsBtn).toBeVisible();
+    await settingsBtn.click();
+
+    const settingsModal = page.locator('#modal-title:has-text("History Settings")');
+    await expect(settingsModal).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(settingsModal).not.toBeVisible();
+
+    // 8. Clear History with confirmation
+    const clearBtn = page.locator('button[aria-label="Clear All History"]');
+    await expect(clearBtn).toBeVisible();
+    await clearBtn.click();
+
+    const confirmModal = page.locator('#modal-title:has-text("Clear Request History")');
+    await expect(confirmModal).toBeVisible();
+
+    const confirmClearBtn = page.locator('button:has-text("Clear All History")').last();
+    await confirmClearBtn.click();
+    await expect(confirmModal).not.toBeVisible();
+
+    // Verify history entries are cleared
+    await expect(page.locator('text=No requests sent yet')).toBeVisible();
+  });
 });

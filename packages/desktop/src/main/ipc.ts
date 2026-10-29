@@ -13,6 +13,7 @@ import {
   type RequestFile,
 } from '@reqit/core';
 import { fileService } from './services/file-service.js';
+import { historyService } from './services/history-service.js';
 import type {
   SendRequestPayload,
   ReadBodyChunkPayload,
@@ -28,6 +29,8 @@ import type {
   SaveEnvironmentPayload,
   DeleteEnvironmentPayload,
   SaveSecretsPayload,
+  HistoryListFilter,
+  HistorySettings,
 } from '../shared/ipc-types.js';
 
 const activeRequests = new Map<string, AbortController>();
@@ -116,11 +119,13 @@ export function registerIpcHandlers(): void {
     },
   );
 
-  // 6. request:send (Phase 11: resolves variables across all scopes)
+  // 6. request:send (Phase 11: resolves variables across all scopes, Phase 12: records history)
   ipcMain.handle('request:send', async (_event, payload: SendRequestPayload) => {
     const { requestId, request, options } = payload;
     const abortController = new AbortController();
     activeRequests.set(requestId, abortController);
+    const startTime = Date.now();
+    const knownSecrets: string[] = [];
 
     try {
       // 1. Gather all variable scopes according to priority:
@@ -167,6 +172,15 @@ export function registerIpcHandlers(): void {
           }
 
           const secrets = await loadSecrets(payload.collectionPath);
+          if (secrets?.environments) {
+            for (const envSec of Object.values(secrets.environments)) {
+              for (const val of Object.values(envSec)) {
+                if (typeof val === 'string' && val.length > 0) {
+                  knownSecrets.push(val);
+                }
+              }
+            }
+          }
           if (secrets?.environments?.[activeEnv]) {
             scopes.secrets = secrets.environments[activeEnv];
           }
@@ -194,10 +208,42 @@ export function registerIpcHandlers(): void {
         throw err;
       }
 
-      const result = await sendRequest(resolvedRequest, {
-        ...options,
-        signal: abortController.signal,
-      });
+      let result;
+      try {
+        result = await sendRequest(resolvedRequest, {
+          ...options,
+          signal: abortController.signal,
+        });
+      } catch (err: unknown) {
+        const durationMs = Date.now() - startTime;
+        try {
+          historyService.addEntry({
+            request,
+            resolvedUrl: resolvedRequest.url,
+            collectionPath: payload.collectionPath,
+            error: err instanceof Error ? err : String(err),
+            durationMs,
+            knownSecrets,
+          });
+        } catch (histErr) {
+          console.error('Failed to record history entry on error:', histErr);
+        }
+        throw err;
+      }
+
+      const durationMs = Date.now() - startTime;
+      try {
+        historyService.addEntry({
+          request,
+          resolvedUrl: resolvedRequest.url,
+          collectionPath: payload.collectionPath,
+          result,
+          durationMs,
+          knownSecrets,
+        });
+      } catch (histErr) {
+        console.error('Failed to record history entry:', histErr);
+      }
 
       // Ensure only structured cloneable data is sent across IPC (no functions)
       return {
@@ -302,5 +348,35 @@ export function registerIpcHandlers(): void {
   // 22. secrets:ensureGitignored
   ipcMain.handle('secrets:ensureGitignored', async (_event, rootPath: string) => {
     return fileService.ensureSecretsGitignored(rootPath);
+  });
+
+  // 23. history:list
+  ipcMain.handle('history:list', async (_event, filter?: HistoryListFilter) => {
+    return historyService.listEntries(filter);
+  });
+
+  // 24. history:getById
+  ipcMain.handle('history:getById', async (_event, id: string) => {
+    return historyService.getEntryById(id);
+  });
+
+  // 25. history:delete
+  ipcMain.handle('history:delete', async (_event, id: string) => {
+    return historyService.deleteEntry(id);
+  });
+
+  // 26. history:clear
+  ipcMain.handle('history:clear', async () => {
+    return historyService.clearHistory();
+  });
+
+  // 27. history:getSettings
+  ipcMain.handle('history:getSettings', async () => {
+    return historyService.getSettings();
+  });
+
+  // 28. history:updateSettings
+  ipcMain.handle('history:updateSettings', async (_event, settings: Partial<HistorySettings>) => {
+    return historyService.updateSettings(settings);
   });
 }

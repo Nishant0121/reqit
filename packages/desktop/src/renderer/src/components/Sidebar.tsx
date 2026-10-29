@@ -21,6 +21,7 @@ import { Button } from './ui/Button';
 import { strings } from '../lib/strings';
 import { useCollectionStore } from '../stores/collectionStore';
 import { useRequestStore } from '../stores/requestStore';
+import { SidebarHistory } from './SidebarHistory';
 
 export interface RequestItem {
   id: string;
@@ -585,179 +586,189 @@ export function Sidebar({
           </button>
         </div>
 
-        {/* New Request or New Folder Button */}
-        <div className="flex items-center gap-1">
-          {tree?.rootPath && (
+        {/* New Request or New Folder Button (Collections only) */}
+        {activeTab === 'collections' && (
+          <div className="flex items-center gap-1">
+            {tree?.rootPath && (
+              <Button
+                variant="ghost"
+                size="compact"
+                onClick={() => {
+                  setCreatingItem({ parentDir: tree.rootPath, type: 'folder' });
+                  setCreatingName('');
+                }}
+                title="New Folder in root"
+                aria-label="New Folder"
+                className="w-7 h-7 p-0 flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+              >
+                <FolderPlus className="w-5 h-5" strokeWidth={1.75} />
+              </Button>
+            )}
+
             <Button
               variant="ghost"
               size="compact"
               onClick={() => {
-                setCreatingItem({ parentDir: tree.rootPath, type: 'folder' });
-                setCreatingName('');
+                if (tree?.rootPath) {
+                  setCreatingItem({ parentDir: tree.rootPath, type: 'request' });
+                  setCreatingName('');
+                } else if (onNewRequest) {
+                  onNewRequest();
+                }
               }}
-              title="New Folder in root"
-              aria-label="New Folder"
+              title={strings.sidebar.newRequest}
+              aria-label={strings.sidebar.newRequest}
               className="w-7 h-7 p-0 flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
             >
-              <FolderPlus className="w-5 h-5" strokeWidth={1.75} />
+              <Plus className="w-5 h-5" strokeWidth={1.75} />
             </Button>
-          )}
-
-          <Button
-            variant="ghost"
-            size="compact"
-            onClick={() => {
-              if (tree?.rootPath) {
-                setCreatingItem({ parentDir: tree.rootPath, type: 'request' });
-                setCreatingName('');
-              } else if (onNewRequest) {
-                onNewRequest();
-              }
-            }}
-            title={strings.sidebar.newRequest}
-            aria-label={strings.sidebar.newRequest}
-            className="w-7 h-7 p-0 flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-          >
-            <Plus className="w-5 h-5" strokeWidth={1.75} />
-          </Button>
-        </div>
-      </div>
-
-      {/* Filter Bar with Count and Clear Button */}
-      <div className="p-2 border-b" style={{ borderColor: 'var(--border)' }}>
-        <div
-          className="relative flex items-center h-[28px] rounded-[4px] border px-2 text-[12px]"
-          style={{
-            backgroundColor: 'var(--bg-input)',
-            borderColor: 'var(--border-strong)',
-          }}
-        >
-          <Search
-            className="w-4 h-4 mr-1.5 shrink-0"
-            style={{ color: 'var(--text-muted)' }}
-            strokeWidth={1.75}
-          />
-          <input
-            type="text"
-            value={filterText}
-            onChange={e => setFilterText(e.target.value)}
-            placeholder={strings.sidebar.filterPlaceholder}
-            className="w-full bg-transparent outline-none app-focus-ring text-[12px]"
-            style={{ color: 'var(--text-primary)' }}
-            aria-label={strings.sidebar.filterRequests}
-          />
-          {filterText && (
-            <button
-              type="button"
-              onClick={() => setFilterText('')}
-              className="p-0.5 rounded-[2px] hover:bg-[var(--bg-hover)] transition-fast"
-              style={{ color: 'var(--text-muted)' }}
-              title={strings.sidebar.clearFilter}
-              aria-label={strings.sidebar.clearFilter}
-            >
-              <X className="w-3.5 h-3.5" strokeWidth={1.75} />
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Requests Tree / List */}
-      <div
-        className="flex-1 overflow-y-auto py-1"
-        onDragOver={e => {
-          if (tree?.rootPath && draggedPath) {
-            e.preventDefault();
-            e.dataTransfer.dropEffect = 'move';
-          }
-        }}
-        onDrop={async e => {
-          if (!tree?.rootPath || !draggedPath) return;
-          e.preventDefault();
-          const src = draggedPath;
-          setDraggedPath(null);
-          setDragOverTarget(null);
-          await moveItem(src, tree.rootPath);
-        }}
-      >
-        {/* Inline input for root-level new item */}
-        {tree?.rootPath && creatingItem?.parentDir === tree.rootPath && (
-          <div className="flex items-center h-[28px] px-3">
-            {creatingItem.type === 'folder' ? (
-              <Folder className="w-3.5 h-3.5 mr-1.5 text-[var(--accent)] shrink-0" />
-            ) : (
-              <FilePlus className="w-3.5 h-3.5 mr-1.5 text-[var(--text-muted)] shrink-0" />
-            )}
-            <input
-              ref={createInputRef}
-              type="text"
-              value={creatingName}
-              placeholder={`Name ${creatingItem.type}...`}
-              onChange={e => setCreatingName(e.target.value)}
-              onKeyDown={e => {
-                if (e.key === 'Enter') handleCreateSubmit();
-                if (e.key === 'Escape') setCreatingItem(null);
-              }}
-              onBlur={handleCreateSubmit}
-              className="flex-1 h-[22px] px-1 bg-[var(--bg-input)] text-[12px] rounded border border-[var(--accent)] outline-none"
-              style={{ color: 'var(--text-primary)' }}
-            />
           </div>
         )}
+      </div>
 
-        {tree ? (
-          hasTreeNodes ? (
-            <div role="tree" aria-label="Requests Tree">
-              {tree.tree.map((node: CollectionTreeNode) =>
-                renderTreeNode(node, tree.rootPath, tree.tree, 0),
+      {activeTab === 'history' ? (
+        <SidebarHistory />
+      ) : (
+        <>
+          {/* Filter Bar with Count and Clear Button */}
+          <div className="p-2 border-b" style={{ borderColor: 'var(--border)' }}>
+            <div
+              className="relative flex items-center h-[28px] rounded-[4px] border px-2 text-[12px]"
+              style={{
+                backgroundColor: 'var(--bg-input)',
+                borderColor: 'var(--border-strong)',
+              }}
+            >
+              <Search
+                className="w-4 h-4 mr-1.5 shrink-0"
+                style={{ color: 'var(--text-muted)' }}
+                strokeWidth={1.75}
+              />
+              <input
+                type="text"
+                value={filterText}
+                onChange={e => setFilterText(e.target.value)}
+                placeholder={strings.sidebar.filterPlaceholder}
+                className="w-full bg-transparent outline-none app-focus-ring text-[12px]"
+                style={{ color: 'var(--text-primary)' }}
+                aria-label={strings.sidebar.filterRequests}
+              />
+              {filterText && (
+                <button
+                  type="button"
+                  onClick={() => setFilterText('')}
+                  className="p-0.5 rounded-[2px] hover:bg-[var(--bg-hover)] transition-fast"
+                  style={{ color: 'var(--text-muted)' }}
+                  title={strings.sidebar.clearFilter}
+                  aria-label={strings.sidebar.clearFilter}
+                >
+                  <X className="w-3.5 h-3.5" strokeWidth={1.75} />
+                </button>
               )}
             </div>
-          ) : (
-            <div className="p-4 text-center text-[12px]" style={{ color: 'var(--text-muted)' }}>
-              No requests in this collection yet. Click + to create one.
-            </div>
-          )
-        ) : requests.length > 0 ? (
-          // Legacy/Fallback list when no collection loaded
-          <div role="tree" aria-label="Requests">
-            {requests.map(req => {
-              const isSelected = req.id === activeRequestId;
-              const draft = drafts[req.id];
-              const displayMethod = draft?.method || req.method;
-              const displayName = draft?.name || req.name;
-              return (
-                <div
-                  key={req.id}
-                  role="treeitem"
-                  aria-selected={isSelected}
-                  tabIndex={0}
-                  onClick={() => onSelectRequest?.(req.id)}
-                  className="flex items-center h-[28px] px-3 cursor-pointer text-[13px] transition-fast app-focus-ring relative"
-                  style={{
-                    backgroundColor: isSelected ? 'var(--accent-subtle)' : 'transparent',
-                    borderLeft: isSelected ? '2px solid var(--accent)' : '2px solid transparent',
+          </div>
+
+          {/* Requests Tree / List */}
+          <div
+            className="flex-1 overflow-y-auto py-1"
+            onDragOver={e => {
+              if (tree?.rootPath && draggedPath) {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+              }
+            }}
+            onDrop={async e => {
+              if (!tree?.rootPath || !draggedPath) return;
+              e.preventDefault();
+              const src = draggedPath;
+              setDraggedPath(null);
+              setDragOverTarget(null);
+              await moveItem(src, tree.rootPath);
+            }}
+          >
+            {/* Inline input for root-level new item */}
+            {tree?.rootPath && creatingItem?.parentDir === tree.rootPath && (
+              <div className="flex items-center h-[28px] px-3">
+                {creatingItem.type === 'folder' ? (
+                  <Folder className="w-3.5 h-3.5 mr-1.5 text-[var(--accent)] shrink-0" />
+                ) : (
+                  <FilePlus className="w-3.5 h-3.5 mr-1.5 text-[var(--text-muted)] shrink-0" />
+                )}
+                <input
+                  ref={createInputRef}
+                  type="text"
+                  value={creatingName}
+                  placeholder={`Name ${creatingItem.type}...`}
+                  onChange={e => setCreatingName(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') handleCreateSubmit();
+                    if (e.key === 'Escape') setCreatingItem(null);
                   }}
-                >
-                  <MethodBadge method={displayMethod} short />
-                  <span
-                    className="truncate ml-1.5 flex-1"
-                    style={{
-                      color: isSelected ? 'var(--text-primary)' : 'var(--text-secondary)',
-                      fontWeight: isSelected ? 500 : 400,
-                    }}
-                    title={displayName}
-                  >
-                    {displayName}
-                  </span>
+                  onBlur={handleCreateSubmit}
+                  className="flex-1 h-[22px] px-1 bg-[var(--bg-input)] text-[12px] rounded border border-[var(--accent)] outline-none"
+                  style={{ color: 'var(--text-primary)' }}
+                />
+              </div>
+            )}
+
+            {tree ? (
+              hasTreeNodes ? (
+                <div role="tree" aria-label="Requests Tree">
+                  {tree.tree.map((node: CollectionTreeNode) =>
+                    renderTreeNode(node, tree.rootPath, tree.tree, 0),
+                  )}
                 </div>
-              );
-            })}
+              ) : (
+                <div className="p-4 text-center text-[12px]" style={{ color: 'var(--text-muted)' }}>
+                  No requests in this collection yet. Click + to create one.
+                </div>
+              )
+            ) : requests.length > 0 ? (
+              // Legacy/Fallback list when no collection loaded
+              <div role="tree" aria-label="Requests">
+                {requests.map(req => {
+                  const isSelected = req.id === activeRequestId;
+                  const draft = drafts[req.id];
+                  const displayMethod = draft?.method || req.method;
+                  const displayName = draft?.name || req.name;
+                  return (
+                    <div
+                      key={req.id}
+                      role="treeitem"
+                      aria-selected={isSelected}
+                      tabIndex={0}
+                      onClick={() => onSelectRequest?.(req.id)}
+                      className="flex items-center h-[28px] px-3 cursor-pointer text-[13px] transition-fast app-focus-ring relative"
+                      style={{
+                        backgroundColor: isSelected ? 'var(--accent-subtle)' : 'transparent',
+                        borderLeft: isSelected
+                          ? '2px solid var(--accent)'
+                          : '2px solid transparent',
+                      }}
+                    >
+                      <MethodBadge method={displayMethod} short />
+                      <span
+                        className="truncate ml-1.5 flex-1"
+                        style={{
+                          color: isSelected ? 'var(--text-primary)' : 'var(--text-secondary)',
+                          fontWeight: isSelected ? 500 : 400,
+                        }}
+                        title={displayName}
+                      >
+                        {displayName}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="p-4 text-center text-[12px]" style={{ color: 'var(--text-muted)' }}>
+                {strings.sidebar.noRequestsYet}
+              </div>
+            )}
           </div>
-        ) : (
-          <div className="p-4 text-center text-[12px]" style={{ color: 'var(--text-muted)' }}>
-            {strings.sidebar.noRequestsYet}
-          </div>
-        )}
-      </div>
+        </>
+      )}
 
       {/* Context Menu Modal / Popup */}
       {contextMenu && (

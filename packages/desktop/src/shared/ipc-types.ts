@@ -7,7 +7,54 @@ import type {
   WatcherChangeEvent,
   EnvironmentFile,
   SecretsFile,
+  HttpMethod,
 } from '@reqit/core';
+
+export type HistoryStatusFilter = 'all' | '2xx' | '4xx' | '5xx' | 'error';
+
+export interface HistoryListFilter {
+  query?: string;
+  statusFilter?: HistoryStatusFilter;
+  limit?: number;
+  offset?: number;
+}
+
+export interface HistoryEntrySummary {
+  id: string;
+  timestamp: number;
+  collectionPath?: string;
+  requestName: string;
+  method: HttpMethod;
+  url: string;
+  status?: number;
+  statusText?: string;
+  durationMs?: number;
+  sizeBytes?: number;
+  isError: boolean;
+}
+
+export interface HistoryEntryDetail extends HistoryEntrySummary {
+  requestSummary: {
+    name: string;
+    method: HttpMethod;
+    url: string;
+    headers?: Array<{ name: string; value: string; enabled?: boolean }>;
+    params?: Array<{ name: string; value: string; enabled?: boolean }>;
+    auth?: Record<string, unknown>;
+    bodyType?: string;
+    bodyContent?: string;
+    bodyForm?: Array<{ name: string; value: string; enabled?: boolean }>;
+  };
+  responseHeaders?: Record<string, string>;
+  responseBody?: string;
+  errorMessage?: string;
+}
+
+export interface HistorySettings {
+  enabled: boolean;
+  maxEntries: number;
+  retentionDays: number;
+}
 
 export interface SendRequestPayload {
   requestId: string;
@@ -123,6 +170,14 @@ export interface IpcChannels {
   'environment:delete': (payload: DeleteEnvironmentPayload) => Promise<boolean>;
   'secrets:save': (payload: SaveSecretsPayload) => Promise<string>;
   'secrets:ensureGitignored': (rootPath: string) => Promise<EnsureSecretsGitignoredResult>;
+  'history:list': (
+    filter?: HistoryListFilter,
+  ) => Promise<{ entries: HistoryEntrySummary[]; total: number }>;
+  'history:getById': (id: string) => Promise<HistoryEntryDetail | null>;
+  'history:delete': (id: string) => Promise<boolean>;
+  'history:clear': () => Promise<boolean>;
+  'history:getSettings': () => Promise<HistorySettings>;
+  'history:updateSettings': (settings: Partial<HistorySettings>) => Promise<HistorySettings>;
 }
 
 export type IpcChannelName = keyof IpcChannels;
@@ -182,4 +237,18 @@ export interface ReqitApi {
   ensureSecretsGitignored: (rootPath: string) => Promise<EnsureSecretsGitignoredResult>;
   /** Subscribes to live collection file watcher changes */
   onCollectionChange: (callback: (event: WatcherChangeEvent) => void) => () => void;
+  /** Gets paginated/filtered list of request history entries */
+  getHistory: (
+    filter?: HistoryListFilter,
+  ) => Promise<{ entries: HistoryEntrySummary[]; total: number }>;
+  /** Gets full request history detail including body and headers */
+  getHistoryDetail: (id: string) => Promise<HistoryEntryDetail | null>;
+  /** Deletes a single request history entry by ID */
+  deleteHistoryEntry: (id: string) => Promise<boolean>;
+  /** Clears all request history entries */
+  clearHistory: () => Promise<boolean>;
+  /** Gets current history settings */
+  getHistorySettings: () => Promise<HistorySettings>;
+  /** Updates history settings (enabled, retentionDays, maxEntries) */
+  updateHistorySettings: (settings: Partial<HistorySettings>) => Promise<HistorySettings>;
 }

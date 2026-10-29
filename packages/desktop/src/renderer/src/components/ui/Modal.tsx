@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 import { Button } from './Button';
 
-export type ModalSize = 'small' | 'default' | 'large';
+export type ModalSize = 'small' | 'default' | 'large' | 'xlarge';
 
 export interface ModalProps {
   isOpen: boolean;
@@ -83,6 +83,7 @@ export function Modal({
     small: 'max-w-[480px]',
     default: 'max-w-[640px]',
     large: 'max-w-[800px]',
+    xlarge: 'max-w-[960px]',
   };
 
   return (

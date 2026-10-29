@@ -290,14 +290,14 @@ This plan breaks the whole project into small phases. Each phase is meant to tak
 
 **Goal:** find and re-run past requests.
 
-- [ ] SQLite database (better-sqlite3) in the app data directory
-- [ ] Store: timestamp, method, resolved URL, status, duration, size, request summary, and response summary
-- [ ] Store response bodies up to a size cap, and prune old entries (keep the last N or last 30 days)
-- [ ] Never store secret values (store the unresolved request, or mask known secrets)
-- [ ] History panel in the sidebar: grouped by day, searchable, filter by status
-- [ ] Click an entry to view its saved response, or "Open as new request"
-- [ ] Clear history, with a confirmation
-- [ ] Settings toggle to disable history entirely
+- [x] SQLite database (better-sqlite3) in the app data directory
+- [x] Store: timestamp, method, resolved URL, status, duration, size, request summary, and response summary
+- [x] Store response bodies up to a size cap, and prune old entries (keep the last N or last 30 days)
+- [x] Never store secret values (store the unresolved request, or mask known secrets)
+- [x] History panel in the sidebar: grouped by day, searchable, filter by status
+- [x] Click an entry to view its saved response, or "Open as new request"
+- [x] Clear history, with a confirmation
+- [x] Settings toggle to disable history entirely
 
 **Done when:** every sent request appears in history, survives a restart, and contains no secrets.
 
