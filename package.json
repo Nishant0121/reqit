@@ -1,6 +1,7 @@
 {
   "name": "reqit-root",
   "version": "0.1.0",
+  "author": "Reqit Contributors <nishantpatil0121@gmail.com>",
   "repository": "https://github.com/Nishant0121/reqit.git",
   "private": true,
   "type": "module",

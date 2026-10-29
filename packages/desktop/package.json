@@ -2,7 +2,7 @@
   "name": "@reqit/desktop",
   "version": "0.1.0",
   "description": "Git-native, local-first API client",
-  "author": "Reqit Contributors",
+  "author": "Reqit Contributors <nishantpatil0121@gmail.com>",
   "license": "MIT",
   "repository": {
     "type": "git",
