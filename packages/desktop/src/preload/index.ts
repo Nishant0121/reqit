@@ -154,6 +154,24 @@ const api: ReqitApi = {
   updateHistorySettings: (settings: Partial<HistorySettings>) => {
     return ipcRenderer.invoke('history:updateSettings', settings);
   },
+  openExampleCollection: () => {
+    return ipcRenderer.invoke('collection:openExample');
+  },
+  getSettings: () => {
+    return ipcRenderer.invoke('settings:get');
+  },
+  updateSettings: (settings: Partial<import('../shared/settings-types.js').AppSettings>) => {
+    return ipcRenderer.invoke('settings:update', settings);
+  },
+  onMenuAction: (callback: (action: string) => void) => {
+    const handler = (_event: Electron.IpcRendererEvent, action: string) => {
+      callback(action);
+    };
+    ipcRenderer.on('menu:action', handler);
+    return () => {
+      ipcRenderer.removeListener('menu:action', handler);
+    };
+  },
 };
 
 // Expose safe, typed API in renderer window

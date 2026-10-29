@@ -13,6 +13,8 @@ import {
   Settings as SettingsIcon,
   Globe,
   Terminal,
+  Zap,
+  Sparkles,
 } from 'lucide-react';
 import { Button } from './ui/Button';
 import { strings } from '../lib/strings';
@@ -34,6 +36,9 @@ export interface TopBarProps {
   onOpenImportCurl?: () => void;
   onOpenCollection?: () => void;
   onNewCollection?: () => void;
+  onOpenSettings?: () => void;
+  onOpenWelcome?: () => void;
+  onOpenExample?: () => void;
   recentCollections?: string[];
   onSelectRecentCollection?: (path: string) => void;
 }
@@ -53,6 +58,9 @@ export function TopBar({
   onOpenImportCurl,
   onOpenCollection,
   onNewCollection,
+  onOpenSettings,
+  onOpenWelcome,
+  onOpenExample,
   recentCollections = [],
   onSelectRecentCollection,
 }: TopBarProps): React.JSX.Element {
@@ -119,15 +127,19 @@ export function TopBar({
           )}
         </button>
 
-        <div
-          className="flex h-6 w-6 items-center justify-center rounded-sm text-[12px] leading-none font-bold"
+        <button
+          type="button"
+          onClick={onOpenWelcome}
+          className="transition-fast flex h-6 w-6 items-center justify-center rounded-sm text-[12px] leading-none font-bold hover:opacity-90"
           style={{
             backgroundColor: 'var(--accent-strong)',
             color: 'var(--accent-fg)',
           }}
+          title="Open Welcome Screen"
+          aria-label="Open Welcome Screen"
         >
           R
-        </div>
+        </button>
 
         {/* Collection Dropdown Trigger */}
         <div className="relative ml-1" ref={menuRef}>
@@ -156,6 +168,34 @@ export function TopBar({
                 borderColor: 'var(--border-strong)',
               }}
             >
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuOpen(false);
+                  onOpenWelcome?.();
+                }}
+                className="transition-fast flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-(--bg-hover)"
+                style={{ color: 'var(--text-primary)' }}
+              >
+                <Zap className="h-5 w-5 text-(--accent)" strokeWidth={1.75} />
+                <span className="flex-1 font-medium">Welcome Screen...</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuOpen(false);
+                  onOpenExample?.();
+                }}
+                className="transition-fast flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-(--bg-hover)"
+                style={{ color: 'var(--text-primary)' }}
+              >
+                <Sparkles className="h-5 w-5 text-(--accent)" strokeWidth={1.75} />
+                <span className="flex-1 font-medium">Explore Example Collection...</span>
+              </button>
+
+              <div className="my-1 border-t" style={{ borderColor: 'var(--border)' }} />
+
               <button
                 type="button"
                 onClick={() => {
@@ -309,6 +349,19 @@ export function TopBar({
           </Button>
         )}
 
+        {onOpenWelcome && (
+          <Button
+            variant="ghost"
+            size="compact"
+            onClick={onOpenWelcome}
+            title="Welcome screen"
+            aria-label="Welcome screen"
+            className="transition-fast flex h-8 w-8 items-center justify-center rounded-sm p-0 text-(--text-secondary) hover:bg-(--bg-hover) hover:text-(--text-primary)"
+          >
+            <Zap className="h-5 w-5" strokeWidth={1.75} />
+          </Button>
+        )}
+
         <Button
           variant="ghost"
           size="compact"
@@ -334,6 +387,7 @@ export function TopBar({
         <Button
           variant="ghost"
           size="compact"
+          onClick={onOpenSettings}
           title={strings.topBar.settings}
           aria-label={strings.topBar.settings}
           className="transition-fast flex h-8 w-8 items-center justify-center rounded-sm p-0 text-(--text-secondary) hover:bg-(--bg-hover) hover:text-(--text-primary)"

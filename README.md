@@ -18,7 +18,7 @@ Most API clients store your requests in their own cloud or proprietary databases
 
 **Reqit solves this by storing collections as human-readable YAML files directly on disk.**
 
-```
+```text
 my-project/
 ├── src/                          <- Your application code
 ├── api/                          <- Your Reqit collection
@@ -41,31 +41,63 @@ my-project/
 
 ---
 
-## Monorepo Structure
+## Key Features
 
-Reqit is organized as a pnpm workspace:
-
-```
-reqit/
-├── packages/
-│   ├── core/         # Shared engine: format parser, variable resolver, HTTP engine
-│   ├── desktop/      # Electron app (React + Tailwind CSS + CodeMirror)
-│   └── cli/          # Headless CLI runner for CI/CD
-├── docs/             # Specifications and implementation plans
-├── examples/         # Sample collections
-└── .github/          # GitHub Actions workflows and issue templates
-```
+- **Local-First & Committable**: Every request, folder, and environment is a deterministic `.yaml` file. Check it into Git and review API changes alongside code.
+- **Fast HTTP Engine**: Built on Node.js native networking with sub-millisecond timing breakdown (DNS, TCP, TLS, TTFB, transfer).
+- **Live File Watcher**: Seamlessly picks up external changes (e.g. `git checkout` or editing in VS Code). Automatic conflict detection with built-in diff viewer.
+- **Hierarchical Variables & Secrets**: Transparent `{{variable}}` substitution across Collection, Folder, Environment, Secrets, and Runtime scopes. Secrets are automatically kept out of Git.
+- **cURL Integration**: Paste raw cURL commands directly into the URL bar to import requests instantly. Export requests to Bash, Windows PowerShell, or CMD format.
+- **Local Request History**: SQLite-backed history with Write-Ahead Logging (WAL), credential masking, and real-time search.
+- **Proxy Support**: HTTP/HTTPS proxy support with HTTP CONNECT tunneling, system environment variable detection, and wildcard bypass lists.
+- **Modern UI & Shortcuts**: Dark/Light/System themes, resizable split panes, CodeMirror 6 editors with autocomplete, and keyboard-first navigation (`Ctrl+Enter` to send, `Ctrl+S` to save).
 
 ---
 
-## Getting Started
+## 5-Minute Quick Start
+
+### 1. Installation
+
+Download the pre-built installer for your operating system from [GitHub Releases](https://github.com/reqit/reqit/releases):
+
+- **Windows**: `Reqit-Setup-<version>.exe`
+- **macOS**: `Reqit-<version>.dmg`
+- **Linux**: `Reqit-<version>.AppImage` or `.deb`
+
+### 2. Exploring the Bundled Example
+
+1. Launch Reqit.
+2. On the Welcome screen, click **Explore Example** (or select `File -> Open Example Collection`).
+3. Select `HTTP Methods -> GET Request` in the sidebar.
+4. Press `Ctrl+Enter` (or `Cmd+Enter` on macOS) to send the request.
+5. Inspect the response headers, body, and timing waterfall breakdown!
+
+### 3. Creating Your First Collection
+
+1. Click **New Collection** from the top bar or Welcome screen.
+2. Choose a collection name and destination folder.
+3. Add a request (`Ctrl+N`), configure URL and headers, and press `Ctrl+S` to save.
+4. Commit your collection folder directly into Git: `git add . && git commit -m "Add API collection"`.
+
+---
+
+## Documentation
+
+- [File Format Specification](docs/file-format.md) — Comprehensive schema, quoting rules, and directory layout.
+- [Implementation Plan](docs/IMPLEMENTATION_PLAN.md) — Phased architecture roadmap and milestone tracking.
+- [UI Guidelines](docs/UI_GUIDELINES.md) — Design tokens, component specs, and keyboard shortcut standards.
+- [Manual Test Checklist](docs/manual-test-checklist.md) — Pre-release validation checklist across platforms.
+
+---
+
+## Development & Building
 
 ### Prerequisites
 
 - [Node.js](https://nodejs.org/) (>= 20.0.0, recommended 22+)
 - [pnpm](https://pnpm.io/) (>= 9.0.0)
 
-### Installation & Development
+### Development Commands
 
 ```bash
 # Clone the repository
@@ -75,21 +107,24 @@ cd reqit
 # Install dependencies across all packages
 pnpm install
 
-# Run linters
-pnpm lint
+# Start Electron desktop app in live-reload dev mode
+pnpm dev
 
-# Run tests
+# Run unit tests across all packages
 pnpm test
 
-# Format code
-pnpm format
+# Run Playwright desktop smoke tests
+pnpm test:smoke
+
+# Run linters and formatting checks
+pnpm lint
+pnpm format:check
+
+# Build and package installers
+pnpm --filter @reqit/desktop run package:win    # Windows (.exe)
+pnpm --filter @reqit/desktop run package:mac    # macOS (.dmg)
+pnpm --filter @reqit/desktop run package:linux  # Linux (.AppImage, .deb)
 ```
-
----
-
-## Contributing
-
-Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct and development workflow.
 
 ---
 

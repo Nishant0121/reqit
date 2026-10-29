@@ -2,6 +2,7 @@ import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { app, BrowserWindow, session } from 'electron';
 import { registerIpcHandlers } from './ipc.js';
+import { setupApplicationMenu } from './menu.js';
 import { fileService } from './services/file-service.js';
 import { loadWindowState, saveWindowState } from './window-state.js';
 
@@ -61,6 +62,9 @@ function createWindow(): void {
 
   mainWindow.on('resize', debouncedSave);
   mainWindow.on('move', debouncedSave);
+
+  // Set up application menu
+  setupApplicationMenu(mainWindow);
 
   // Register IPC handlers
   registerIpcHandlers();

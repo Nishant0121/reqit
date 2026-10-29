@@ -17,6 +17,13 @@ export interface ResponseTiming {
   totalMs: number;
 }
 
+export interface ProxyConfig {
+  url: string;
+  bypass?: string[];
+}
+
+export type ProxyOption = 'system' | 'none' | ProxyConfig;
+
 export interface SendOptions {
   /** Request timeout in milliseconds */
   timeoutMs?: number;
@@ -34,6 +41,8 @@ export interface SendOptions {
   tempDir?: string;
   /** Custom HTTP/HTTPS agent (e.g. for connection pooling / keep-alive) */
   agent?: http.Agent | https.Agent;
+  /** Proxy configuration (system, none, or custom URL) */
+  proxy?: ProxyOption;
   /** Internal tracking for redirect count and loop detection */
   redirectCount?: number;
   visitedUrls?: string[];

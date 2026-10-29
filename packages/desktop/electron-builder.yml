@@ -1,0 +1,35 @@
+appId: com.reqit.desktop
+productName: Reqit
+artifactName: ${productName}-${version}-${os}-${arch}.${ext}
+directories:
+  output: release/${version}
+  buildResources: build
+files:
+  - out/**/*
+  - node_modules/**/*
+  - package.json
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  icon: build/icon.ico
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: always
+  createStartMenuShortcut: true
+mac:
+  target:
+    - target: dmg
+      arch:
+        - x64
+        - arm64
+  icon: build/icon.icns
+  category: public.app-category.developer-tools
+linux:
+  target:
+    - target: AppImage
+    - target: deb
+  icon: build/icons
+  category: Development

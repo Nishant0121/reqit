@@ -54,7 +54,7 @@ export const VariableInput = forwardRef<HTMLInputElement, VariableInputProps>(
     const internalInputRef = useRef<HTMLInputElement | null>(null);
     const overlayRef = useRef<HTMLDivElement | null>(null);
 
-    const heightClass = inputSize === 'large' ? 'h-[32px]' : 'h-[28px]';
+    const heightClass = inputSize === 'large' ? 'h-8' : 'h-7';
 
     const effectiveKnownVars = variablesMap
       ? Array.from(new Set([...Object.keys(variablesMap), ...knownVariables]))

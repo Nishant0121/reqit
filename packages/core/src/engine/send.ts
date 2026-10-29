@@ -19,6 +19,7 @@ import {
 import { TimingTracker } from './timing.js';
 import type { ResponseResult, SendOptions } from './types.js';
 import { buildTargetUrl } from './url.js';
+import { resolveProxyConfig, createProxyAgent } from './proxy.js';
 
 const DEFAULT_MAX_REDIRECTS = 5;
 const DEFAULT_MAX_IN_MEMORY_BYTES = 5 * 1024 * 1024; // 5 MB
@@ -105,6 +106,14 @@ export async function sendRequest(
     options?.timeoutMs ??
     (typeof resolvedRequest.timeoutMs === 'number' ? resolvedRequest.timeoutMs : undefined);
 
+  let effectiveAgent = options?.agent;
+  if (!effectiveAgent && options?.proxy) {
+    const resolvedProxy = resolveProxyConfig(targetUrl, options.proxy);
+    if (resolvedProxy?.proxyUrl) {
+      effectiveAgent = createProxyAgent(resolvedProxy.proxyUrl, isHttps, validateSsl);
+    }
+  }
+
   const requestOptions: https.RequestOptions = {
     method: resolvedRequest.method || 'GET',
     hostname: targetUrl.hostname,
@@ -112,7 +121,7 @@ export async function sendRequest(
     path: targetUrl.pathname + targetUrl.search,
     headers: headersRecord,
     rejectUnauthorized: validateSsl,
-    agent: options?.agent,
+    agent: effectiveAgent,
   };
 
   const maxInMemoryBytes = options?.maxInMemoryBytes ?? DEFAULT_MAX_IN_MEMORY_BYTES;

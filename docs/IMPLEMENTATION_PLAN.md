@@ -329,20 +329,20 @@ This plan breaks the whole project into small phases. Each phase is meant to tak
 
 **Goal:** ship something people can install.
 
-- [ ] First-run experience: welcome screen with "Open folder", "New collection", and "Open example"
-- [ ] A bundled example collection (a public API such as httpbin or a similar test API)
-- [ ] App icon, window title showing the collection and environment, native menus
-- [ ] Settings screen: theme, font size, timeout default, redirect default, TLS default, proxy, history toggle
-- [ ] Proxy support (HTTP/HTTPS proxy, system proxy)
-- [ ] Error boundaries and an in-app "Something went wrong" screen with a copy-details button
-- [ ] Performance check: startup time, memory, a collection with 500 requests
-- [ ] electron-builder config for Windows (`.exe`), macOS (`.dmg`), Linux (`.AppImage`, `.deb`)
-- [ ] GitHub Actions release workflow: on version tag, build all three platforms and upload to GitHub Releases
-- [ ] README with screenshots or a GIF, install instructions, and a 5-minute quick start
-- [ ] `docs/file-format.md` with the full spec from the README
-- [ ] `CHANGELOG.md`
-- [ ] Manual test pass on all three operating systems (a checklist file in `docs/`)
-- [ ] Tag `v0.1.0` and publish the release
+- [x] First-run experience: welcome screen with "Open folder", "New collection", and "Open example"
+- [x] A bundled example collection (a public API such as httpbin or a similar test API)
+- [x] App icon, window title showing the collection and environment, native menus
+- [x] Settings screen: theme, font size, timeout default, redirect default, TLS default, proxy, history toggle
+- [x] Proxy support (HTTP/HTTPS proxy, system proxy)
+- [x] Error boundaries and an in-app "Something went wrong" screen with a copy-details button
+- [x] Performance check: startup time, memory, a collection with 500 requests
+- [x] electron-builder config for Windows (`.exe`), macOS (`.dmg`), Linux (`.AppImage`, `.deb`)
+- [x] GitHub Actions release workflow: on version tag, build all three platforms and upload to GitHub Releases
+- [x] README with screenshots or a GIF, install instructions, and a 5-minute quick start
+- [x] `docs/file-format.md` with the full spec from the README
+- [x] `CHANGELOG.md`
+- [x] Manual test pass on all three operating systems (a checklist file in `docs/`)
+- [x] Tag `v0.1.0` and publish the release
 
 **Done when:** a stranger can download the installer from GitHub Releases, open a folder, send a request, and commit the file to Git.
 

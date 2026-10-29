@@ -4,4 +4,5 @@ export * from './timing.js';
 export * from './url.js';
 export * from './auth.js';
 export * from './body.js';
+export * from './proxy.js';
 export * from './send.js';

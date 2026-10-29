@@ -17,10 +17,13 @@ import { HistoryDetailModal } from './components/HistoryDetailModal';
 import { HistorySettingsModal } from './components/HistorySettingsModal';
 import { ClearHistoryConfirmModal } from './components/ClearHistoryConfirmModal';
 import { ImportCurlModal } from './components/ImportCurlModal';
+import { SettingsModal } from './components/SettingsModal';
+import { WelcomeScreen } from './components/WelcomeScreen';
 import { useAppStore } from './stores/appStore';
 import { useCollectionStore } from './stores/collectionStore';
 import { useRequestStore } from './stores/requestStore';
 import { useHistoryStore } from './stores/historyStore';
+import { useSettingsStore } from './stores/settingsStore';
 import { matchesShortcut } from './lib/shortcuts';
 import { parseUrlQueryParams, syncUrlWithParams } from './lib/url-sync';
 import { draftToRequestFile } from './lib/request-mapper';
@@ -59,6 +62,9 @@ export default function App(): React.JSX.Element {
   const [envModalTab, setEnvModalTab] = useState<'environments' | 'secrets'>('environments');
   const [envModalVarName, setEnvModalVarName] = useState<string | undefined>(undefined);
   const [importCurlModalOpen, setImportCurlModalOpen] = useState(false);
+  const [showWelcomeScreen, setShowWelcomeScreen] = useState(false);
+
+  const { openSettings, loadSettings } = useSettingsStore();
 
   // 2. Collection store
   const {
@@ -152,7 +158,11 @@ export default function App(): React.JSX.Element {
 
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Initialize from preload API
+  // Initialize from preload API and load settings
+  useEffect(() => {
+    loadSettings();
+  }, [loadSettings]);
+
   useEffect(() => {
     if (window.reqitApi) {
       window.reqitApi.getVersion().then(v => setVersion(v));
@@ -160,14 +170,29 @@ export default function App(): React.JSX.Element {
         if (testUrl) {
           updateActiveDraft({ url: testUrl });
         }
-      });
-      window.reqitApi.getRecentCollections().then(recents => {
-        if (recents && recents.length > 0 && recents[0]) {
-          loadCollection(recents[0]);
-        }
+        window.reqitApi.getRecentCollections().then(recents => {
+          if (recents && recents.length > 0 && recents[0]) {
+            loadCollection(recents[0]);
+          } else {
+            const isTestEnv = Boolean(testUrl && testUrl.includes('127.0.0.1'));
+            if (!isTestEnv) {
+              setShowWelcomeScreen(true);
+            }
+          }
+        });
       });
     }
   }, [setVersion, updateActiveDraft, loadCollection]);
+
+  // Dynamic window title: [●] <Request> - <Collection> (<Env>) — Reqit
+  useEffect(() => {
+    const dirtyBullet = activeDraft.isDirty ? '● ' : '';
+    const reqName = activeDraft.name || 'Untitled';
+    const colName = activeCollection.name || 'Reqit Workspace';
+    const envPart =
+      activeEnvironment && activeEnvironment !== 'none' ? ` (${activeEnvironment})` : '';
+    document.title = `${dirtyBullet}${reqName} - ${colName}${envPart} — Reqit`;
+  }, [activeDraft.isDirty, activeDraft.name, activeCollection.name, activeEnvironment]);
 
   // Subscribe to live file watcher changes from main process (Phase 10)
   useEffect(() => {
@@ -401,6 +426,83 @@ export default function App(): React.JSX.Element {
     [activeDraft, variablesMap, addToast],
   );
 
+  // Open example collection helper
+  const handleOpenExample = useCallback(async () => {
+    if (!window.reqitApi?.openExampleCollection) return;
+    try {
+      const res = await window.reqitApi.openExampleCollection();
+      if (res?.rootPath) {
+        await loadCollection(res.rootPath);
+        setShowWelcomeScreen(false);
+        addToast({
+          type: 'success',
+          message: 'Opened Httpbin Example Collection',
+        });
+      }
+    } catch (err: unknown) {
+      addToast({
+        type: 'error',
+        message: `Failed to open example collection: ${err instanceof Error ? err.message : String(err)}`,
+      });
+    }
+  }, [loadCollection, addToast]);
+
+  // Subscribe to native application menu actions (Phase 14)
+  useEffect(() => {
+    if (!window.reqitApi?.onMenuAction) return;
+    const unsub = window.reqitApi.onMenuAction((action: string) => {
+      switch (action) {
+        case 'open-welcome':
+        case 'help:welcome':
+          setShowWelcomeScreen(true);
+          break;
+        case 'open-example':
+        case 'file:open-example':
+          handleOpenExample();
+          break;
+        case 'new-request':
+        case 'file:new-request':
+          createRequest();
+          setShowWelcomeScreen(false);
+          break;
+        case 'new-collection':
+        case 'file:new-collection':
+          setNewCollectionModalOpen(true);
+          break;
+        case 'open-collection':
+        case 'file:open-collection':
+          loadCollection().then(tree => {
+            if (tree) setShowWelcomeScreen(false);
+          });
+          break;
+        case 'save-request':
+        case 'file:save-request':
+          handleSave();
+          break;
+        case 'open-settings':
+        case 'file:settings':
+          openSettings();
+          break;
+        case 'import-curl':
+        case 'edit:import-curl':
+          setImportCurlModalOpen(true);
+          break;
+        case 'open-shortcuts':
+        case 'help:shortcuts':
+          setShortcutsModalOpen(true);
+          break;
+      }
+    });
+    return () => unsub();
+  }, [
+    createRequest,
+    loadCollection,
+    handleOpenExample,
+    handleSave,
+    openSettings,
+    setShortcutsModalOpen,
+  ]);
+
   // Keyboard shortcut registry listener (Section 10.1)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -473,6 +575,13 @@ export default function App(): React.JSX.Element {
         setImportCurlModalOpen(true);
         return;
       }
+
+      // 11. Open settings (Ctrl/Cmd + ,)
+      if (matchesShortcut(e, 'Ctrl+,')) {
+        e.preventDefault();
+        openSettings();
+        return;
+      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
@@ -489,6 +598,7 @@ export default function App(): React.JSX.Element {
     setShortcutsModalOpen,
     setImportCurlModalOpen,
     loadCollection,
+    openSettings,
   ]);
 
   // Request node selection handler
@@ -566,6 +676,9 @@ export default function App(): React.JSX.Element {
         onOpenImportCurl={() => setImportCurlModalOpen(true)}
         onOpenCollection={() => loadCollection()}
         onNewCollection={() => setNewCollectionModalOpen(true)}
+        onOpenSettings={openSettings}
+        onOpenWelcome={() => setShowWelcomeScreen(true)}
+        onOpenExample={handleOpenExample}
         recentCollections={recentCollections}
         onSelectRecentCollection={p => loadCollection(p)}
       />
@@ -588,118 +701,143 @@ export default function App(): React.JSX.Element {
 
         {/* Main Workspace Area */}
         <main className="flex min-w-0 flex-1 flex-col overflow-hidden bg-(--bg-base)">
-          {/* Request Tabs (32px) */}
-          <RequestTabs
-            tabs={tabsWithStatus}
-            activeTabId={activeRequestId}
-            onSelectTab={openRequest}
-            onCloseTab={closeTab}
-            onNewTab={() => createRequest()}
-          />
-
-          {/* Conflict Banner (Phase 10) */}
-          {activeDraft.conflict && (
-            <ConflictBanner
-              onKeepMine={() => resolveConflictKeepMine(activeDraft.id)}
-              onLoadDisk={() => resolveConflictLoadDisk(activeDraft.id)}
-              onViewDiff={() => setDiffModalOpen(true)}
-            />
-          )}
-
-          {/* Deleted On Disk Banner (Phase 10) */}
-          {activeDraft.isDeletedOnDisk && (
-            <DeletedBanner
-              filePath={activeDraft.filePath}
-              onRecreate={handleRecreateFile}
-              onCloseTab={() => closeTab(activeDraft.id)}
-            />
-          )}
-
-          {/* URL Bar (32px) */}
-          <UrlBar
-            method={activeDraft.method}
-            onMethodChange={m => updateActiveDraft({ method: m })}
-            url={activeDraft.url}
-            onUrlChange={handleUrlChange}
-            onSend={handleSend}
-            onCancel={handleCancel}
-            loading={loading}
-            knownVariables={knownVariableNames}
-            variablesMap={variablesMap}
-            onImportCurl={handleImportCurl}
-            onOpenImportCurl={() => setImportCurlModalOpen(true)}
-            onCopyCurl={handleCopyCurl}
-          />
-
-          {/* Split Panes: Request Panel (top) + Response Panel (bottom) */}
-          <div ref={containerRef} className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
-            {/* Request Panel (min 200px) */}
-            <div
-              style={{ height: `${splitHeight}px` }}
-              className="flex min-h-50 shrink-0 flex-col overflow-hidden"
-            >
-              <RequestPanel
-                params={activeDraft.params}
-                onParamsChange={handleParamsChange}
-                headers={activeDraft.headers}
-                onHeadersChange={h => updateActiveDraft({ headers: h })}
-                authType={activeDraft.authType}
-                onAuthTypeChange={a => updateActiveDraft({ authType: a })}
-                bearerToken={activeDraft.bearerToken}
-                onBearerTokenChange={t => updateActiveDraft({ bearerToken: t })}
-                basicUser={activeDraft.basicUser}
-                onBasicUserChange={u => updateActiveDraft({ basicUser: u })}
-                basicPass={activeDraft.basicPass}
-                onBasicPassChange={p => updateActiveDraft({ basicPass: p })}
-                apiKeyName={activeDraft.apiKeyName}
-                onApiKeyNameChange={k => updateActiveDraft({ apiKeyName: k })}
-                apiKeyValue={activeDraft.apiKeyValue}
-                onApiKeyValueChange={v => updateActiveDraft({ apiKeyValue: v })}
-                apiKeyIn={activeDraft.apiKeyIn || 'header'}
-                onApiKeyInChange={inLoc => updateActiveDraft({ apiKeyIn: inLoc })}
-                bodyType={activeDraft.bodyType}
-                onBodyTypeChange={b => updateActiveDraft({ bodyType: b })}
-                bodyContent={activeDraft.bodyContent}
-                onBodyContentChange={c => updateActiveDraft({ bodyContent: c })}
-                bodyFormRows={activeDraft.bodyFormRows || []}
-                onBodyFormRowsChange={rows => updateActiveDraft({ bodyFormRows: rows })}
-                bodyMultipartRows={activeDraft.bodyMultipartRows || []}
-                onBodyMultipartRowsChange={rows => updateActiveDraft({ bodyMultipartRows: rows })}
-                knownVariables={knownVariableNames}
-                variablesMap={variablesMap}
-                onOpenSecrets={() => handleOpenEnvModal('secrets')}
-              />
-            </div>
-
-            {/* Drag Handle / Split Divider */}
-            <div
-              onMouseDown={handleSplitResize}
-              className="transition-fast relative z-10 flex h-1.25 w-full shrink-0 cursor-row-resize items-center justify-center border-t border-b select-none hover:bg-(--accent)"
-              style={{
-                borderColor: 'var(--border)',
-                backgroundColor: 'var(--bg-surface)',
+          {showWelcomeScreen ? (
+            <WelcomeScreen
+              onOpenFolder={async () => {
+                const tree = await loadCollection();
+                if (tree) setShowWelcomeScreen(false);
               }}
-              title="Resize panels"
-              aria-hidden="true"
-            >
-              <div
-                className="h-0.5 w-8 rounded-full"
-                style={{ backgroundColor: 'var(--border-strong)' }}
+              onNewCollection={() => setNewCollectionModalOpen(true)}
+              onOpenExample={handleOpenExample}
+              onImportCurl={() => setImportCurlModalOpen(true)}
+              onDismissToEditor={() => setShowWelcomeScreen(false)}
+              recentCollections={recentCollections}
+              onSelectRecent={async p => {
+                const tree = await loadCollection(p);
+                if (tree) setShowWelcomeScreen(false);
+              }}
+            />
+          ) : (
+            <>
+              {/* Request Tabs (32px) */}
+              <RequestTabs
+                tabs={tabsWithStatus}
+                activeTabId={activeRequestId}
+                onSelectTab={openRequest}
+                onCloseTab={closeTab}
+                onNewTab={() => createRequest()}
               />
-            </div>
 
-            {/* Response Panel (bottom pane, min 200px) */}
-            <div className="min-h-50 flex-1 overflow-hidden">
-              <ResponsePanel
-                result={result}
-                error={error}
-                loading={loading}
+              {/* Conflict Banner (Phase 10) */}
+              {activeDraft.conflict && (
+                <ConflictBanner
+                  onKeepMine={() => resolveConflictKeepMine(activeDraft.id)}
+                  onLoadDisk={() => resolveConflictLoadDisk(activeDraft.id)}
+                  onViewDiff={() => setDiffModalOpen(true)}
+                />
+              )}
+
+              {/* Deleted On Disk Banner (Phase 10) */}
+              {activeDraft.isDeletedOnDisk && (
+                <DeletedBanner
+                  filePath={activeDraft.filePath}
+                  onRecreate={handleRecreateFile}
+                  onCloseTab={() => closeTab(activeDraft.id)}
+                />
+              )}
+
+              {/* URL Bar (32px) */}
+              <UrlBar
+                method={activeDraft.method}
+                onMethodChange={m => updateActiveDraft({ method: m })}
+                url={activeDraft.url}
+                onUrlChange={handleUrlChange}
                 onSend={handleSend}
                 onCancel={handleCancel}
-                onAddVariable={varName => handleOpenEnvModal('environments', varName)}
+                loading={loading}
+                knownVariables={knownVariableNames}
+                variablesMap={variablesMap}
+                onImportCurl={handleImportCurl}
+                onOpenImportCurl={() => setImportCurlModalOpen(true)}
+                onCopyCurl={handleCopyCurl}
               />
-            </div>
-          </div>
+
+              {/* Split Panes: Request Panel (top) + Response Panel (bottom) */}
+              <div
+                ref={containerRef}
+                className="relative flex min-h-0 flex-1 flex-col overflow-hidden"
+              >
+                {/* Request Panel (min 200px) */}
+                <div
+                  style={{ height: `${splitHeight}px` }}
+                  className="flex min-h-50 shrink-0 flex-col overflow-hidden"
+                >
+                  <RequestPanel
+                    params={activeDraft.params}
+                    onParamsChange={handleParamsChange}
+                    headers={activeDraft.headers}
+                    onHeadersChange={h => updateActiveDraft({ headers: h })}
+                    authType={activeDraft.authType}
+                    onAuthTypeChange={a => updateActiveDraft({ authType: a })}
+                    bearerToken={activeDraft.bearerToken}
+                    onBearerTokenChange={t => updateActiveDraft({ bearerToken: t })}
+                    basicUser={activeDraft.basicUser}
+                    onBasicUserChange={u => updateActiveDraft({ basicUser: u })}
+                    basicPass={activeDraft.basicPass}
+                    onBasicPassChange={p => updateActiveDraft({ basicPass: p })}
+                    apiKeyName={activeDraft.apiKeyName}
+                    onApiKeyNameChange={k => updateActiveDraft({ apiKeyName: k })}
+                    apiKeyValue={activeDraft.apiKeyValue}
+                    onApiKeyValueChange={v => updateActiveDraft({ apiKeyValue: v })}
+                    apiKeyIn={activeDraft.apiKeyIn || 'header'}
+                    onApiKeyInChange={inLoc => updateActiveDraft({ apiKeyIn: inLoc })}
+                    bodyType={activeDraft.bodyType}
+                    onBodyTypeChange={b => updateActiveDraft({ bodyType: b })}
+                    bodyContent={activeDraft.bodyContent}
+                    onBodyContentChange={c => updateActiveDraft({ bodyContent: c })}
+                    bodyFormRows={activeDraft.bodyFormRows || []}
+                    onBodyFormRowsChange={rows => updateActiveDraft({ bodyFormRows: rows })}
+                    bodyMultipartRows={activeDraft.bodyMultipartRows || []}
+                    onBodyMultipartRowsChange={rows =>
+                      updateActiveDraft({ bodyMultipartRows: rows })
+                    }
+                    knownVariables={knownVariableNames}
+                    variablesMap={variablesMap}
+                    onOpenSecrets={() => handleOpenEnvModal('secrets')}
+                  />
+                </div>
+
+                {/* Drag Handle / Split Divider */}
+                <div
+                  onMouseDown={handleSplitResize}
+                  className="transition-fast relative z-10 flex h-1.25 w-full shrink-0 cursor-row-resize items-center justify-center border-t border-b select-none hover:bg-(--accent)"
+                  style={{
+                    borderColor: 'var(--border)',
+                    backgroundColor: 'var(--bg-surface)',
+                  }}
+                  title="Resize panels"
+                  aria-hidden="true"
+                >
+                  <div
+                    className="h-0.5 w-8 rounded-full"
+                    style={{ backgroundColor: 'var(--border-strong)' }}
+                  />
+                </div>
+
+                {/* Response Panel (bottom pane, min 200px) */}
+                <div className="min-h-50 flex-1 overflow-hidden">
+                  <ResponsePanel
+                    result={result}
+                    error={error}
+                    loading={loading}
+                    onSend={handleSend}
+                    onCancel={handleCancel}
+                    onAddVariable={varName => handleOpenEnvModal('environments', varName)}
+                  />
+                </div>
+              </div>
+            </>
+          )}
         </main>
       </div>
 
@@ -718,7 +856,8 @@ export default function App(): React.JSX.Element {
         isOpen={newCollectionModalOpen}
         onClose={() => setNewCollectionModalOpen(false)}
         onCreate={async (name, targetDir) => {
-          await createCollection(name, targetDir);
+          const tree = await createCollection(name, targetDir);
+          if (tree) setShowWelcomeScreen(false);
         }}
       />
       <EnvironmentSecretsModal
@@ -739,6 +878,7 @@ export default function App(): React.JSX.Element {
           onLoadDisk={() => resolveConflictLoadDisk(activeDraft.id)}
         />
       )}
+      <SettingsModal />
       <HistoryDetailModal />
       <HistorySettingsModal />
       <ClearHistoryConfirmModal />

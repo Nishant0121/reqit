@@ -14,6 +14,9 @@ import {
 } from '@reqit/core';
 import { fileService } from './services/file-service.js';
 import { historyService } from './services/history-service.js';
+import { settingsService } from './services/settings-service.js';
+import { openBundledExampleCollection } from './services/example-collection.js';
+import type { AppSettings } from '../shared/settings-types.js';
 import type {
   SendRequestPayload,
   ReadBodyChunkPayload,
@@ -208,12 +211,36 @@ export function registerIpcHandlers(): void {
         throw err;
       }
 
+      // Merge application settings defaults with request options
+      const appSettings = settingsService.getSettings();
+      const sendOptions = {
+        ...options,
+        timeoutMs: options?.timeoutMs ?? appSettings.requestTimeoutMs,
+        followRedirects: options?.followRedirects ?? appSettings.followRedirects,
+        maxRedirects: options?.maxRedirects ?? appSettings.maxRedirects,
+        validateSsl: options?.validateSsl ?? appSettings.validateSsl,
+        proxy:
+          options?.proxy !== undefined
+            ? options.proxy
+            : appSettings.proxyMode === 'system'
+              ? ('system' as const)
+              : appSettings.proxyMode === 'manual' && appSettings.proxyUrl
+                ? {
+                    url: appSettings.proxyUrl,
+                    bypass: appSettings.proxyBypass
+                      ? appSettings.proxyBypass
+                          .split(',')
+                          .map(s => s.trim())
+                          .filter(Boolean)
+                      : undefined,
+                  }
+                : ('none' as const),
+        signal: abortController.signal,
+      };
+
       let result;
       try {
-        result = await sendRequest(resolvedRequest, {
-          ...options,
-          signal: abortController.signal,
-        });
+        result = await sendRequest(resolvedRequest, sendOptions);
       } catch (err: unknown) {
         const durationMs = Date.now() - startTime;
         try {
@@ -378,5 +405,24 @@ export function registerIpcHandlers(): void {
   // 28. history:updateSettings
   ipcMain.handle('history:updateSettings', async (_event, settings: Partial<HistorySettings>) => {
     return historyService.updateSettings(settings);
+  });
+
+  // 29. collection:openExample
+  ipcMain.handle('collection:openExample', async () => {
+    return openBundledExampleCollection();
+  });
+
+  // 30. settings:get
+  ipcMain.handle('settings:get', async () => {
+    return settingsService.getSettings();
+  });
+
+  // 31. settings:update
+  ipcMain.handle('settings:update', async (_event, partial: Partial<AppSettings>) => {
+    const updated = settingsService.updateSettings(partial);
+    if (partial.historyEnabled !== undefined) {
+      historyService.updateSettings({ enabled: partial.historyEnabled });
+    }
+    return updated;
   });
 }

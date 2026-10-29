@@ -9,6 +9,7 @@ import type {
   SecretsFile,
   HttpMethod,
 } from '@reqit/core';
+import type { AppSettings } from './settings-types.js';
 
 export type HistoryStatusFilter = 'all' | '2xx' | '4xx' | '5xx' | 'error';
 
@@ -178,6 +179,9 @@ export interface IpcChannels {
   'history:clear': () => Promise<boolean>;
   'history:getSettings': () => Promise<HistorySettings>;
   'history:updateSettings': (settings: Partial<HistorySettings>) => Promise<HistorySettings>;
+  'collection:openExample': () => Promise<CollectionTree | null>;
+  'settings:get': () => Promise<AppSettings>;
+  'settings:update': (settings: Partial<AppSettings>) => Promise<AppSettings>;
 }
 
 export type IpcChannelName = keyof IpcChannels;
@@ -251,4 +255,12 @@ export interface ReqitApi {
   getHistorySettings: () => Promise<HistorySettings>;
   /** Updates history settings (enabled, retentionDays, maxEntries) */
   updateHistorySettings: (settings: Partial<HistorySettings>) => Promise<HistorySettings>;
+  /** Opens or unpacks the bundled example collection (Httpbin) */
+  openExampleCollection: () => Promise<CollectionTree | null>;
+  /** Gets application settings (theme, defaults, proxy, history) */
+  getSettings: () => Promise<AppSettings>;
+  /** Updates application settings */
+  updateSettings: (settings: Partial<AppSettings>) => Promise<AppSettings>;
+  /** Subscribes to native menu actions */
+  onMenuAction: (callback: (action: string) => void) => () => void;
 }

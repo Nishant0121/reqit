@@ -76,8 +76,8 @@ test.describe('Desktop App Shell Smoke Test (Phase 5)', () => {
   test('launches app window, verifies title, clicks button, and displays response from main engine', async () => {
     await page.waitForLoadState('domcontentloaded');
 
-    // Title verification
-    expect(await page.title()).toBe('Reqit');
+    // Title verification (dynamic window title contains Reqit)
+    expect(await page.title()).toContain('Reqit');
 
     // Button should be visible
     const sendButton = page.locator('#send-test-btn');
@@ -123,7 +123,9 @@ test.describe('Desktop App Shell Smoke Test (Phase 5)', () => {
 
     const modalTitle = page.locator('#modal-title');
     await expect(modalTitle).toHaveText('Keyboard shortcuts');
-    await expect(page.locator('text=Send request')).toBeVisible();
+    await expect(
+      page.locator('[role="dialog"]').getByText('Send request', { exact: true }),
+    ).toBeVisible();
 
     // Close modal with Escape key
     await page.keyboard.press('Escape');
@@ -848,5 +850,63 @@ test.describe('Desktop App Shell Smoke Test (Phase 5)', () => {
     // Active method should now be PUT and URL https://httpbin.org/put
     await expect(methodSelect).toHaveValue('PUT');
     await expect(urlInput).toHaveValue('https://httpbin.org/put');
+  });
+
+  test('verifies Phase 14 features: Settings modal tabs, preferences persistence, and Welcome screen', async () => {
+    // 1. Open Settings modal via TopBar settings button
+    const settingsBtn = page.locator('button[aria-label="Settings"]');
+    await expect(settingsBtn).toBeVisible();
+    await settingsBtn.click();
+
+    const settingsModalTitle = page.locator('#modal-title:has-text("Settings")');
+    await expect(settingsModalTitle).toBeVisible();
+
+    // 2. Verify General tab
+    await expect(page.locator('button:has-text("General")').first()).toBeVisible();
+    await expect(page.locator('text=Appearance & Theme')).toBeVisible();
+
+    // 3. Switch to Request Defaults tab
+    await page.locator('button:has-text("Request Defaults")').click();
+    await expect(page.locator('text=Network & Execution Defaults')).toBeVisible();
+    await expect(page.locator('text=Follow HTTP Redirects')).toBeVisible();
+
+    // 4. Switch to Proxy tab
+    await page.locator('button:has-text("Proxy")').click();
+    await expect(page.getByRole('heading', { name: 'Proxy Configuration' })).toBeVisible();
+    await expect(page.locator('text=No Proxy (Direct Connection)')).toBeVisible();
+    await expect(page.locator('text=Use System Proxy')).toBeVisible();
+    await expect(page.locator('text=Manual Proxy Configuration')).toBeVisible();
+
+    // 5. Switch to Privacy & History tab
+    await page.locator('button:has-text("Privacy & History")').click();
+    await expect(page.locator('text=Privacy & Request History')).toBeVisible();
+    await expect(page.locator('button:has-text("Clear All History Now")')).toBeVisible();
+
+    // 6. Close Settings modal with Cancel button
+    const cancelBtn = page.locator('button:has-text("Cancel")').first();
+    await cancelBtn.click();
+    await expect(settingsModalTitle).not.toBeVisible();
+
+    // 7. Open Welcome screen via TopBar Welcome button
+    const welcomeBtn = page.locator('button[aria-label="Welcome screen"]');
+    await expect(welcomeBtn).toBeVisible();
+    await welcomeBtn.click();
+
+    // Verify Welcome screen contents
+    await expect(page.locator('text=Welcome to Reqit')).toBeVisible();
+    await expect(page.locator('button:has-text("Open Folder")').first()).toBeVisible();
+    await expect(page.locator('button:has-text("New Collection")').first()).toBeVisible();
+    await expect(page.locator('button:has-text("Explore Example")').first()).toBeVisible();
+    await expect(page.getByText('Recent Collections', { exact: true })).toBeVisible();
+    await expect(page.getByText('Keyboard Shortcuts', { exact: true })).toBeVisible();
+
+    // 8. Dismiss Welcome screen using Back to Editor / Close button
+    const closeWelcomeBtn = page.locator('button[aria-label="Close welcome screen"]');
+    await expect(closeWelcomeBtn).toBeVisible();
+    await closeWelcomeBtn.click();
+
+    // Verify Welcome screen is dismissed and editor is back
+    await expect(page.locator('text=Welcome to Reqit')).not.toBeVisible();
+    await expect(page.locator('#url-input')).toBeVisible();
   });
 });
