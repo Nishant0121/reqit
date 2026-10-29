@@ -76,11 +76,11 @@ export function TopBar({
   const getThemeIcon = () => {
     switch (theme) {
       case 'dark':
-        return <Moon className="w-5 h-5" strokeWidth={1.75} />;
+        return <Moon className="h-5 w-5" strokeWidth={1.75} />;
       case 'light':
-        return <Sun className="w-5 h-5" strokeWidth={1.75} />;
+        return <Sun className="h-5 w-5" strokeWidth={1.75} />;
       default:
-        return <Laptop className="w-5 h-5" strokeWidth={1.75} />;
+        return <Laptop className="h-5 w-5" strokeWidth={1.75} />;
     }
   };
 
@@ -97,7 +97,7 @@ export function TopBar({
 
   return (
     <header
-      className="h-[42px] px-3 flex items-center justify-between border-b select-none shrink-0"
+      className="flex h-10.5 shrink-0 items-center justify-between border-b px-3 select-none"
       style={{
         backgroundColor: 'var(--bg-surface)',
         borderColor: 'var(--border)',
@@ -108,19 +108,19 @@ export function TopBar({
         <button
           type="button"
           onClick={onToggleSidebar}
-          className="w-8 h-8 inline-flex items-center justify-center rounded-[var(--radius-sm)] hover:bg-[var(--bg-hover)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-fast app-focus-ring"
+          className="transition-fast app-focus-ring inline-flex h-8 w-8 items-center justify-center rounded-sm text-(--text-secondary) hover:bg-(--bg-hover) hover:text-(--text-primary)"
           title={strings.topBar.toggleSidebar}
           aria-label={strings.topBar.toggleSidebar}
         >
           {sidebarOpen ? (
-            <PanelLeftClose className="w-5 h-5" strokeWidth={1.75} />
+            <PanelLeftClose className="h-5 w-5" strokeWidth={1.75} />
           ) : (
-            <PanelLeft className="w-5 h-5" strokeWidth={1.75} />
+            <PanelLeft className="h-5 w-5" strokeWidth={1.75} />
           )}
         </button>
 
         <div
-          className="w-6 h-6 rounded-[var(--radius-sm)] flex items-center justify-center font-bold text-[12px] leading-none"
+          className="flex h-6 w-6 items-center justify-center rounded-sm text-[12px] leading-none font-bold"
           style={{
             backgroundColor: 'var(--accent-strong)',
             color: 'var(--accent-fg)',
@@ -134,14 +134,14 @@ export function TopBar({
           <button
             type="button"
             onClick={() => setMenuOpen(!menuOpen)}
-            className="flex items-center gap-1.5 px-2 py-1 rounded-[var(--radius-sm)] text-[13px] font-medium hover:bg-[var(--bg-hover)] transition-fast app-focus-ring"
+            className="transition-fast app-focus-ring flex items-center gap-1.5 rounded-sm px-2 py-1 text-[13px] font-medium hover:bg-(--bg-hover)"
             style={{ color: 'var(--text-primary)' }}
             title={collectionPath ? `${collectionName}\n${collectionPath}` : collectionName}
           >
-            <Folder className="w-4 h-4" style={{ color: 'var(--accent)' }} strokeWidth={1.75} />
-            <span className="max-w-[180px] truncate">{collectionName}</span>
+            <Folder className="h-4 w-4" style={{ color: 'var(--accent)' }} strokeWidth={1.75} />
+            <span className="max-w-45 truncate">{collectionName}</span>
             <ChevronDown
-              className="w-3.5 h-3.5"
+              className="h-3.5 w-3.5"
               style={{ color: 'var(--text-muted)' }}
               strokeWidth={1.75}
             />
@@ -150,7 +150,7 @@ export function TopBar({
           {/* Collection Menu Dropdown */}
           {menuOpen && (
             <div
-              className="absolute left-0 mt-1 w-64 rounded-[var(--radius-md)] border shadow-lg py-1 z-50 text-[12px]"
+              className="absolute left-0 z-50 mt-1 w-64 rounded-md border py-1 text-[12px] shadow-lg"
               style={{
                 backgroundColor: 'var(--bg-elevated)',
                 borderColor: 'var(--border-strong)',
@@ -162,10 +162,10 @@ export function TopBar({
                   setMenuOpen(false);
                   onOpenCollection?.();
                 }}
-                className="w-full px-3 py-1.5 flex items-center gap-2 hover:bg-[var(--bg-hover)] text-left transition-fast"
+                className="transition-fast flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-(--bg-hover)"
                 style={{ color: 'var(--text-primary)' }}
               >
-                <FolderOpen className="w-5 h-5 text-[var(--accent)]" strokeWidth={1.75} />
+                <FolderOpen className="h-5 w-5 text-(--accent)" strokeWidth={1.75} />
                 <span className="flex-1 font-medium">Open Collection Folder...</span>
               </button>
 
@@ -175,10 +175,10 @@ export function TopBar({
                   setMenuOpen(false);
                   onNewCollection?.();
                 }}
-                className="w-full px-3 py-1.5 flex items-center gap-2 hover:bg-[var(--bg-hover)] text-left transition-fast"
+                className="transition-fast flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-(--bg-hover)"
                 style={{ color: 'var(--text-primary)' }}
               >
-                <FolderPlus className="w-5 h-5 text-[var(--accent)]" strokeWidth={1.75} />
+                <FolderPlus className="h-5 w-5 text-(--accent)" strokeWidth={1.75} />
                 <span className="flex-1 font-medium">New Collection...</span>
               </button>
 
@@ -188,12 +188,12 @@ export function TopBar({
                   setMenuOpen(false);
                   onOpenImportCurl?.();
                 }}
-                className="w-full px-3 py-1.5 flex items-center gap-2 hover:bg-[var(--bg-hover)] text-left transition-fast"
+                className="transition-fast flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-(--bg-hover)"
                 style={{ color: 'var(--text-primary)' }}
               >
-                <Terminal className="w-5 h-5 text-[var(--accent)]" strokeWidth={1.75} />
+                <Terminal className="h-5 w-5 text-(--accent)" strokeWidth={1.75} />
                 <span className="flex-1 font-medium">Import cURL...</span>
-                <span className="text-[10px] text-[var(--text-muted)] font-mono">Ctrl+I</span>
+                <span className="font-mono text-[10px] text-(--text-muted)">Ctrl+I</span>
               </button>
 
               {recentCollections.length > 0 && (
@@ -220,18 +220,18 @@ export function TopBar({
                           setMenuOpen(false);
                           onSelectRecentCollection?.(p);
                         }}
-                        className="w-full px-3 py-1.5 flex flex-col items-start hover:bg-[var(--bg-hover)] text-left transition-fast"
+                        className="transition-fast flex w-full flex-col items-start px-3 py-1.5 text-left hover:bg-(--bg-hover)"
                         style={{
                           backgroundColor: isCurrent ? 'var(--accent-subtle)' : 'transparent',
                           color: isCurrent ? 'var(--accent)' : 'var(--text-primary)',
                         }}
                         title={p}
                       >
-                        <span className="font-medium text-[12px] truncate max-w-full">
+                        <span className="max-w-full truncate text-[12px] font-medium">
                           {basename}
                         </span>
                         <span
-                          className="font-mono text-[10px] truncate max-w-full"
+                          className="max-w-full truncate font-mono text-[10px]"
                           style={{ color: 'var(--text-muted)' }}
                         >
                           {p}
@@ -252,7 +252,7 @@ export function TopBar({
           <select
             value={activeEnvironment}
             onChange={e => onEnvironmentChange(e.target.value)}
-            className="h-[28px] px-2 text-[12px] bg-transparent border rounded-[4px] app-focus-ring outline-none cursor-pointer"
+            className="app-focus-ring h-7 cursor-pointer rounded-sm border bg-transparent px-2 text-[12px] outline-none"
             style={{
               borderColor: 'var(--border-strong)',
               color: 'var(--text-primary)',
@@ -287,11 +287,11 @@ export function TopBar({
             <button
               type="button"
               onClick={onManageEnvironments}
-              className="w-7 h-7 flex items-center justify-center rounded-[var(--radius-sm)] hover:bg-[var(--bg-hover)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-fast"
+              className="transition-fast flex h-7 w-7 items-center justify-center rounded-sm text-(--text-secondary) hover:bg-(--bg-hover) hover:text-(--text-primary)"
               title="Manage Environments & Secrets"
               aria-label="Manage Environments & Secrets"
             >
-              <Globe className="w-4 h-4" />
+              <Globe className="h-4 w-4" />
             </button>
           )}
         </div>
@@ -303,9 +303,9 @@ export function TopBar({
             onClick={onOpenImportCurl}
             title="Import cURL (Ctrl+I)"
             aria-label="Import cURL"
-            className="w-8 h-8 p-0 flex items-center justify-center rounded-[var(--radius-sm)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] transition-fast"
+            className="transition-fast flex h-8 w-8 items-center justify-center rounded-sm p-0 text-(--text-secondary) hover:bg-(--bg-hover) hover:text-(--text-primary)"
           >
-            <Terminal className="w-5 h-5" strokeWidth={1.75} />
+            <Terminal className="h-5 w-5" strokeWidth={1.75} />
           </Button>
         )}
 
@@ -315,9 +315,9 @@ export function TopBar({
           onClick={onOpenShortcuts}
           title="Keyboard shortcuts (Ctrl+/)"
           aria-label="Keyboard shortcuts"
-          className="w-8 h-8 p-0 flex items-center justify-center rounded-[var(--radius-sm)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] transition-fast"
+          className="transition-fast flex h-8 w-8 items-center justify-center rounded-sm p-0 text-(--text-secondary) hover:bg-(--bg-hover) hover:text-(--text-primary)"
         >
-          <Keyboard className="w-5 h-5" strokeWidth={1.75} />
+          <Keyboard className="h-5 w-5" strokeWidth={1.75} />
         </Button>
 
         <Button
@@ -326,7 +326,7 @@ export function TopBar({
           onClick={onToggleTheme}
           title={getThemeTooltip()}
           aria-label={strings.topBar.themeToggle}
-          className="w-8 h-8 p-0 flex items-center justify-center rounded-[var(--radius-sm)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] transition-fast"
+          className="transition-fast flex h-8 w-8 items-center justify-center rounded-sm p-0 text-(--text-secondary) hover:bg-(--bg-hover) hover:text-(--text-primary)"
         >
           {getThemeIcon()}
         </Button>
@@ -336,9 +336,9 @@ export function TopBar({
           size="compact"
           title={strings.topBar.settings}
           aria-label={strings.topBar.settings}
-          className="w-8 h-8 p-0 flex items-center justify-center rounded-[var(--radius-sm)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] transition-fast"
+          className="transition-fast flex h-8 w-8 items-center justify-center rounded-sm p-0 text-(--text-secondary) hover:bg-(--bg-hover) hover:text-(--text-primary)"
         >
-          <SettingsIcon className="w-5 h-5" strokeWidth={1.75} />
+          <SettingsIcon className="h-5 w-5" strokeWidth={1.75} />
         </Button>
       </div>
     </header>

@@ -137,7 +137,7 @@ export function RequestPanel({
 
   return (
     <div
-      className="flex flex-col h-full overflow-hidden"
+      className="flex h-full flex-col overflow-hidden"
       style={{ backgroundColor: 'var(--bg-base)' }}
     >
       {/* Sub Tabs */}
@@ -159,18 +159,18 @@ export function RequestPanel({
         {/* Hardcoded Secret Warning Banner (Phase 11) */}
         {hardcodedFindings.length > 0 && (
           <div
-            className="mb-3 px-3 py-2 rounded border flex items-center justify-between text-[12px] shrink-0"
+            className="mb-3 flex shrink-0 items-center justify-between rounded border px-3 py-2 text-[12px]"
             style={{
               backgroundColor: 'rgba(245, 158, 11, 0.1)',
               borderColor: 'rgba(245, 158, 11, 0.4)',
               color: 'var(--text-primary)',
             }}
           >
-            <div className="flex items-center gap-2 overflow-hidden mr-2">
-              <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
+            <div className="mr-2 flex items-center gap-2 overflow-hidden">
+              <AlertTriangle className="h-4 w-4 shrink-0 text-amber-400" />
               <div className="truncate">
                 <span className="font-semibold text-amber-400">Hardcoded Token Warning:</span>{' '}
-                <span className="text-[var(--text-secondary)]">
+                <span className="text-(--text-secondary)">
                   {hardcodedFindings[0]?.reason || 'Sensitive credential detected in plain text.'}
                 </span>
               </div>
@@ -179,7 +179,7 @@ export function RequestPanel({
               <button
                 type="button"
                 onClick={onOpenSecrets}
-                className="px-2 py-0.5 rounded text-[11px] font-medium bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 shrink-0 transition-fast"
+                className="transition-fast shrink-0 rounded bg-amber-500/20 px-2 py-0.5 text-[11px] font-medium text-amber-300 hover:bg-amber-500/30"
               >
                 Move to Secrets
               </button>
@@ -221,7 +221,7 @@ export function RequestPanel({
           <div className="max-w-md space-y-4">
             <div>
               <label
-                className="block text-[12px] font-medium mb-1.5"
+                className="mb-1.5 block text-[12px] font-medium"
                 style={{ color: 'var(--text-secondary)' }}
               >
                 {strings.requestPanel.authType}
@@ -229,7 +229,7 @@ export function RequestPanel({
               <select
                 value={authType}
                 onChange={e => onAuthTypeChange(e.target.value as AuthType)}
-                className="h-[28px] px-2 text-[13px] bg-transparent border rounded-[4px] app-focus-ring outline-none cursor-pointer w-full font-sans"
+                className="app-focus-ring h-7 w-full cursor-pointer rounded-sm border bg-transparent px-2 font-sans text-[13px] outline-none"
                 style={{
                   borderColor: 'var(--border-strong)',
                   color: 'var(--text-primary)',
@@ -267,7 +267,7 @@ export function RequestPanel({
             {authType === 'bearer' && (
               <div>
                 <label
-                  className="block text-[12px] font-medium mb-1.5"
+                  className="mb-1.5 block text-[12px] font-medium"
                   style={{ color: 'var(--text-secondary)' }}
                 >
                   {strings.requestPanel.bearerToken}
@@ -287,7 +287,7 @@ export function RequestPanel({
               <div className="space-y-3">
                 <div>
                   <label
-                    className="block text-[12px] font-medium mb-1"
+                    className="mb-1 block text-[12px] font-medium"
                     style={{ color: 'var(--text-secondary)' }}
                   >
                     {strings.requestPanel.usernamePlaceholder}
@@ -302,7 +302,7 @@ export function RequestPanel({
                 </div>
                 <div>
                   <label
-                    className="block text-[12px] font-medium mb-1"
+                    className="mb-1 block text-[12px] font-medium"
                     style={{ color: 'var(--text-secondary)' }}
                   >
                     {strings.requestPanel.passwordPlaceholder}
@@ -323,7 +323,7 @@ export function RequestPanel({
               <div className="space-y-3">
                 <div>
                   <label
-                    className="block text-[12px] font-medium mb-1"
+                    className="mb-1 block text-[12px] font-medium"
                     style={{ color: 'var(--text-secondary)' }}
                   >
                     {strings.requestPanel.keyPlaceholder}
@@ -338,7 +338,7 @@ export function RequestPanel({
                 </div>
                 <div>
                   <label
-                    className="block text-[12px] font-medium mb-1"
+                    className="mb-1 block text-[12px] font-medium"
                     style={{ color: 'var(--text-secondary)' }}
                   >
                     {strings.requestPanel.valuePlaceholder}
@@ -353,13 +353,13 @@ export function RequestPanel({
                 </div>
                 <div>
                   <label
-                    className="block text-[12px] font-medium mb-1.5"
+                    className="mb-1.5 block text-[12px] font-medium"
                     style={{ color: 'var(--text-secondary)' }}
                   >
                     Add to
                   </label>
                   <div
-                    className="inline-flex items-center p-0.5 rounded-[6px] border select-none transition-fast"
+                    className="transition-fast inline-flex items-center rounded-md border p-0.5 select-none"
                     style={{
                       backgroundColor: 'var(--bg-input)',
                       borderColor: 'var(--border)',
@@ -375,7 +375,7 @@ export function RequestPanel({
                       return (
                         <label
                           key={opt.id}
-                          className="relative flex items-center h-[26px] px-3 rounded-[4px] text-[12px] font-medium cursor-pointer transition-fast overflow-hidden"
+                          className="transition-fast relative flex h-6.5 cursor-pointer items-center overflow-hidden rounded-sm px-3 text-[12px] font-medium"
                           style={{
                             backgroundColor: isSelected ? 'var(--bg-elevated)' : 'transparent',
                             color: isSelected ? 'var(--text-primary)' : 'var(--text-secondary)',
@@ -389,7 +389,7 @@ export function RequestPanel({
                             value={opt.id}
                             checked={isSelected}
                             onChange={() => onApiKeyInChange(opt.id as 'header' | 'query')}
-                            className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10"
+                            className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
                           />
                           <span className="pointer-events-none relative z-0">{opt.label}</span>
                         </label>
@@ -404,7 +404,7 @@ export function RequestPanel({
 
         {/* BODY TAB */}
         {activeSubTab === 'body' && (
-          <div className="flex flex-col h-full space-y-3">
+          <div className="flex h-full flex-col space-y-3">
             {/* Format selector */}
             <div className="flex items-center justify-between pb-1">
               <div className="flex items-center gap-2.5">
@@ -415,7 +415,7 @@ export function RequestPanel({
                   Type:
                 </span>
                 <div
-                  className="inline-flex items-center p-0.5 rounded-[6px] border select-none transition-fast"
+                  className="transition-fast inline-flex items-center rounded-md border p-0.5 select-none"
                   style={{
                     backgroundColor: 'var(--bg-input)',
                     borderColor: 'var(--border)',
@@ -429,7 +429,7 @@ export function RequestPanel({
                     return (
                       <label
                         key={opt.id}
-                        className="relative flex items-center gap-1.5 h-[26px] px-2.5 rounded-[4px] text-[12px] font-medium cursor-pointer transition-fast overflow-hidden"
+                        className="transition-fast relative flex h-6.5 cursor-pointer items-center gap-1.5 overflow-hidden rounded-sm px-2.5 text-[12px] font-medium"
                         style={{
                           backgroundColor: isSelected ? 'var(--bg-elevated)' : 'transparent',
                           color: isSelected ? 'var(--text-primary)' : 'var(--text-secondary)',
@@ -446,10 +446,10 @@ export function RequestPanel({
                             onBodyTypeChange(opt.id);
                             setJsonFormatError(null);
                           }}
-                          className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10"
+                          className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
                         />
                         <Icon
-                          className="w-4 h-4 shrink-0 transition-fast pointer-events-none relative z-0"
+                          className="transition-fast pointer-events-none relative z-0 h-4 w-4 shrink-0"
                           style={{
                             color: isSelected ? 'var(--accent)' : 'var(--text-muted)',
                           }}
@@ -466,7 +466,7 @@ export function RequestPanel({
                 <button
                   type="button"
                   onClick={handleBeautifyJson}
-                  className="inline-flex items-center gap-1.5 h-[28px] px-3 text-[12px] font-medium border rounded-[4px] hover:bg-[var(--bg-hover)] transition-fast app-focus-ring"
+                  className="transition-fast app-focus-ring inline-flex h-7 items-center gap-1.5 rounded-sm border px-3 text-[12px] font-medium hover:bg-(--bg-hover)"
                   style={{
                     borderColor: 'var(--border-strong)',
                     backgroundColor: 'var(--bg-surface)',
@@ -474,7 +474,7 @@ export function RequestPanel({
                   }}
                   title="Format and prettify JSON"
                 >
-                  <Sparkles className="w-4 h-4 text-[var(--accent)]" strokeWidth={1.75} />
+                  <Sparkles className="h-4 w-4 text-(--accent)" strokeWidth={1.75} />
                   <span>Beautify</span>
                 </button>
               )}
@@ -483,14 +483,14 @@ export function RequestPanel({
             {/* JSON Error Warning */}
             {jsonFormatError && (
               <div
-                className="flex items-center gap-2 px-2.5 py-1.5 text-[11px] rounded-[4px] border"
+                className="flex items-center gap-2 rounded-sm border px-2.5 py-1.5 text-[11px]"
                 style={{
                   backgroundColor: 'var(--danger-subtle)',
                   borderColor: 'var(--danger)',
                   color: 'var(--danger)',
                 }}
               >
-                <AlertCircle className="w-4 h-4 shrink-0" strokeWidth={1.75} />
+                <AlertCircle className="h-4 w-4 shrink-0" strokeWidth={1.75} />
                 <span>Invalid JSON: {jsonFormatError}</span>
               </div>
             )}
@@ -498,7 +498,7 @@ export function RequestPanel({
             {/* None Empty State */}
             {bodyType === 'none' && (
               <div
-                className="flex items-center justify-center h-32 border border-dashed rounded-[4px] text-[12px]"
+                className="flex h-32 items-center justify-center rounded-sm border border-dashed text-[12px]"
                 style={{ borderColor: 'var(--border)', color: 'var(--text-muted)' }}
               >
                 This request does not have a body.
@@ -507,7 +507,7 @@ export function RequestPanel({
 
             {/* JSON Editor */}
             {bodyType === 'json' && (
-              <div className="flex-1 min-h-[160px]">
+              <div className="min-h-40 flex-1">
                 <CodeEditor
                   value={bodyContent}
                   onChange={val => {
@@ -524,7 +524,7 @@ export function RequestPanel({
 
             {/* Plain Text Editor */}
             {bodyType === 'text' && (
-              <div className="flex-1 min-h-[160px]">
+              <div className="min-h-40 flex-1">
                 <CodeEditor
                   value={bodyContent}
                   onChange={onBodyContentChange}
@@ -538,7 +538,7 @@ export function RequestPanel({
 
             {/* Form URL-encoded Editor */}
             {bodyType === 'form' && (
-              <div className="flex-1 min-h-[160px]">
+              <div className="min-h-40 flex-1">
                 <KeyValueTable
                   rows={bodyFormRows}
                   onChange={onBodyFormRowsChange}
@@ -552,7 +552,7 @@ export function RequestPanel({
 
             {/* Multipart Editor with File Picker */}
             {bodyType === 'multipart' && (
-              <div className="flex-1 min-h-[160px]">
+              <div className="min-h-40 flex-1">
                 <MultipartTable
                   rows={bodyMultipartRows}
                   onChange={onBodyMultipartRowsChange}
@@ -565,7 +565,7 @@ export function RequestPanel({
 
         {/* SCRIPTS TAB */}
         {activeSubTab === 'scripts' && (
-          <div className="text-[12px] p-4 text-center" style={{ color: 'var(--text-muted)' }}>
+          <div className="p-4 text-center text-[12px]" style={{ color: 'var(--text-muted)' }}>
             Pre-request and post-response scripts can be configured here.
           </div>
         )}

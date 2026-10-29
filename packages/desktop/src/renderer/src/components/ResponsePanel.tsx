@@ -286,11 +286,11 @@ export function ResponsePanel({
     return (
       <div
         id="response-result"
-        className="flex flex-col h-full p-4 overflow-y-auto select-none"
+        className="flex h-full flex-col overflow-y-auto p-4 select-none"
         style={{ backgroundColor: 'var(--bg-base)' }}
       >
         <div
-          className="border rounded-[4px] p-4 max-w-xl space-y-3"
+          className="max-w-xl space-y-3 rounded-sm border p-4"
           style={{
             borderColor: 'var(--danger)',
             backgroundColor: 'var(--danger-subtle)',
@@ -299,18 +299,18 @@ export function ResponsePanel({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <AlertCircle
-                className="w-5 h-5 shrink-0"
+                className="h-5 w-5 shrink-0"
                 style={{ color: 'var(--danger)' }}
                 strokeWidth={1.5}
               />
-              <span className="font-semibold text-[14px]" style={{ color: 'var(--danger)' }}>
+              <span className="text-[14px] font-semibold" style={{ color: 'var(--danger)' }}>
                 {strings.errors.errorPrefix}
               </span>
             </div>
             <button
               type="button"
               onClick={handleCopyError}
-              className="inline-flex items-center gap-1.5 px-2 py-1 text-[11px] font-medium border rounded-[4px] hover:bg-[var(--bg-hover)] transition-fast"
+              className="transition-fast inline-flex items-center gap-1.5 rounded-sm border px-2 py-1 text-[11px] font-medium hover:bg-(--bg-hover)"
               style={{
                 borderColor: 'var(--border)',
                 backgroundColor: 'var(--bg-surface)',
@@ -318,18 +318,18 @@ export function ResponsePanel({
               }}
             >
               {copied ? (
-                <Check className="w-3 h-3 text-[var(--success)]" />
+                <Check className="h-3 w-3 text-(--success)" />
               ) : (
-                <Copy className="w-3 h-3" />
+                <Copy className="h-3 w-3" />
               )}
               <span>{copied ? 'Copied' : 'Copy error details'}</span>
             </button>
           </div>
 
-          <div className="text-[13px] space-y-2" style={{ color: 'var(--text-primary)' }}>
+          <div className="space-y-2 text-[13px]" style={{ color: 'var(--text-primary)' }}>
             <div>
               <span
-                className="font-medium text-[12px] block"
+                className="block text-[12px] font-medium"
                 style={{ color: 'var(--text-secondary)' }}
               >
                 {strings.errors.whatHappened}
@@ -340,7 +340,7 @@ export function ResponsePanel({
             {error.cause && (
               <div>
                 <span
-                  className="font-medium text-[12px] block"
+                  className="block text-[12px] font-medium"
                   style={{ color: 'var(--text-secondary)' }}
                 >
                   {strings.errors.why}
@@ -351,7 +351,7 @@ export function ResponsePanel({
 
             <div>
               <span
-                className="font-medium text-[12px] block"
+                className="block text-[12px] font-medium"
                 style={{ color: 'var(--text-secondary)' }}
               >
                 {strings.errors.whatToDo}
@@ -368,7 +368,7 @@ export function ResponsePanel({
                     const match = error.message.match(/Undefined variable "\{\{([^}]+)\}\}"/);
                     onAddVariable(match ? match[1] : undefined);
                   }}
-                  className="px-3 py-1.5 rounded-[4px] text-[12px] font-medium bg-[var(--accent)] text-[var(--accent-fg)] hover:opacity-90 transition-fast"
+                  className="transition-fast rounded-sm bg-(--accent) px-3 py-1.5 text-[12px] font-medium text-(--accent-fg) hover:opacity-90"
                 >
                   Add variable
                 </button>
@@ -384,11 +384,11 @@ export function ResponsePanel({
   if (!result && !loading) {
     return (
       <div
-        className="flex items-center justify-center h-full select-none"
+        className="flex h-full items-center justify-center select-none"
         style={{ backgroundColor: 'var(--bg-base)' }}
       >
         <EmptyState
-          icon={<ArrowRight className="w-6 h-6" strokeWidth={1.5} />}
+          icon={<ArrowRight className="h-6 w-6" strokeWidth={1.5} />}
           title={strings.responsePanel.emptyStateTitle}
           description={strings.responsePanel.emptyStateHelp}
           actionLabel={strings.urlBar.send}
@@ -402,12 +402,12 @@ export function ResponsePanel({
   if (loading && !result) {
     return (
       <div
-        className="flex flex-col items-center justify-center h-full select-none space-y-3"
+        className="flex h-full flex-col items-center justify-center space-y-3 select-none"
         style={{ backgroundColor: 'var(--bg-base)', color: 'var(--text-muted)' }}
       >
         <div className="flex items-center gap-2.5 text-[13px]">
           <span
-            className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin spin-allowed"
+            className="spin-allowed h-4 w-4 animate-spin rounded-full border-2 border-t-transparent"
             style={{ borderColor: 'var(--accent)', borderTopColor: 'transparent' }}
           />
           <span style={{ color: 'var(--text-primary)' }}>{strings.urlBar.sending}</span>
@@ -421,7 +421,7 @@ export function ResponsePanel({
             variant="ghost"
             size="compact"
             onClick={onCancel}
-            className="border text-[11px] px-3 h-[24px]"
+            className="h-6 border px-3 text-[11px]"
             style={{ borderColor: 'var(--border)' }}
           >
             Cancel (Esc)
@@ -467,12 +467,12 @@ export function ResponsePanel({
   return (
     <div
       id="response-result"
-      className="flex flex-col h-full overflow-hidden"
+      className="flex h-full flex-col overflow-hidden"
       style={{ backgroundColor: 'var(--bg-surface)' }}
     >
       {/* Response Header Strip (Section 6.6) */}
       <div
-        className="flex items-center justify-between px-3 h-[36px] border-b select-none shrink-0"
+        className="flex h-9 shrink-0 items-center justify-between border-b px-3 select-none"
         style={{
           backgroundColor: 'var(--bg-surface)',
           borderColor: 'var(--border)',
@@ -482,17 +482,17 @@ export function ResponsePanel({
         <div className="flex items-center gap-3">
           <StatusBadge status={result.status} statusText={result.statusText} />
           <span
-            className="text-[12px] font-mono flex items-center gap-1.5"
+            className="flex items-center gap-1.5 font-mono text-[12px]"
             style={{ color: 'var(--text-secondary)' }}
           >
-            <Clock className="w-3.5 h-3.5 text-[var(--text-muted)]" strokeWidth={1.75} />
+            <Clock className="h-3.5 w-3.5 text-(--text-muted)" strokeWidth={1.75} />
             {formatDuration(result.totalMs)}
           </span>
           <span
-            className="text-[12px] font-mono flex items-center gap-1.5"
+            className="flex items-center gap-1.5 font-mono text-[12px]"
             style={{ color: 'var(--text-secondary)' }}
           >
-            <Layers className="w-3.5 h-3.5 text-[var(--text-muted)]" strokeWidth={1.75} />
+            <Layers className="h-3.5 w-3.5 text-(--text-muted)" strokeWidth={1.75} />
             {formatBytes(result.sizeBytes)}
           </span>
         </div>
@@ -505,9 +505,9 @@ export function ResponsePanel({
             onClick={() => editorRef.current?.openSearch()}
             title="In-body search (Ctrl+F)"
             aria-label="Search response"
-            className="w-8 h-8 p-0 flex items-center justify-center rounded-[var(--radius-sm)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] transition-fast"
+            className="transition-fast flex h-8 w-8 items-center justify-center rounded-sm p-0 text-(--text-secondary) hover:bg-(--bg-hover) hover:text-(--text-primary)"
           >
-            <Search className="w-4 h-4" strokeWidth={1.8} />
+            <Search className="h-4 w-4" strokeWidth={1.8} />
           </Button>
 
           <Button
@@ -516,12 +516,12 @@ export function ResponsePanel({
             onClick={handleCopyBody}
             title={copied ? strings.responsePanel.copied : strings.responsePanel.copyResponse}
             aria-label={strings.responsePanel.copyResponse}
-            className="w-8 h-8 p-0 flex items-center justify-center rounded-[var(--radius-sm)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] transition-fast"
+            className="transition-fast flex h-8 w-8 items-center justify-center rounded-sm p-0 text-(--text-secondary) hover:bg-(--bg-hover) hover:text-(--text-primary)"
           >
             {copied ? (
-              <Check className="w-4 h-4" style={{ color: 'var(--success)' }} strokeWidth={2} />
+              <Check className="h-4 w-4" style={{ color: 'var(--success)' }} strokeWidth={2} />
             ) : (
-              <Copy className="w-4 h-4" strokeWidth={1.8} />
+              <Copy className="h-4 w-4" strokeWidth={1.8} />
             )}
           </Button>
 
@@ -531,16 +531,16 @@ export function ResponsePanel({
             onClick={handleSaveBody}
             title={strings.responsePanel.saveResponse}
             aria-label={strings.responsePanel.saveResponse}
-            className="w-8 h-8 p-0 flex items-center justify-center rounded-[var(--radius-sm)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] transition-fast"
+            className="transition-fast flex h-8 w-8 items-center justify-center rounded-sm p-0 text-(--text-secondary) hover:bg-(--bg-hover) hover:text-(--text-primary)"
           >
-            <Download className="w-4 h-4" strokeWidth={1.8} />
+            <Download className="h-4 w-4" strokeWidth={1.8} />
           </Button>
         </div>
       </div>
 
       {/* Response Sub-tabs and View Mode Controls */}
       <div
-        className="flex items-center justify-between px-3 border-b select-none shrink-0"
+        className="flex shrink-0 items-center justify-between border-b px-3 select-none"
         style={{ borderColor: 'var(--border)' }}
       >
         <Tabs
@@ -561,7 +561,7 @@ export function ResponsePanel({
               <select
                 value={prettyMode}
                 onChange={e => setPrettyMode(e.target.value as EditorMode)}
-                className="h-[22px] px-1 text-[11px] bg-transparent border rounded-[2px] outline-none cursor-pointer"
+                className="h-5.5 cursor-pointer rounded-xs border bg-transparent px-1 text-[11px] outline-none"
                 style={{
                   borderColor: 'var(--border)',
                   backgroundColor: 'var(--bg-input)',
@@ -597,7 +597,7 @@ export function ResponsePanel({
 
             {/* Segmented Pill Control for View Format */}
             <div
-              className="inline-flex items-center p-0.5 rounded-[4px] border select-none transition-fast"
+              className="transition-fast inline-flex items-center rounded-sm border p-0.5 select-none"
               style={{
                 backgroundColor: 'var(--bg-input)',
                 borderColor: 'var(--border)',
@@ -615,7 +615,7 @@ export function ResponsePanel({
                     key={opt.id}
                     type="button"
                     onClick={() => setViewFormat(opt.id as ViewFormat)}
-                    className="flex items-center gap-1 h-[20px] px-2 rounded-[2px] text-[11px] font-medium transition-fast app-focus-ring"
+                    className="transition-fast app-focus-ring flex h-5 items-center gap-1 rounded-xs px-2 text-[11px] font-medium"
                     style={{
                       backgroundColor: isSelected ? 'var(--bg-elevated)' : 'transparent',
                       color: isSelected ? 'var(--text-primary)' : 'var(--text-muted)',
@@ -623,7 +623,7 @@ export function ResponsePanel({
                     }}
                   >
                     <Icon
-                      className="w-3.5 h-3.5"
+                      className="h-3.5 w-3.5"
                       style={{ color: isSelected ? 'var(--accent)' : 'inherit' }}
                       strokeWidth={1.75}
                     />
@@ -640,11 +640,11 @@ export function ResponsePanel({
       <div className="flex-1 overflow-auto p-3">
         {/* BODY TAB VIEW */}
         {activeTab === 'body' && (
-          <div className="flex flex-col h-full space-y-2">
+          <div className="flex h-full flex-col space-y-2">
             {/* Large streamed body notice */}
             {result.bodyPath && (
               <div
-                className="p-2.5 rounded-[4px] text-[12px] border flex items-center justify-between"
+                className="flex items-center justify-between rounded-sm border p-2.5 text-[12px]"
                 style={{
                   backgroundColor: 'var(--info-subtle)',
                   borderColor: 'var(--info)',
@@ -661,17 +661,17 @@ export function ResponsePanel({
                       type="button"
                       disabled={streamLoading}
                       onClick={handleLoadMoreStream}
-                      className="px-2 py-0.5 text-[11px] font-medium border rounded-[2px] hover:bg-[var(--bg-hover)] transition-fast flex items-center gap-1"
+                      className="transition-fast flex items-center gap-1 rounded-xs border px-2 py-0.5 text-[11px] font-medium hover:bg-(--bg-hover)"
                       style={{ borderColor: 'var(--border)', backgroundColor: 'var(--bg-surface)' }}
                     >
-                      <RefreshCw className={`w-3 h-3 ${streamLoading ? 'animate-spin' : ''}`} />
+                      <RefreshCw className={`h-3 w-3 ${streamLoading ? 'animate-spin' : ''}`} />
                       <span>Load more</span>
                     </button>
                   )}
                   <button
                     type="button"
                     onClick={handleSaveBody}
-                    className="px-2 py-0.5 text-[11px] font-medium border rounded-[2px] hover:bg-[var(--bg-hover)] transition-fast"
+                    className="transition-fast rounded-xs border px-2 py-0.5 text-[11px] font-medium hover:bg-(--bg-hover)"
                     style={{ borderColor: 'var(--border)', backgroundColor: 'var(--bg-surface)' }}
                   >
                     Save full file
@@ -683,7 +683,7 @@ export function ResponsePanel({
             {/* Large in-memory body truncation notice */}
             {isLargeInMemory && (
               <div
-                className="p-2.5 rounded-[4px] text-[12px] border flex items-center justify-between"
+                className="flex items-center justify-between rounded-sm border p-2.5 text-[12px]"
                 style={{
                   backgroundColor: 'var(--warning-subtle)',
                   borderColor: 'var(--warning)',
@@ -697,7 +697,7 @@ export function ResponsePanel({
                 <button
                   type="button"
                   onClick={() => setShowFullInMemoryBody(true)}
-                  className="px-2 py-0.5 text-[11px] font-medium border rounded-[2px] hover:bg-[var(--bg-hover)] transition-fast"
+                  className="transition-fast rounded-xs border px-2 py-0.5 text-[11px] font-medium hover:bg-(--bg-hover)"
                   style={{ borderColor: 'var(--border)', backgroundColor: 'var(--bg-surface)' }}
                 >
                   Load full content
@@ -707,36 +707,36 @@ export function ResponsePanel({
 
             {/* PREVIEW MODE: HTML, Image, SVG */}
             {viewFormat === 'preview' && (
-              <div className="flex-1 h-full min-h-[220px]">
+              <div className="h-full min-h-55 flex-1">
                 {contentInfo.isHtml ? (
                   <iframe
                     title="HTML Preview"
                     sandbox="allow-same-origin"
                     srcDoc={rawBodyText}
-                    className="w-full h-full min-h-[300px] border rounded-[4px] bg-white"
+                    className="h-full min-h-75 w-full rounded-sm border bg-white"
                   />
                 ) : contentInfo.isImage || contentInfo.isSvg ? (
                   <div
-                    className="flex flex-col items-center justify-center p-4 h-full border rounded-[4px] relative overflow-hidden"
+                    className="relative flex h-full flex-col items-center justify-center overflow-hidden rounded-sm border p-4"
                     style={{
                       backgroundColor: 'var(--bg-input)',
                       borderColor: 'var(--border)',
                     }}
                   >
-                    <div className="absolute top-2 right-2 flex items-center gap-1 z-10">
+                    <div className="absolute top-2 right-2 z-10 flex items-center gap-1">
                       <button
                         type="button"
                         onClick={() => setImageZoomFit(!imageZoomFit)}
-                        className="p-1 rounded-[2px] border hover:bg-[var(--bg-hover)] transition-fast text-[11px] flex items-center gap-1"
+                        className="transition-fast flex items-center gap-1 rounded-xs border p-1 text-[11px] hover:bg-(--bg-hover)"
                         style={{
                           borderColor: 'var(--border)',
                           backgroundColor: 'var(--bg-surface)',
                         }}
                       >
                         {imageZoomFit ? (
-                          <ZoomIn className="w-4 h-4" strokeWidth={1.75} />
+                          <ZoomIn className="h-4 w-4" strokeWidth={1.75} />
                         ) : (
-                          <Maximize2 className="w-4 h-4" strokeWidth={1.75} />
+                          <Maximize2 className="h-4 w-4" strokeWidth={1.75} />
                         )}
                         <span>{imageZoomFit ? 'Fit' : '100%'}</span>
                       </button>
@@ -745,12 +745,12 @@ export function ResponsePanel({
                     {contentInfo.isSvg && rawBodyText.includes('<svg') ? (
                       <div
                         dangerouslySetInnerHTML={{ __html: rawBodyText }}
-                        className={imageZoomFit ? 'max-w-full max-h-[360px]' : ''}
+                        className={imageZoomFit ? 'max-h-90 max-w-full' : ''}
                       />
                     ) : (
-                      <div className="flex-1 flex items-center justify-center w-full overflow-auto p-4">
+                      <div className="flex w-full flex-1 items-center justify-center overflow-auto p-4">
                         <div
-                          className="p-3 rounded border shadow-sm max-w-full max-h-[420px] flex items-center justify-center overflow-auto"
+                          className="flex max-h-105 max-w-full items-center justify-center overflow-auto rounded border p-3 shadow-sm"
                           style={{
                             borderColor: 'var(--border)',
                             backgroundColor: 'var(--bg-elevated)',
@@ -768,22 +768,20 @@ export function ResponsePanel({
                             }
                             alt="Response preview"
                             className={`rounded transition-transform ${
-                              imageZoomFit
-                                ? 'max-w-full max-h-[360px] object-contain'
-                                : 'max-w-none'
+                              imageZoomFit ? 'max-h-90 max-w-full object-contain' : 'max-w-none'
                             }`}
                           />
                         </div>
                       </div>
                     )}
 
-                    <div className="mt-3 text-[11px] font-mono text-[var(--text-muted)]">
+                    <div className="mt-3 font-mono text-[11px] text-(--text-muted)">
                       {contentInfo.mimeType} · {formatBytes(result.sizeBytes)}
                     </div>
                   </div>
                 ) : (
                   <div
-                    className="flex items-center justify-center h-48 border border-dashed rounded-[4px] text-[12px]"
+                    className="flex h-48 items-center justify-center rounded-sm border border-dashed text-[12px]"
                     style={{ borderColor: 'var(--border)', color: 'var(--text-muted)' }}
                   >
                     Preview is not available for this content type. Use Pretty or Raw view.
@@ -794,7 +792,7 @@ export function ResponsePanel({
 
             {/* PRETTY OR RAW EDITOR MODE */}
             {viewFormat !== 'preview' && (
-              <div className="flex-1 min-h-[200px]">
+              <div className="min-h-50 flex-1">
                 {rawBodyText ? (
                   <CodeEditor
                     ref={editorRef}
@@ -807,7 +805,7 @@ export function ResponsePanel({
                   />
                 ) : (
                   <pre
-                    className="p-3 font-mono text-[12px] leading-relaxed select-text outline-none rounded-[4px] border whitespace-pre-wrap break-all"
+                    className="rounded-sm border p-3 font-mono text-[12px] leading-relaxed break-all whitespace-pre-wrap outline-none select-text"
                     style={{
                       backgroundColor: 'var(--bg-surface)',
                       borderColor: 'var(--border)',
@@ -828,14 +826,14 @@ export function ResponsePanel({
             {/* Search filter bar */}
             <div className="flex items-center justify-between">
               <div
-                className="relative flex items-center h-[28px] w-full max-w-sm rounded-[4px] border px-2 text-[12px]"
+                className="relative flex h-7 w-full max-w-sm items-center rounded-sm border px-2 text-[12px]"
                 style={{
                   backgroundColor: 'var(--bg-input)',
                   borderColor: 'var(--border-strong)',
                 }}
               >
                 <Search
-                  className="w-4 h-4 mr-1.5 shrink-0"
+                  className="mr-1.5 h-4 w-4 shrink-0"
                   style={{ color: 'var(--text-muted)' }}
                   strokeWidth={1.75}
                 />
@@ -844,7 +842,7 @@ export function ResponsePanel({
                   value={headerFilter}
                   onChange={e => setHeaderFilter(e.target.value)}
                   placeholder={strings.responsePanel.filterHeaders}
-                  className="w-full bg-transparent outline-none app-focus-ring text-[12px]"
+                  className="app-focus-ring w-full bg-transparent text-[12px] outline-none"
                   style={{ color: 'var(--text-primary)' }}
                   aria-label={strings.responsePanel.filterHeaders}
                 />
@@ -852,15 +850,15 @@ export function ResponsePanel({
                   <button
                     type="button"
                     onClick={() => setHeaderFilter('')}
-                    className="p-0.5 rounded text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+                    className="rounded p-0.5 text-(--text-muted) hover:text-(--text-primary)"
                     title="Clear filter"
                   >
-                    <X className="w-3.5 h-3.5" strokeWidth={1.75} />
+                    <X className="h-3.5 w-3.5" strokeWidth={1.75} />
                   </button>
                 )}
               </div>
 
-              <span className="text-[11px] font-mono" style={{ color: 'var(--text-muted)' }}>
+              <span className="font-mono text-[11px]" style={{ color: 'var(--text-muted)' }}>
                 {headerFilter
                   ? `Filtered: ${filteredHeaders.length} of ${headersList.length}`
                   : `${headersList.length} headers`}
@@ -869,7 +867,7 @@ export function ResponsePanel({
 
             {/* Headers Table */}
             <div
-              className="w-full border rounded-[4px] overflow-hidden"
+              className="w-full overflow-hidden rounded-sm border"
               style={{ borderColor: 'var(--border)', backgroundColor: 'var(--bg-base)' }}
             >
               <table className="w-full border-collapse text-left text-[12px]">
@@ -882,7 +880,7 @@ export function ResponsePanel({
                       color: 'var(--text-secondary)',
                     }}
                   >
-                    <th className="px-3 py-1.5 font-medium w-1/3">Header</th>
+                    <th className="w-1/3 px-3 py-1.5 font-medium">Header</th>
                     <th className="px-3 py-1.5 font-medium">Value</th>
                     <th className="w-8 px-2 py-1.5 text-center font-medium"></th>
                   </tr>
@@ -891,7 +889,7 @@ export function ResponsePanel({
                   {filteredHeaders.map(h => (
                     <tr
                       key={h.name}
-                      className="group border-b last:border-b-0 hover:bg-[var(--bg-hover)] transition-fast"
+                      className="group transition-fast border-b last:border-b-0 hover:bg-(--bg-hover)"
                       style={{ borderColor: 'var(--border)' }}
                     >
                       <td
@@ -910,13 +908,13 @@ export function ResponsePanel({
                         <button
                           type="button"
                           onClick={() => handleCopyHeader(h.name, h.value)}
-                          className="p-1 rounded opacity-0 group-hover:opacity-100 hover:bg-[var(--bg-active)] transition-fast text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+                          className="transition-fast rounded p-1 text-(--text-muted) opacity-0 group-hover:opacity-100 hover:bg-(--bg-active) hover:text-(--text-primary)"
                           title="Copy header value"
                         >
                           {copiedKey === h.name ? (
-                            <Check className="w-4 h-4 text-[var(--success)]" strokeWidth={2} />
+                            <Check className="h-4 w-4 text-(--success)" strokeWidth={2} />
                           ) : (
-                            <Copy className="w-4 h-4" strokeWidth={1.8} />
+                            <Copy className="h-4 w-4" strokeWidth={1.8} />
                           )}
                         </button>
                       </td>

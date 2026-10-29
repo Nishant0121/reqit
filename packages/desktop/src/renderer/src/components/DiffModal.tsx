@@ -35,23 +35,23 @@ export function DiffModal({
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={`Diff: ${requestName}`} size="large">
-      <div className="flex flex-col h-[520px] select-none text-[12px]">
+      <div className="flex h-130 flex-col text-[12px] select-none">
         {/* Header bar: Path, Mode Switcher, and Legends */}
         <div
-          className="flex items-center justify-between pb-3 mb-2 border-b shrink-0"
+          className="mb-2 flex shrink-0 items-center justify-between border-b pb-3"
           style={{ borderColor: 'var(--border)' }}
         >
-          <div className="flex items-center gap-2 overflow-hidden mr-3">
-            <FileDiff className="w-4 h-4 text-[var(--accent)] shrink-0" />
+          <div className="mr-3 flex items-center gap-2 overflow-hidden">
+            <FileDiff className="h-4 w-4 shrink-0 text-(--accent)" />
             <span
-              className="text-[var(--text-secondary)] font-mono text-[11px] truncate"
+              className="truncate font-mono text-[11px] text-(--text-secondary)"
               title={filePath}
             >
               {filePath || requestName}
             </span>
           </div>
 
-          <div className="flex items-center gap-3 shrink-0">
+          <div className="flex shrink-0 items-center gap-3">
             {/* View Mode Toggle */}
             <div
               className="flex items-center rounded border p-0.5"
@@ -63,37 +63,37 @@ export function DiffModal({
               <button
                 type="button"
                 onClick={() => setViewMode('unified')}
-                className={`px-2 py-0.5 text-[11px] rounded transition-fast flex items-center gap-1 ${
+                className={`transition-fast flex items-center gap-1 rounded px-2 py-0.5 text-[11px] ${
                   viewMode === 'unified'
-                    ? 'bg-[var(--accent)] text-white'
-                    : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                    ? 'bg-(--accent) text-white'
+                    : 'text-(--text-secondary) hover:text-(--text-primary)'
                 }`}
               >
-                <Split className="w-3 h-3" />
+                <Split className="h-3 w-3" />
                 <span>Unified</span>
               </button>
               <button
                 type="button"
                 onClick={() => setViewMode('split')}
-                className={`px-2 py-0.5 text-[11px] rounded transition-fast flex items-center gap-1 ${
+                className={`transition-fast flex items-center gap-1 rounded px-2 py-0.5 text-[11px] ${
                   viewMode === 'split'
-                    ? 'bg-[var(--accent)] text-white'
-                    : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                    ? 'bg-(--accent) text-white'
+                    : 'text-(--text-secondary) hover:text-(--text-primary)'
                 }`}
               >
-                <Columns className="w-3 h-3" />
+                <Columns className="h-3 w-3" />
                 <span>Side by Side</span>
               </button>
             </div>
 
             {/* Legend */}
-            <div className="flex items-center gap-2 text-[11px] text-[var(--text-muted)]">
+            <div className="flex items-center gap-2 text-[11px] text-(--text-muted)">
               <span className="flex items-center gap-1">
-                <span className="w-2.5 h-2.5 rounded-sm bg-red-500/30 border border-red-500/50" />
+                <span className="h-2.5 w-2.5 rounded-sm border border-red-500/50 bg-red-500/30" />
                 Disk (Deleted/Replaced)
               </span>
               <span className="flex items-center gap-1">
-                <span className="w-2.5 h-2.5 rounded-sm bg-emerald-500/30 border border-emerald-500/50" />
+                <span className="h-2.5 w-2.5 rounded-sm border border-emerald-500/50 bg-emerald-500/30" />
                 Your Edits (Added/New)
               </span>
             </div>
@@ -117,7 +117,7 @@ export function DiffModal({
                 return (
                   <div
                     key={idx}
-                    className="flex items-center leading-[20px] px-2 font-mono whitespace-pre"
+                    className="flex items-center px-2 font-mono leading-5 whitespace-pre"
                     style={{
                       backgroundColor: isAdded
                         ? 'rgba(34, 197, 94, 0.12)'
@@ -129,20 +129,20 @@ export function DiffModal({
                   >
                     {/* Old line number */}
                     <span
-                      className="w-8 shrink-0 text-right pr-2 select-none text-[10px]"
+                      className="w-8 shrink-0 pr-2 text-right text-[10px] select-none"
                       style={{ color: 'var(--text-muted)' }}
                     >
                       {line.oldLineNumber ?? ''}
                     </span>
                     {/* New line number */}
                     <span
-                      className="w-8 shrink-0 text-right pr-2 select-none text-[10px]"
+                      className="w-8 shrink-0 pr-2 text-right text-[10px] select-none"
                       style={{ color: 'var(--text-muted)' }}
                     >
                       {line.newLineNumber ?? ''}
                     </span>
                     {/* Marker +/- */}
-                    <span className="w-4 shrink-0 text-center select-none font-bold">
+                    <span className="w-4 shrink-0 text-center font-bold select-none">
                       {isAdded ? '+' : isRemoved ? '-' : ' '}
                     </span>
                     {/* Line text */}
@@ -157,40 +157,40 @@ export function DiffModal({
               style={{ borderColor: 'var(--border)' }}
             >
               {/* Left Column: Disk Version */}
-              <div className="w-1/2 flex flex-col min-w-0 overflow-auto">
+              <div className="flex w-1/2 min-w-0 flex-col overflow-auto">
                 <div
-                  className="px-2 py-1 text-[11px] font-medium border-b shrink-0 bg-[var(--bg-surface)] text-[var(--text-secondary)]"
+                  className="shrink-0 border-b bg-(--bg-surface) px-2 py-1 text-[11px] font-medium text-(--text-secondary)"
                   style={{ borderColor: 'var(--border)' }}
                 >
                   Disk Version (Remote / External)
                 </div>
                 <div className="flex-1 overflow-auto p-2">
                   {diskLines.map((text, idx) => (
-                    <div key={idx} className="flex leading-[18px] text-[11px] whitespace-pre">
-                      <span className="w-6 shrink-0 text-right pr-2 text-[var(--text-muted)] select-none">
+                    <div key={idx} className="flex text-[11px] leading-4.5 whitespace-pre">
+                      <span className="w-6 shrink-0 pr-2 text-right text-(--text-muted) select-none">
                         {idx + 1}
                       </span>
-                      <span className="flex-1 text-[var(--text-primary)]">{text || ' '}</span>
+                      <span className="flex-1 text-(--text-primary)">{text || ' '}</span>
                     </div>
                   ))}
                 </div>
               </div>
 
               {/* Right Column: Your Version */}
-              <div className="w-1/2 flex flex-col min-w-0 overflow-auto">
+              <div className="flex w-1/2 min-w-0 flex-col overflow-auto">
                 <div
-                  className="px-2 py-1 text-[11px] font-medium border-b shrink-0 bg-[var(--bg-surface)] text-[var(--text-secondary)]"
+                  className="shrink-0 border-b bg-(--bg-surface) px-2 py-1 text-[11px] font-medium text-(--text-secondary)"
                   style={{ borderColor: 'var(--border)' }}
                 >
                   Your Version (Unsaved Local Edits)
                 </div>
                 <div className="flex-1 overflow-auto p-2">
                   {localLines.map((text, idx) => (
-                    <div key={idx} className="flex leading-[18px] text-[11px] whitespace-pre">
-                      <span className="w-6 shrink-0 text-right pr-2 text-[var(--text-muted)] select-none">
+                    <div key={idx} className="flex text-[11px] leading-4.5 whitespace-pre">
+                      <span className="w-6 shrink-0 pr-2 text-right text-(--text-muted) select-none">
                         {idx + 1}
                       </span>
-                      <span className="flex-1 text-[var(--text-primary)]">{text || ' '}</span>
+                      <span className="flex-1 text-(--text-primary)">{text || ' '}</span>
                     </div>
                   ))}
                 </div>
@@ -201,7 +201,7 @@ export function DiffModal({
 
         {/* Modal Footer Actions */}
         <div
-          className="flex items-center justify-between pt-3 mt-3 border-t shrink-0"
+          className="mt-3 flex shrink-0 items-center justify-between border-t pt-3"
           style={{ borderColor: 'var(--border)' }}
         >
           <Button variant="ghost" size="compact" onClick={onClose}>
@@ -219,7 +219,7 @@ export function DiffModal({
               }}
               className="flex items-center gap-1"
             >
-              <ArrowDownToLine className="w-3.5 h-3.5" />
+              <ArrowDownToLine className="h-3.5 w-3.5" />
               <span>Load Disk Version</span>
             </Button>
             <Button
@@ -232,7 +232,7 @@ export function DiffModal({
               }}
               className="flex items-center gap-1"
             >
-              <Check className="w-3.5 h-3.5" />
+              <Check className="h-3.5 w-3.5" />
               <span>Keep My Edits</span>
             </Button>
           </div>

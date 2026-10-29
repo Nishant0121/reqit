@@ -32,7 +32,7 @@ export function RequestTabs({
     <div
       role="tablist"
       aria-label="Request tabs"
-      className="flex items-center h-[32px] border-b select-none overflow-x-auto shrink-0"
+      className="flex h-8 shrink-0 items-center overflow-x-auto border-b select-none"
       style={{
         backgroundColor: 'var(--bg-surface)',
         borderColor: 'var(--border)',
@@ -52,7 +52,7 @@ export function RequestTabs({
                 onSelectTab(tab.id);
               }
             }}
-            className="group flex items-center h-full px-3 text-[12px] cursor-pointer transition-fast app-focus-ring relative"
+            className="group transition-fast app-focus-ring relative flex h-full cursor-pointer items-center px-3 text-[12px]"
             style={{
               backgroundColor: isActive ? 'var(--bg-base)' : 'transparent',
               borderRight: '1px solid var(--border)',
@@ -61,23 +61,23 @@ export function RequestTabs({
               maxWidth: '180px',
             }}
           >
-            <MethodBadge method={tab.method} short className="w-auto mr-1.5" />
-            <span className="truncate flex-1" title={tab.name}>
+            <MethodBadge method={tab.method} short className="mr-1.5 w-auto" />
+            <span className="flex-1 truncate" title={tab.name}>
               {tab.name}
             </span>
 
             {/* Conflict or Deleted or Unsaved indicator */}
             {tab.hasConflict ? (
               <span title="External conflict detected" className="ml-1.5 shrink-0">
-                <AlertTriangle className="w-3 h-3 text-amber-500" />
+                <AlertTriangle className="h-3 w-3 text-amber-500" />
               </span>
             ) : tab.isDeleted ? (
               <span title="File deleted on disk" className="ml-1.5 shrink-0">
-                <Trash2 className="w-3 h-3 text-red-500" />
+                <Trash2 className="h-3 w-3 text-red-500" />
               </span>
             ) : tab.isDirty ? (
               <span
-                className="w-1.5 h-1.5 rounded-full ml-1.5 shrink-0"
+                className="ml-1.5 h-1.5 w-1.5 shrink-0 rounded-full"
                 style={{ backgroundColor: 'var(--warning)' }}
                 title={strings.tabs.unsavedChanges}
               />
@@ -89,12 +89,12 @@ export function RequestTabs({
                 e.stopPropagation();
                 onCloseTab(tab.id);
               }}
-              className="ml-1.5 p-0.5 rounded-[2px] opacity-0 group-hover:opacity-100 hover:bg-[var(--bg-hover)] transition-fast shrink-0"
+              className="transition-fast ml-1.5 shrink-0 rounded-xs p-0.5 opacity-0 group-hover:opacity-100 hover:bg-(--bg-hover)"
               style={{ color: 'var(--text-muted)' }}
               title={strings.tabs.closeTab}
               aria-label={strings.tabs.closeTab}
             >
-              <X className="w-3.5 h-3.5" strokeWidth={1.75} />
+              <X className="h-3.5 w-3.5" strokeWidth={1.75} />
             </button>
           </div>
         );
@@ -104,12 +104,12 @@ export function RequestTabs({
       <button
         type="button"
         onClick={onNewTab}
-        className="flex items-center justify-center w-[32px] h-full hover:bg-[var(--bg-hover)] transition-fast app-focus-ring"
+        className="transition-fast app-focus-ring flex h-full w-8 items-center justify-center hover:bg-(--bg-hover)"
         style={{ color: 'var(--text-muted)' }}
         title={strings.tabs.newTab}
         aria-label={strings.tabs.newTab}
       >
-        <Plus className="w-4 h-4" strokeWidth={1.75} />
+        <Plus className="h-4 w-4" strokeWidth={1.75} />
       </button>
     </div>
   );

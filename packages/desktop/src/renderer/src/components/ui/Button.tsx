@@ -59,7 +59,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       ref={ref}
       disabled={isDisabled}
       aria-disabled={isDisabled}
-      className={`inline-flex items-center justify-center font-normal transition-fast select-none app-focus-ring ${
+      className={`transition-fast app-focus-ring inline-flex items-center justify-center font-normal select-none ${
         sizeClasses[size]
       } ${variantClasses[variant]} ${className}`}
       style={{
@@ -71,7 +71,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
     >
       {loading ? (
         <>
-          <Loader2 className="w-4 h-4 animate-spin spin-allowed" strokeWidth={1.75} />
+          <Loader2 className="spin-allowed h-4 w-4 animate-spin" strokeWidth={1.75} />
           {children}
         </>
       ) : (

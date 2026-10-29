@@ -95,7 +95,7 @@ export function KeyValueTable({
   return (
     <div
       ref={containerRef}
-      className="w-full border rounded-[4px] relative"
+      className="relative w-full rounded-sm border"
       style={{
         borderColor: 'var(--border)',
         backgroundColor: 'var(--bg-base)',
@@ -111,13 +111,13 @@ export function KeyValueTable({
               color: 'var(--text-secondary)',
             }}
           >
-            <th className="w-[32px] px-2 py-1.5 text-center font-medium"></th>
+            <th className="w-8 px-2 py-1.5 text-center font-medium"></th>
             <th className="px-3 py-1.5 font-medium">{keyPlaceholder}</th>
             <th className="px-3 py-1.5 font-medium">{valuePlaceholder}</th>
             {showDescription && (
               <th className="px-3 py-1.5 font-medium">{descriptionPlaceholder}</th>
             )}
-            <th className="w-[32px] px-2 py-1.5 text-center font-medium"></th>
+            <th className="w-8 px-2 py-1.5 text-center font-medium"></th>
           </tr>
         </thead>
         <tbody>
@@ -153,7 +153,7 @@ export function KeyValueTable({
             return (
               <tr
                 key={row.id}
-                className="border-b last:border-b-0 transition-fast"
+                className="transition-fast border-b last:border-b-0"
                 style={{
                   borderColor: 'var(--border)',
                   backgroundColor: 'var(--bg-base)',
@@ -167,13 +167,13 @@ export function KeyValueTable({
                     checked={row.enabled}
                     disabled={isTail}
                     onChange={e => handleUpdate(idx, { enabled: e.target.checked })}
-                    className="w-3.5 h-3.5 rounded-[2px] cursor-pointer app-focus-ring"
+                    className="app-focus-ring h-3.5 w-3.5 cursor-pointer rounded-xs"
                     aria-label="Toggle row"
                   />
                 </td>
 
                 {/* Key cell with autocomplete */}
-                <td className="px-2 py-1 align-middle relative">
+                <td className="relative px-2 py-1 align-middle">
                   <input
                     type="text"
                     value={row.key}
@@ -218,7 +218,7 @@ export function KeyValueTable({
                         }
                       }
                     }}
-                    className="w-full bg-transparent px-1.5 py-0.5 text-[12px] font-mono outline-none app-focus-ring"
+                    className="app-focus-ring w-full bg-transparent px-1.5 py-0.5 font-mono text-[12px] outline-none"
                     style={{
                       color: isDimmed ? 'var(--text-muted)' : 'var(--text-primary)',
                     }}
@@ -227,7 +227,7 @@ export function KeyValueTable({
                   {/* Key suggestions dropdown */}
                   {matchingKeys.length > 0 && (
                     <div
-                      className="absolute left-2 top-full mt-1 z-50 min-w-[180px] max-h-[200px] overflow-y-auto py-1 rounded-[4px] border shadow-elevation select-none"
+                      className="shadow-elevation absolute top-full left-2 z-50 mt-1 max-h-50 min-w-45 overflow-y-auto rounded-sm border py-1 select-none"
                       style={{
                         backgroundColor: 'var(--bg-elevated)',
                         borderColor: 'var(--border)',
@@ -247,7 +247,7 @@ export function KeyValueTable({
                             handleUpdate(idx, { key: sug });
                             setActiveKeySuggestRow(null);
                           }}
-                          className="px-2.5 py-1 text-[12px] font-mono cursor-pointer transition-fast flex items-center justify-between"
+                          className="transition-fast flex cursor-pointer items-center justify-between px-2.5 py-1 font-mono text-[12px]"
                           style={{
                             backgroundColor:
                               i === suggestIndex ? 'var(--bg-active)' : 'transparent',
@@ -265,7 +265,7 @@ export function KeyValueTable({
                 </td>
 
                 {/* Value cell with variable support and value suggestions */}
-                <td className="px-2 py-1 align-middle relative">
+                <td className="relative px-2 py-1 align-middle">
                   <VariableInput
                     value={row.value}
                     placeholder={valuePlaceholder}
@@ -311,13 +311,13 @@ export function KeyValueTable({
                         }
                       }
                     }}
-                    className="w-full !h-[26px] !border-none !bg-transparent !px-1.5 !text-[12px]"
+                    className="h-6.5! w-full border-none! bg-transparent! px-1.5! text-[12px]!"
                   />
 
                   {/* Value suggestions dropdown */}
                   {matchingValues.length > 0 && !row.value.includes('{{') && (
                     <div
-                      className="absolute left-2 top-full mt-1 z-50 min-w-[200px] max-h-[200px] overflow-y-auto py-1 rounded-[4px] border shadow-elevation select-none"
+                      className="shadow-elevation absolute top-full left-2 z-50 mt-1 max-h-50 min-w-50 overflow-y-auto rounded-sm border py-1 select-none"
                       style={{
                         backgroundColor: 'var(--bg-elevated)',
                         borderColor: 'var(--border)',
@@ -331,7 +331,7 @@ export function KeyValueTable({
                             handleUpdate(idx, { value: valSug });
                             setActiveValueSuggestRow(null);
                           }}
-                          className="px-2.5 py-1 text-[12px] font-mono cursor-pointer transition-fast flex items-center justify-between"
+                          className="transition-fast flex cursor-pointer items-center justify-between px-2.5 py-1 font-mono text-[12px]"
                           style={{
                             backgroundColor:
                               i === suggestIndex ? 'var(--bg-active)' : 'transparent',
@@ -353,7 +353,7 @@ export function KeyValueTable({
                       value={row.description || ''}
                       placeholder={descriptionPlaceholder}
                       onChange={e => handleUpdate(idx, { description: e.target.value })}
-                      className="w-full bg-transparent px-1.5 py-0.5 text-[12px] outline-none app-focus-ring"
+                      className="app-focus-ring w-full bg-transparent px-1.5 py-0.5 text-[12px] outline-none"
                       style={{
                         color: isDimmed ? 'var(--text-muted)' : 'var(--text-primary)',
                       }}
@@ -367,11 +367,11 @@ export function KeyValueTable({
                     <button
                       type="button"
                       onClick={() => handleDelete(idx)}
-                      className="w-6 h-6 inline-flex items-center justify-center rounded-[var(--radius-sm)] hover:bg-[var(--bg-hover)] text-[var(--text-muted)] hover:text-[var(--danger)] transition-fast app-focus-ring"
+                      className="transition-fast app-focus-ring inline-flex h-6 w-6 items-center justify-center rounded-sm text-(--text-muted) hover:bg-(--bg-hover) hover:text-(--danger)"
                       title="Delete row"
                       aria-label="Delete row"
                     >
-                      <Trash2 className="w-4 h-4" strokeWidth={1.75} />
+                      <Trash2 className="h-4 w-4" strokeWidth={1.75} />
                     </button>
                   )}
                 </td>

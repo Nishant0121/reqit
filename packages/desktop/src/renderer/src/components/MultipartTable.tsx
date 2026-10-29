@@ -86,7 +86,7 @@ export function MultipartTable({
 
   return (
     <div
-      className="w-full border rounded-[4px] relative"
+      className="relative w-full rounded-sm border"
       style={{
         borderColor: 'var(--border)',
         backgroundColor: 'var(--bg-base)',
@@ -110,11 +110,11 @@ export function MultipartTable({
               color: 'var(--text-secondary)',
             }}
           >
-            <th className="w-[32px] px-2 py-1.5 text-center font-medium"></th>
-            <th className="px-3 py-1.5 font-medium w-[28%]">Field Name</th>
-            <th className="px-3 py-1.5 font-medium w-[90px]">Type</th>
+            <th className="w-8 px-2 py-1.5 text-center font-medium"></th>
+            <th className="w-[28%] px-3 py-1.5 font-medium">Field Name</th>
+            <th className="w-22.5 px-3 py-1.5 font-medium">Type</th>
             <th className="px-3 py-1.5 font-medium">Value / File</th>
-            <th className="w-[32px] px-2 py-1.5 text-center font-medium"></th>
+            <th className="w-8 px-2 py-1.5 text-center font-medium"></th>
           </tr>
         </thead>
         <tbody>
@@ -125,7 +125,7 @@ export function MultipartTable({
             return (
               <tr
                 key={row.id}
-                className="border-b last:border-b-0 transition-fast"
+                className="transition-fast border-b last:border-b-0"
                 style={{
                   borderColor: 'var(--border)',
                   backgroundColor: 'var(--bg-base)',
@@ -139,7 +139,7 @@ export function MultipartTable({
                     checked={row.enabled}
                     disabled={isTail}
                     onChange={e => handleUpdate(idx, { enabled: e.target.checked })}
-                    className="w-3.5 h-3.5 rounded-[2px] cursor-pointer app-focus-ring"
+                    className="app-focus-ring h-3.5 w-3.5 cursor-pointer rounded-xs"
                     aria-label="Toggle multipart row"
                   />
                 </td>
@@ -151,7 +151,7 @@ export function MultipartTable({
                     value={row.key}
                     placeholder="Field name"
                     onChange={e => handleUpdate(idx, { key: e.target.value })}
-                    className="w-full bg-transparent px-1.5 py-0.5 text-[12px] font-mono outline-none app-focus-ring"
+                    className="app-focus-ring w-full bg-transparent px-1.5 py-0.5 font-mono text-[12px] outline-none"
                     style={{
                       color: isDimmed ? 'var(--text-muted)' : 'var(--text-primary)',
                     }}
@@ -169,7 +169,7 @@ export function MultipartTable({
                         fileName: undefined,
                       })
                     }
-                    className="h-[24px] px-1 text-[11px] bg-transparent border rounded-[2px] outline-none cursor-pointer"
+                    className="h-6 cursor-pointer rounded-xs border bg-transparent px-1 text-[11px] outline-none"
                     style={{
                       borderColor: 'var(--border)',
                       backgroundColor: 'var(--bg-input)',
@@ -204,24 +204,21 @@ export function MultipartTable({
                       <button
                         type="button"
                         onClick={() => handlePickFile(idx)}
-                        className="inline-flex items-center gap-1.5 h-[24px] px-2 text-[11px] font-medium border rounded-[2px] hover:bg-[var(--bg-hover)] transition-fast"
+                        className="transition-fast inline-flex h-6 items-center gap-1.5 rounded-xs border px-2 text-[11px] font-medium hover:bg-(--bg-hover)"
                         style={{
                           borderColor: 'var(--border)',
                           backgroundColor: 'var(--bg-surface)',
                           color: 'var(--text-primary)',
                         }}
                       >
-                        <FolderOpen
-                          className="w-3.5 h-3.5 text-[var(--accent)]"
-                          strokeWidth={1.75}
-                        />
+                        <FolderOpen className="h-3.5 w-3.5 text-(--accent)" strokeWidth={1.75} />
                         <span>Choose file...</span>
                       </button>
 
                       {row.value ? (
-                        <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                        <div className="flex min-w-0 flex-1 items-center gap-1.5">
                           <span
-                            className="text-[11px] font-mono truncate"
+                            className="truncate font-mono text-[11px]"
                             style={{ color: 'var(--text-primary)' }}
                             title={row.value}
                           >
@@ -230,10 +227,10 @@ export function MultipartTable({
                           <button
                             type="button"
                             onClick={() => handleUpdate(idx, { value: '', fileName: undefined })}
-                            className="p-0.5 rounded hover:bg-[var(--bg-hover)] transition-fast text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+                            className="transition-fast rounded p-0.5 text-(--text-muted) hover:bg-(--bg-hover) hover:text-(--text-primary)"
                             title="Remove file"
                           >
-                            <X className="w-3.5 h-3.5" strokeWidth={1.75} />
+                            <X className="h-3.5 w-3.5" strokeWidth={1.75} />
                           </button>
                         </div>
                       ) : (
@@ -248,7 +245,7 @@ export function MultipartTable({
                       placeholder="Field value"
                       knownVariables={knownVariables}
                       onChange={val => handleUpdate(idx, { value: val })}
-                      className="w-full !h-[26px] !border-none !bg-transparent !px-1.5 !text-[12px]"
+                      className="h-6.5! w-full border-none! bg-transparent! px-1.5! text-[12px]!"
                     />
                   )}
                 </td>
@@ -259,11 +256,11 @@ export function MultipartTable({
                     <button
                       type="button"
                       onClick={() => handleDelete(idx)}
-                      className="w-6 h-6 inline-flex items-center justify-center rounded-[var(--radius-sm)] hover:bg-[var(--bg-hover)] text-[var(--text-muted)] hover:text-[var(--danger)] transition-fast app-focus-ring"
+                      className="transition-fast app-focus-ring inline-flex h-6 w-6 items-center justify-center rounded-sm text-(--text-muted) hover:bg-(--bg-hover) hover:text-(--danger)"
                       title="Delete row"
                       aria-label="Delete row"
                     >
-                      <Trash2 className="w-4 h-4" strokeWidth={1.75} />
+                      <Trash2 className="h-4 w-4" strokeWidth={1.75} />
                     </button>
                   )}
                 </td>

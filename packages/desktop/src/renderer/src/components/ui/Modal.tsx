@@ -93,7 +93,7 @@ export function Modal({
       role="dialog"
       aria-modal="true"
       aria-labelledby="modal-title"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 transition-fast"
+      className="transition-fast fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ backgroundColor: 'var(--bg-overlay)' }}
       onClick={e => {
         if (e.target === e.currentTarget) onClose();
@@ -102,7 +102,7 @@ export function Modal({
       <div
         ref={modalRef}
         tabIndex={-1}
-        className={`w-full ${widthMap[size]} max-h-[80vh] flex flex-col rounded-[8px] border shadow-elevation outline-none transition-panel overflow-hidden`}
+        className={`w-full ${widthMap[size]} shadow-elevation transition-panel flex max-h-[80vh] flex-col overflow-hidden rounded-lg border outline-none`}
         style={{
           backgroundColor: 'var(--bg-elevated)',
           borderColor: 'var(--border)',
@@ -110,12 +110,12 @@ export function Modal({
       >
         {/* Header */}
         <div
-          className="flex items-center justify-between px-6 py-4 border-b shrink-0 select-none"
+          className="flex shrink-0 items-center justify-between border-b px-6 py-4 select-none"
           style={{ borderColor: 'var(--border)' }}
         >
           <h2
             id="modal-title"
-            className="text-[16px] leading-[24px] font-semibold"
+            className="text-[16px] leading-6 font-semibold"
             style={{ color: 'var(--text-primary)' }}
           >
             {title}
@@ -123,17 +123,17 @@ export function Modal({
           <button
             type="button"
             onClick={onClose}
-            className="w-8 h-8 inline-flex items-center justify-center rounded-[var(--radius-sm)] hover:bg-[var(--bg-hover)] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-fast app-focus-ring"
+            className="transition-fast app-focus-ring inline-flex h-8 w-8 items-center justify-center rounded-sm text-(--text-muted) hover:bg-(--bg-hover) hover:text-(--text-primary)"
             title="Close dialog (Escape)"
             aria-label="Close dialog"
           >
-            <X className="w-5 h-5" strokeWidth={1.75} />
+            <X className="h-5 w-5" strokeWidth={1.75} />
           </button>
         </div>
 
         {/* Body */}
         <div
-          className="p-6 overflow-y-auto flex-1 text-[13px] leading-[20px]"
+          className="flex-1 overflow-y-auto p-6 text-[13px] leading-5"
           style={{ color: 'var(--text-primary)' }}
         >
           {children}
@@ -142,7 +142,7 @@ export function Modal({
         {/* Footer */}
         {customFooter ? (
           <div
-            className="flex items-center justify-end gap-3 px-6 py-3 border-t shrink-0 select-none"
+            className="flex shrink-0 items-center justify-end gap-3 border-t px-6 py-3 select-none"
             style={{
               borderColor: 'var(--border)',
               backgroundColor: 'var(--bg-surface)',
@@ -153,7 +153,7 @@ export function Modal({
         ) : (
           (primaryAction || secondaryAction) && (
             <div
-              className="flex items-center justify-end gap-3 px-6 py-3 border-t shrink-0 select-none"
+              className="flex shrink-0 items-center justify-end gap-3 border-t px-6 py-3 select-none"
               style={{
                 borderColor: 'var(--border)',
                 backgroundColor: 'var(--bg-surface)',

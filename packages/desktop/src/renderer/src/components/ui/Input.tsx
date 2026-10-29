@@ -23,9 +23,9 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
   const heightClass = inputSize === 'large' ? 'h-[32px]' : 'h-[28px]';
 
   return (
-    <div className="flex flex-col w-full">
+    <div className="flex w-full flex-col">
       <div
-        className={`relative flex items-center w-full transition-fast ${heightClass}`}
+        className={`transition-fast relative flex w-full items-center ${heightClass}`}
         style={{
           backgroundColor: 'var(--bg-input)',
           border: `1px solid ${error ? 'var(--danger)' : 'var(--border-strong)'}`,
@@ -34,7 +34,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
       >
         {leftIcon && (
           <div
-            className="pl-2.5 flex items-center justify-center pointer-events-none"
+            className="pointer-events-none flex items-center justify-center pl-2.5"
             style={{ color: 'var(--text-muted)' }}
           >
             {leftIcon}
@@ -43,7 +43,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
         <input
           ref={ref}
           disabled={disabled}
-          className={`w-full h-full bg-transparent px-2.5 text-[13px] app-focus-ring outline-none transition-fast ${
+          className={`app-focus-ring transition-fast h-full w-full bg-transparent px-2.5 text-[13px] outline-none ${
             leftIcon ? 'pl-2' : ''
           } ${rightElement ? 'pr-8' : ''} ${className}`}
           style={{
@@ -55,7 +55,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
         {rightElement && <div className="absolute right-1 flex items-center">{rightElement}</div>}
       </div>
       {error && (
-        <span className="mt-1 text-[12px] leading-[16px]" style={{ color: 'var(--danger)' }}>
+        <span className="mt-1 text-[12px] leading-4" style={{ color: 'var(--danger)' }}>
           {error}
         </span>
       )}

@@ -74,7 +74,7 @@ export function NewCollectionModal({
     >
       <div className="space-y-4 text-[13px]">
         <div>
-          <label className="block font-medium mb-1.5" style={{ color: 'var(--text-primary)' }}>
+          <label className="mb-1.5 block font-medium" style={{ color: 'var(--text-primary)' }}>
             Collection Name
           </label>
           <input
@@ -86,7 +86,7 @@ export function NewCollectionModal({
               if (e.key === 'Enter') handleSubmit();
             }}
             placeholder="e.g. My API Services"
-            className="w-full h-[32px] px-2.5 rounded-[var(--radius-sm)] border text-[13px] bg-transparent outline-none app-focus-ring"
+            className="app-focus-ring h-8 w-full rounded-sm border bg-transparent px-2.5 text-[13px] outline-none"
             style={{
               backgroundColor: 'var(--bg-input)',
               borderColor: 'var(--border-strong)',
@@ -101,8 +101,8 @@ export function NewCollectionModal({
         </div>
 
         <div>
-          <label className="block font-medium mb-1.5" style={{ color: 'var(--text-primary)' }}>
-            Destination Directory <span className="font-normal text-[11px]">(Optional)</span>
+          <label className="mb-1.5 block font-medium" style={{ color: 'var(--text-primary)' }}>
+            Destination Directory <span className="text-[11px] font-normal">(Optional)</span>
           </label>
           <div className="flex gap-2">
             <input
@@ -110,7 +110,7 @@ export function NewCollectionModal({
               value={targetDir}
               onChange={e => setTargetDir(e.target.value)}
               placeholder="Leave empty to choose folder via dialog"
-              className="flex-1 h-[32px] px-2.5 rounded-[var(--radius-sm)] border text-[12px] bg-transparent outline-none app-focus-ring font-mono"
+              className="app-focus-ring h-8 flex-1 rounded-sm border bg-transparent px-2.5 font-mono text-[12px] outline-none"
               style={{
                 backgroundColor: 'var(--bg-input)',
                 borderColor: 'var(--border-strong)',
@@ -120,13 +120,13 @@ export function NewCollectionModal({
             <button
               type="button"
               onClick={handleBrowse}
-              className="px-3 h-[32px] rounded-[var(--radius-sm)] border text-[12px] font-medium flex items-center gap-1.5 hover:bg-[var(--bg-hover)] transition-fast"
+              className="transition-fast flex h-8 items-center gap-1.5 rounded-sm border px-3 text-[12px] font-medium hover:bg-(--bg-hover)"
               style={{
                 borderColor: 'var(--border-strong)',
                 color: 'var(--text-primary)',
               }}
             >
-              <Folder className="w-3.5 h-3.5" />
+              <Folder className="h-3.5 w-3.5" />
               Browse
             </button>
           </div>
@@ -134,7 +134,7 @@ export function NewCollectionModal({
 
         {error && (
           <div
-            className="p-2 rounded-[var(--radius-sm)] text-[12px]"
+            className="rounded-sm p-2 text-[12px]"
             style={{
               backgroundColor: 'var(--status-err-bg)',
               color: 'var(--status-err-fg)',

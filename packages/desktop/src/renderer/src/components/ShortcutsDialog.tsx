@@ -23,13 +23,13 @@ export function ShortcutsDialog({
           return (
             <div key={section} className="space-y-2">
               <h3
-                className="text-[12px] font-semibold uppercase tracking-wider"
+                className="text-[12px] font-semibold tracking-wider uppercase"
                 style={{ color: 'var(--text-secondary)' }}
               >
                 {section}
               </h3>
               <div
-                className="divide-y rounded-[4px] border"
+                className="divide-y rounded-sm border"
                 style={{
                   borderColor: 'var(--border)',
                   backgroundColor: 'var(--bg-surface)',
@@ -51,7 +51,7 @@ export function ShortcutsDialog({
                     </div>
 
                     <kbd
-                      className="px-2 py-0.5 rounded-[4px] font-mono text-[11px] font-semibold border select-none shrink-0"
+                      className="shrink-0 rounded-sm border px-2 py-0.5 font-mono text-[11px] font-semibold select-none"
                       style={{
                         backgroundColor: 'var(--bg-elevated)',
                         borderColor: 'var(--border-strong)',

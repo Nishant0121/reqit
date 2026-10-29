@@ -51,7 +51,7 @@ export function ContextMenu({
     <div
       ref={menuRef}
       role="menu"
-      className="fixed z-50 min-w-[180px] py-1 rounded-[6px] border shadow-elevation select-none transition-fast"
+      className="shadow-elevation transition-fast fixed z-50 min-w-45 rounded-md border py-1 select-none"
       style={{
         left: `${adjustedX}px`,
         top: `${adjustedY}px`,
@@ -80,10 +80,10 @@ export function ContextMenu({
               item.onClick?.();
               onClose();
             }}
-            className={`w-full h-[28px] px-3 flex items-center justify-between text-[13px] text-left transition-fast app-focus-ring ${
+            className={`transition-fast app-focus-ring flex h-7 w-full items-center justify-between px-3 text-left text-[13px] ${
               item.disabled
                 ? 'cursor-not-allowed opacity-50'
-                : 'hover:bg-[var(--bg-active)] cursor-pointer'
+                : 'cursor-pointer hover:bg-(--bg-active)'
             }`}
             style={{
               color: item.destructive
@@ -95,7 +95,7 @@ export function ContextMenu({
           >
             <div className="flex items-center gap-2 truncate">
               {item.icon && (
-                <span className="w-4 h-4 flex items-center justify-center shrink-0">
+                <span className="flex h-4 w-4 shrink-0 items-center justify-center">
                   {item.icon}
                 </span>
               )}
@@ -104,7 +104,7 @@ export function ContextMenu({
 
             {item.shortcut && (
               <span
-                className="ml-3 text-[11px] font-mono shrink-0"
+                className="ml-3 shrink-0 font-mono text-[11px]"
                 style={{ color: 'var(--text-muted)' }}
               >
                 {item.shortcut}

@@ -40,23 +40,23 @@ export function SidebarHistory(): React.JSX.Element {
   const grouped = groupEntriesByDay(entries);
 
   return (
-    <div className="flex flex-col h-full overflow-hidden select-none">
+    <div className="flex h-full flex-col overflow-hidden select-none">
       {/* Top search & actions header */}
       <div
-        className="p-2 border-b flex flex-col gap-2 shrink-0"
+        className="flex shrink-0 flex-col gap-2 border-b p-2"
         style={{ borderColor: 'var(--border)' }}
       >
         {/* Search input with Settings and Clear buttons */}
         <div className="flex items-center gap-1">
           <div
-            className="flex-1 relative flex items-center h-[28px] rounded-[4px] border px-2 text-[12px]"
+            className="relative flex h-7 flex-1 items-center rounded-sm border px-2 text-[12px]"
             style={{
               backgroundColor: 'var(--bg-input)',
               borderColor: 'var(--border-strong)',
             }}
           >
             <Search
-              className="w-3.5 h-3.5 mr-1.5 shrink-0"
+              className="mr-1.5 h-3.5 w-3.5 shrink-0"
               style={{ color: 'var(--text-muted)' }}
               strokeWidth={1.75}
             />
@@ -65,7 +65,7 @@ export function SidebarHistory(): React.JSX.Element {
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               placeholder="Search history..."
-              className="w-full bg-transparent outline-none app-focus-ring text-[12px]"
+              className="app-focus-ring w-full bg-transparent text-[12px] outline-none"
               style={{ color: 'var(--text-primary)' }}
               aria-label="Search history"
             />
@@ -73,12 +73,12 @@ export function SidebarHistory(): React.JSX.Element {
               <button
                 type="button"
                 onClick={() => setSearchQuery('')}
-                className="p-0.5 rounded-[2px] hover:bg-[var(--bg-hover)] transition-fast"
+                className="transition-fast rounded-xs p-0.5 hover:bg-(--bg-hover)"
                 style={{ color: 'var(--text-muted)' }}
                 title="Clear search"
                 aria-label="Clear search"
               >
-                <X className="w-3 h-3" strokeWidth={1.75} />
+                <X className="h-3 w-3" strokeWidth={1.75} />
               </button>
             )}
           </div>
@@ -88,11 +88,11 @@ export function SidebarHistory(): React.JSX.Element {
             variant="ghost"
             size="compact"
             onClick={() => setIsSettingsOpen(true)}
-            className="w-7 h-7 p-0 flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+            className="flex h-7 w-7 items-center justify-center p-0 text-(--text-secondary) hover:text-(--text-primary)"
             title="History Settings"
             aria-label="History Settings"
           >
-            <Settings className="w-4 h-4" />
+            <Settings className="h-4 w-4" />
           </Button>
 
           {/* Clear history button */}
@@ -101,16 +101,16 @@ export function SidebarHistory(): React.JSX.Element {
             size="compact"
             onClick={() => setIsConfirmClearOpen(true)}
             disabled={total === 0}
-            className="w-7 h-7 p-0 flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--status-err)] disabled:opacity-30"
+            className="flex h-7 w-7 items-center justify-center p-0 text-(--text-secondary) hover:text-(--status-err) disabled:opacity-30"
             title="Clear All History"
             aria-label="Clear All History"
           >
-            <Trash2 className="w-4 h-4" />
+            <Trash2 className="h-4 w-4" />
           </Button>
         </div>
 
         {/* Status filter pills */}
-        <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-0.5">
+        <div className="no-scrollbar flex items-center gap-1 overflow-x-auto py-0.5">
           {STATUS_FILTERS.map(f => {
             const isActive = statusFilter === f.id;
             return (
@@ -118,17 +118,17 @@ export function SidebarHistory(): React.JSX.Element {
                 key={f.id}
                 type="button"
                 onClick={() => setStatusFilter(f.id)}
-                className={`px-2 py-0.5 rounded text-[11px] font-medium transition-fast shrink-0 ${
+                className={`transition-fast shrink-0 rounded px-2 py-0.5 text-[11px] font-medium ${
                   isActive
-                    ? 'bg-[var(--accent)] text-white'
-                    : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)]'
+                    ? 'bg-(--accent) text-white'
+                    : 'bg-(--bg-secondary) text-(--text-secondary) hover:bg-(--bg-hover) hover:text-(--text-primary)'
                 }`}
               >
                 {f.label}
               </button>
             );
           })}
-          <div className="ml-auto text-[11px] font-mono text-[var(--text-muted)] shrink-0 px-1">
+          <div className="ml-auto shrink-0 px-1 font-mono text-[11px] text-(--text-muted)">
             {total}
           </div>
         </div>
@@ -137,7 +137,7 @@ export function SidebarHistory(): React.JSX.Element {
       {/* Disabled warning banner */}
       {!settings.enabled && (
         <div
-          className="px-3 py-2 border-b flex items-center justify-between text-[11px]"
+          className="flex items-center justify-between border-b px-3 py-2 text-[11px]"
           style={{
             backgroundColor: 'var(--status-err-bg)',
             borderColor: 'var(--border)',
@@ -145,13 +145,13 @@ export function SidebarHistory(): React.JSX.Element {
           }}
         >
           <div className="flex items-center gap-1.5 overflow-hidden">
-            <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+            <AlertCircle className="h-3.5 w-3.5 shrink-0" />
             <span className="truncate">History recording is paused</span>
           </div>
           <button
             type="button"
             onClick={() => setIsSettingsOpen(true)}
-            className="underline font-semibold shrink-0 ml-2 hover:opacity-80"
+            className="ml-2 shrink-0 font-semibold underline hover:opacity-80"
           >
             Settings
           </button>
@@ -161,12 +161,10 @@ export function SidebarHistory(): React.JSX.Element {
       {/* History entries list grouped by day */}
       <div className="flex-1 overflow-y-auto py-1">
         {isLoading && entries.length === 0 ? (
-          <div className="p-6 text-center text-[12px] text-[var(--text-muted)]">
-            Loading history...
-          </div>
+          <div className="p-6 text-center text-[12px] text-(--text-muted)">Loading history...</div>
         ) : entries.length === 0 ? (
-          <div className="p-6 text-center flex flex-col items-center gap-2 text-[12px] text-[var(--text-muted)]">
-            <Clock className="w-8 h-8 opacity-40 mb-1" />
+          <div className="flex flex-col items-center gap-2 p-6 text-center text-[12px] text-(--text-muted)">
+            <Clock className="mb-1 h-8 w-8 opacity-40" />
             {searchQuery || statusFilter !== 'all' ? (
               <>
                 <span>No requests match your history filter.</span>
@@ -176,7 +174,7 @@ export function SidebarHistory(): React.JSX.Element {
                     setSearchQuery('');
                     setStatusFilter('all');
                   }}
-                  className="text-[var(--accent)] hover:underline mt-1"
+                  className="mt-1 text-(--accent) hover:underline"
                 >
                   Clear filter
                 </button>
@@ -191,7 +189,7 @@ export function SidebarHistory(): React.JSX.Element {
               <div key={group.day} className="flex flex-col">
                 {/* Day Header */}
                 <div
-                  className="px-3 py-1 text-[11px] font-semibold uppercase tracking-wider sticky top-0 flex items-center justify-between z-10"
+                  className="sticky top-0 z-10 flex items-center justify-between px-3 py-1 text-[11px] font-semibold tracking-wider uppercase"
                   style={{
                     backgroundColor: 'var(--bg-primary)',
                     color: 'var(--text-muted)',
@@ -238,14 +236,14 @@ function HistoryItemRow({ entry, onSelect, onDelete }: HistoryItemRowProps): Rea
       onKeyDown={e => {
         if (e.key === 'Enter') onSelect();
       }}
-      className="group relative flex flex-col gap-1 px-3 py-2 cursor-pointer transition-fast hover:bg-[var(--bg-hover)] border-b last:border-b-0 border-[var(--border)] app-focus-ring select-none text-left"
+      className="group transition-fast app-focus-ring relative flex cursor-pointer flex-col gap-1 border-b border-(--border) px-3 py-2 text-left select-none last:border-b-0 hover:bg-(--bg-hover)"
     >
       {/* Top line: Method badge, request name / url, status */}
-      <div className="flex items-center gap-2 justify-between">
-        <div className="flex items-center gap-1.5 overflow-hidden min-w-0">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-1.5 overflow-hidden">
           <MethodBadge method={entry.method} />
           <span
-            className="font-medium text-[12px] truncate text-[var(--text-primary)]"
+            className="truncate text-[12px] font-medium text-(--text-primary)"
             title={entry.requestName}
           >
             {entry.requestName}
@@ -257,7 +255,7 @@ function HistoryItemRow({ entry, onSelect, onDelete }: HistoryItemRowProps): Rea
           {entry.status ? (
             <StatusBadge status={entry.status} />
           ) : (
-            <span className="px-1.5 py-0.2 rounded text-[10px] font-semibold bg-[var(--status-err-bg)] text-[var(--status-err)]">
+            <span className="py-0.2 rounded bg-(--status-err-bg) px-1.5 text-[10px] font-semibold text-(--status-err)">
               ERR
             </span>
           )}
@@ -265,12 +263,12 @@ function HistoryItemRow({ entry, onSelect, onDelete }: HistoryItemRowProps): Rea
       </div>
 
       {/* URL sub-line */}
-      <div className="text-[11px] font-mono truncate text-[var(--text-muted)]" title={entry.url}>
+      <div className="truncate font-mono text-[11px] text-(--text-muted)" title={entry.url}>
         {entry.url}
       </div>
 
       {/* Bottom metadata: time, duration, and hover delete button */}
-      <div className="flex items-center justify-between text-[10px] text-[var(--text-muted)] mt-0.5">
+      <div className="mt-0.5 flex items-center justify-between text-[10px] text-(--text-muted)">
         <div className="flex items-center gap-2">
           <span>{formatHistoryTime(entry.timestamp)}</span>
           {entry.durationMs !== undefined && <span>• {formatDuration(entry.durationMs)}</span>}
@@ -280,11 +278,11 @@ function HistoryItemRow({ entry, onSelect, onDelete }: HistoryItemRowProps): Rea
         <button
           type="button"
           onClick={onDelete}
-          className="opacity-0 group-hover:opacity-100 p-0.5 rounded text-[var(--text-muted)] hover:text-[var(--status-err)] hover:bg-[var(--bg-secondary)] transition-fast"
+          className="transition-fast rounded p-0.5 text-(--text-muted) opacity-0 group-hover:opacity-100 hover:bg-(--bg-secondary) hover:text-(--status-err)"
           title="Delete entry"
           aria-label="Delete entry"
         >
-          <Trash2 className="w-3 h-3" />
+          <Trash2 className="h-3 w-3" />
         </button>
       </div>
     </div>

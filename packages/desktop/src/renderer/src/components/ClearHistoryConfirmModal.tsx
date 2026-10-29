@@ -25,14 +25,14 @@ export function ClearHistoryConfirmModal(): React.JSX.Element | null {
       }}
     >
       <div className="flex items-start gap-3 py-2 text-[13px]">
-        <div className="p-2 rounded-full bg-[var(--status-err-bg)] text-[var(--status-err)] shrink-0">
-          <AlertTriangle className="w-5 h-5" />
+        <div className="shrink-0 rounded-full bg-(--status-err-bg) p-2 text-(--status-err)">
+          <AlertTriangle className="h-5 w-5" />
         </div>
         <div className="flex flex-col gap-1.5">
-          <span className="font-semibold text-[var(--text-primary)]">
+          <span className="font-semibold text-(--text-primary)">
             Are you sure you want to clear your history?
           </span>
-          <span className="text-[var(--text-secondary)] leading-relaxed">
+          <span className="leading-relaxed text-(--text-secondary)">
             This will permanently delete all {total > 0 ? `${total} ` : ''}saved request and
             response entries from SQLite storage. This action cannot be undone.
           </span>

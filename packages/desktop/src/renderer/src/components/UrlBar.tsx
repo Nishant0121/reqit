@@ -77,7 +77,7 @@ export function UrlBar({
 
   return (
     <div
-      className="p-3 border-b flex items-center gap-2 select-none shrink-0"
+      className="flex shrink-0 items-center gap-2 border-b p-3 select-none"
       style={{
         backgroundColor: 'var(--bg-surface)',
         borderColor: 'var(--border)',
@@ -85,7 +85,7 @@ export function UrlBar({
     >
       {/* Method Selector */}
       <div
-        className="relative flex items-center h-[32px] rounded-[4px] border shrink-0"
+        className="relative flex h-8 shrink-0 items-center rounded-sm border"
         style={{
           borderColor: 'var(--border-strong)',
           backgroundColor: 'var(--bg-input)',
@@ -95,7 +95,7 @@ export function UrlBar({
           id="method-select"
           value={method}
           onChange={e => onMethodChange(e.target.value as HttpMethod)}
-          className="h-full pl-3 pr-7 text-[12px] font-mono font-bold uppercase bg-transparent outline-none cursor-pointer app-focus-ring appearance-none"
+          className="app-focus-ring h-full cursor-pointer appearance-none bg-transparent pr-7 pl-3 font-mono text-[12px] font-bold uppercase outline-none"
           style={{
             color: `var(--method-${method.toLowerCase()})`,
           }}
@@ -115,7 +115,7 @@ export function UrlBar({
           ))}
         </select>
         <div
-          className="absolute right-2 pointer-events-none text-[9px]"
+          className="pointer-events-none absolute right-2 text-[9px]"
           style={{ color: 'var(--text-muted)' }}
         >
           ▼
@@ -123,7 +123,7 @@ export function UrlBar({
       </div>
 
       {/* URL Input with Variable Highlighting, {{ Autocomplete & cURL Paste detection */}
-      <div className="flex-1 min-w-0">
+      <div className="min-w-0 flex-1">
         <VariableInput
           id="url-input"
           inputSize="large"
@@ -144,9 +144,9 @@ export function UrlBar({
       </div>
 
       {/* Copy as cURL Split Button and Dropdown Menu */}
-      <div className="relative flex items-center shrink-0" ref={curlMenuRef}>
+      <div className="relative flex shrink-0 items-center" ref={curlMenuRef}>
         <div
-          className="inline-flex rounded-[4px] border overflow-hidden h-[32px]"
+          className="inline-flex h-8 overflow-hidden rounded-sm border"
           style={{
             borderColor: 'var(--border-strong)',
             backgroundColor: 'var(--bg-elevated)',
@@ -156,14 +156,14 @@ export function UrlBar({
             type="button"
             id="copy-curl-btn"
             onClick={() => handleCopy()}
-            className="h-full px-2.5 flex items-center gap-1.5 text-[12px] font-medium hover:bg-[var(--bg-hover)] text-[var(--text-primary)] transition-fast select-none app-focus-ring"
+            className="transition-fast app-focus-ring flex h-full items-center gap-1.5 px-2.5 text-[12px] font-medium text-(--text-primary) select-none hover:bg-(--bg-hover)"
             title={`Copy as cURL (${targetLabel}, ${resolveVariables ? 'Resolved' : 'Raw'})`}
             aria-label="Copy request as cURL command"
           >
             {copied ? (
-              <Check className="w-3.5 h-3.5 text-[var(--success)]" />
+              <Check className="h-3.5 w-3.5 text-(--success)" />
             ) : (
-              <Terminal className="w-3.5 h-3.5 text-[var(--accent)]" />
+              <Terminal className="h-3.5 w-3.5 text-(--accent)" />
             )}
             <span>cURL</span>
           </button>
@@ -171,26 +171,26 @@ export function UrlBar({
             type="button"
             id="copy-curl-menu-btn"
             onClick={() => setCurlMenuOpen(!curlMenuOpen)}
-            className="h-full px-1.5 flex items-center justify-center hover:bg-[var(--bg-hover)] text-[var(--text-muted)] hover:text-[var(--text-primary)] border-l transition-fast app-focus-ring"
+            className="transition-fast app-focus-ring flex h-full items-center justify-center border-l px-1.5 text-(--text-muted) hover:bg-(--bg-hover) hover:text-(--text-primary)"
             style={{ borderColor: 'var(--border)' }}
             title="cURL options"
             aria-label="cURL options"
           >
-            <ChevronDown className="w-3 h-3" />
+            <ChevronDown className="h-3 w-3" />
           </button>
         </div>
 
         {/* Dropdown Menu */}
         {curlMenuOpen && (
           <div
-            className="absolute right-0 top-full mt-1.5 w-60 rounded-[var(--radius-md)] border shadow-xl py-1.5 z-50 text-[12px]"
+            className="absolute top-full right-0 z-50 mt-1.5 w-60 rounded-md border py-1.5 text-[12px] shadow-xl"
             style={{
               backgroundColor: 'var(--bg-elevated)',
               borderColor: 'var(--border-strong)',
             }}
           >
             {/* Header: Shell Format */}
-            <div className="px-3 py-1 text-[11px] font-semibold tracking-wider uppercase text-[var(--text-muted)]">
+            <div className="px-3 py-1 text-[11px] font-semibold tracking-wider text-(--text-muted) uppercase">
               Shell Format
             </div>
             {(
@@ -208,17 +208,17 @@ export function UrlBar({
                   handleCopy(opt.id, resolveVariables);
                   setCurlMenuOpen(false);
                 }}
-                className="w-full px-3 py-1.5 flex items-center justify-between hover:bg-[var(--bg-hover)] text-left transition-fast text-[var(--text-primary)]"
+                className="transition-fast flex w-full items-center justify-between px-3 py-1.5 text-left text-(--text-primary) hover:bg-(--bg-hover)"
               >
                 <span>{opt.label}</span>
-                {curlTarget === opt.id && <Check className="w-3.5 h-3.5 text-[var(--accent)]" />}
+                {curlTarget === opt.id && <Check className="h-3.5 w-3.5 text-(--accent)" />}
               </button>
             ))}
 
             <div className="my-1 border-t" style={{ borderColor: 'var(--border)' }} />
 
             {/* Header: Variable Resolution */}
-            <div className="px-3 py-1 text-[11px] font-semibold tracking-wider uppercase text-[var(--text-muted)]">
+            <div className="px-3 py-1 text-[11px] font-semibold tracking-wider text-(--text-muted) uppercase">
               Variables
             </div>
             <button
@@ -228,15 +228,15 @@ export function UrlBar({
                 handleCopy(curlTarget, true);
                 setCurlMenuOpen(false);
               }}
-              className="w-full px-3 py-1.5 flex items-center justify-between hover:bg-[var(--bg-hover)] text-left transition-fast text-[var(--text-primary)]"
+              className="transition-fast flex w-full items-center justify-between px-3 py-1.5 text-left text-(--text-primary) hover:bg-(--bg-hover)"
             >
               <div className="flex flex-col">
                 <span>Resolved</span>
-                <span className="text-[10px] text-[var(--text-muted)]">
+                <span className="text-[10px] text-(--text-muted)">
                   Substitute env vars & secrets
                 </span>
               </div>
-              {resolveVariables && <Check className="w-3.5 h-3.5 text-[var(--accent)]" />}
+              {resolveVariables && <Check className="h-3.5 w-3.5 text-(--accent)" />}
             </button>
             <button
               type="button"
@@ -245,15 +245,15 @@ export function UrlBar({
                 handleCopy(curlTarget, false);
                 setCurlMenuOpen(false);
               }}
-              className="w-full px-3 py-1.5 flex items-center justify-between hover:bg-[var(--bg-hover)] text-left transition-fast text-[var(--text-primary)]"
+              className="transition-fast flex w-full items-center justify-between px-3 py-1.5 text-left text-(--text-primary) hover:bg-(--bg-hover)"
             >
               <div className="flex flex-col">
                 <span>Unresolved (Raw)</span>
-                <span className="text-[10px] text-[var(--text-muted)]">
+                <span className="text-[10px] text-(--text-muted)">
                   Keep &#123;&#123;variable&#125;&#125; syntax
                 </span>
               </div>
-              {!resolveVariables && <Check className="w-3.5 h-3.5 text-[var(--accent)]" />}
+              {!resolveVariables && <Check className="h-3.5 w-3.5 text-(--accent)" />}
             </button>
 
             {onOpenImportCurl && (
@@ -266,11 +266,11 @@ export function UrlBar({
                     setCurlMenuOpen(false);
                     onOpenImportCurl();
                   }}
-                  className="w-full px-3 py-1.5 flex items-center gap-2 hover:bg-[var(--bg-hover)] text-left transition-fast text-[var(--text-primary)]"
+                  className="transition-fast flex w-full items-center gap-2 px-3 py-1.5 text-left text-(--text-primary) hover:bg-(--bg-hover)"
                 >
-                  <Download className="w-3.5 h-3.5 text-[var(--accent)]" />
+                  <Download className="h-3.5 w-3.5 text-(--accent)" />
                   <span className="flex-1 font-medium">Import cURL...</span>
-                  <span className="text-[10px] text-[var(--text-muted)] font-mono">Ctrl+I</span>
+                  <span className="font-mono text-[10px] text-(--text-muted)">Ctrl+I</span>
                 </button>
               </>
             )}
@@ -285,7 +285,7 @@ export function UrlBar({
           variant="danger"
           size="large"
           onClick={onCancel}
-          className="w-[96px] shrink-0 font-medium"
+          className="w-24 shrink-0 font-medium"
         >
           {strings.urlBar.cancel}
         </Button>
@@ -295,7 +295,7 @@ export function UrlBar({
           variant="primary"
           size="large"
           onClick={onSend}
-          className="w-[96px] shrink-0 font-medium"
+          className="w-24 shrink-0 font-medium"
         >
           {strings.urlBar.send}
         </Button>

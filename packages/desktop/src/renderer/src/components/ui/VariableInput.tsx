@@ -211,7 +211,7 @@ export const VariableInput = forwardRef<HTMLInputElement, VariableInputProps>(
               input.focus();
               input.setSelectionRange(start, match!.index + match![0].length);
             }}
-            className="rounded-[2px] font-mono pointer-events-auto cursor-help select-none"
+            className="pointer-events-auto cursor-help rounded-xs font-mono select-none"
             style={{
               color: isDefined ? 'var(--var-known)' : 'var(--danger)',
               backgroundColor: isDefined ? 'var(--accent-subtle)' : 'var(--danger-subtle)',
@@ -237,9 +237,9 @@ export const VariableInput = forwardRef<HTMLInputElement, VariableInputProps>(
     };
 
     return (
-      <div className="relative flex flex-col w-full">
+      <div className="relative flex w-full flex-col">
         <div
-          className={`relative flex items-center w-full transition-fast ${heightClass}`}
+          className={`transition-fast relative flex w-full items-center ${heightClass}`}
           style={{
             backgroundColor: 'var(--bg-input)',
             border: `1px solid ${error ? 'var(--danger)' : 'var(--border-strong)'}`,
@@ -248,7 +248,7 @@ export const VariableInput = forwardRef<HTMLInputElement, VariableInputProps>(
         >
           {leftIcon && (
             <div
-              className="pl-2.5 flex items-center justify-center pointer-events-none shrink-0"
+              className="pointer-events-none flex shrink-0 items-center justify-center pl-2.5"
               style={{ color: 'var(--text-muted)' }}
             >
               {leftIcon}
@@ -258,7 +258,7 @@ export const VariableInput = forwardRef<HTMLInputElement, VariableInputProps>(
           {/* Variables visual highlight layer (z-20 so variable pills can receive hover/clicks) */}
           <div
             ref={overlayRef}
-            className={`absolute inset-0 px-2.5 flex items-center text-[13px] font-mono pointer-events-none overflow-hidden whitespace-pre z-20 ${
+            className={`pointer-events-none absolute inset-0 z-20 flex items-center overflow-hidden px-2.5 font-mono text-[13px] whitespace-pre ${
               leftIcon ? 'pl-8' : ''
             } ${rightElement ? 'pr-8' : ''}`}
           >
@@ -282,7 +282,7 @@ export const VariableInput = forwardRef<HTMLInputElement, VariableInputProps>(
               }
             }}
             placeholder={placeholder}
-            className={`w-full h-full bg-transparent px-2.5 text-[13px] font-mono app-focus-ring outline-none transition-fast relative z-10 whitespace-pre ${
+            className={`app-focus-ring transition-fast relative z-10 h-full w-full bg-transparent px-2.5 font-mono text-[13px] whitespace-pre outline-none ${
               value.includes('{{') ? 'text-transparent' : ''
             } ${leftIcon ? 'pl-2' : ''} ${rightElement ? 'pr-8' : ''} ${className}`}
             style={{
@@ -293,13 +293,13 @@ export const VariableInput = forwardRef<HTMLInputElement, VariableInputProps>(
           />
 
           {rightElement && (
-            <div className="absolute right-1 flex items-center z-20">{rightElement}</div>
+            <div className="absolute right-1 z-20 flex items-center">{rightElement}</div>
           )}
 
           {/* Hover Popover showing resolved value and scope */}
           {!autocompleteOpen && hoveredVar && (
             <div
-              className="absolute top-full mt-1.5 z-50 px-2.5 py-1.5 text-[11px] rounded-[6px] shadow-elevation font-mono border pointer-events-none whitespace-normal transition-fast"
+              className="shadow-elevation transition-fast pointer-events-none absolute top-full z-50 mt-1.5 rounded-md border px-2.5 py-1.5 font-mono text-[11px] whitespace-normal"
               style={{
                 backgroundColor: 'var(--bg-elevated)',
                 borderColor: hoveredVar.isDefined ? 'var(--border)' : 'var(--danger)',
@@ -309,31 +309,31 @@ export const VariableInput = forwardRef<HTMLInputElement, VariableInputProps>(
                 minWidth: '180px',
               }}
             >
-              <div className="flex items-center gap-1.5 font-bold mb-0.5">
+              <div className="mb-0.5 flex items-center gap-1.5 font-bold">
                 <span style={{ color: hoveredVar.isDefined ? 'var(--accent)' : 'var(--danger)' }}>
                   {`{{${hoveredVar.name}}}`}
                 </span>
                 {!hoveredVar.isDefined && (
-                  <span className="text-[10px] px-1 py-0.2 rounded font-sans bg-red-950/40 text-red-400">
+                  <span className="py-0.2 rounded bg-red-950/40 px-1 font-sans text-[10px] text-red-400">
                     undefined
                   </span>
                 )}
               </div>
-              <div className="text-[var(--text-secondary)] truncate">
+              <div className="truncate text-(--text-secondary)">
                 value:{' '}
                 <span
                   className={
                     hoveredVar.isDefined
-                      ? 'text-[var(--text-primary)] font-semibold'
-                      : 'text-red-400 font-semibold italic'
+                      ? 'font-semibold text-(--text-primary)'
+                      : 'font-semibold text-red-400 italic'
                   }
                 >
                   {hoveredVar.value}
                 </span>
               </div>
-              <div className="text-[10px] text-[var(--text-muted)] mt-0.5 flex items-center gap-1">
+              <div className="mt-0.5 flex items-center gap-1 text-[10px] text-(--text-muted)">
                 <span>scope:</span>
-                <span className="px-1 py-0.2 rounded bg-[var(--bg-surface)] text-[var(--text-secondary)] font-medium">
+                <span className="py-0.2 rounded bg-(--bg-surface) px-1 font-medium text-(--text-secondary)">
                   {hoveredVar.scope}
                 </span>
               </div>
@@ -344,14 +344,14 @@ export const VariableInput = forwardRef<HTMLInputElement, VariableInputProps>(
         {/* Variable Autocomplete Popup */}
         {autocompleteOpen && matchingVars.length > 0 && (
           <div
-            className="absolute top-full left-0 mt-1 z-50 min-w-[200px] py-1 rounded-[6px] border shadow-elevation select-none transition-fast"
+            className="shadow-elevation transition-fast absolute top-full left-0 z-50 mt-1 min-w-50 rounded-md border py-1 select-none"
             style={{
               backgroundColor: 'var(--bg-elevated)',
               borderColor: 'var(--border)',
             }}
           >
             <div
-              className="px-3 py-1 text-[11px] font-semibold uppercase tracking-wider border-b"
+              className="border-b px-3 py-1 text-[11px] font-semibold tracking-wider uppercase"
               style={{ borderColor: 'var(--border)', color: 'var(--text-muted)' }}
             >
               Variables
@@ -363,7 +363,7 @@ export const VariableInput = forwardRef<HTMLInputElement, VariableInputProps>(
                 <div
                   key={v}
                   onClick={() => handleSelectVariable(v)}
-                  className="px-3 py-1.5 text-[12px] font-mono cursor-pointer flex items-center justify-between transition-fast"
+                  className="transition-fast flex cursor-pointer items-center justify-between px-3 py-1.5 font-mono text-[12px]"
                   style={{
                     backgroundColor: isSelected ? 'var(--bg-active)' : 'transparent',
                     color: 'var(--text-primary)',
@@ -371,7 +371,7 @@ export const VariableInput = forwardRef<HTMLInputElement, VariableInputProps>(
                 >
                   <span style={{ color: 'var(--var-known)' }}>{`{{${v}}}`}</span>
                   <span
-                    className="text-[10px] px-1 py-0.2 rounded font-sans"
+                    className="py-0.2 rounded px-1 font-sans text-[10px]"
                     style={{ backgroundColor: 'var(--bg-surface)', color: 'var(--text-muted)' }}
                   >
                     {scopeLabel}
@@ -383,7 +383,7 @@ export const VariableInput = forwardRef<HTMLInputElement, VariableInputProps>(
         )}
 
         {error && (
-          <span className="mt-1 text-[12px] leading-[16px]" style={{ color: 'var(--danger)' }}>
+          <span className="mt-1 text-[12px] leading-4" style={{ color: 'var(--danger)' }}>
             {error}
           </span>
         )}

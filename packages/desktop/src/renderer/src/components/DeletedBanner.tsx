@@ -17,31 +17,31 @@ export function DeletedBanner({
     <div
       role="alert"
       id="deleted-banner"
-      className="flex items-center justify-between px-3 py-1.5 border-b text-[12px] select-none transition-fast shrink-0"
+      className="transition-fast flex shrink-0 items-center justify-between border-b px-3 py-1.5 text-[12px] select-none"
       style={{
         backgroundColor: 'rgba(239, 68, 68, 0.1)',
         borderColor: 'rgba(239, 68, 68, 0.3)',
         color: 'var(--text-primary)',
       }}
     >
-      <div className="flex items-center gap-2 overflow-hidden mr-3">
-        <Trash2 className="w-4 h-4 text-red-500 shrink-0" />
-        <span className="font-medium text-red-500 shrink-0">File deleted on disk:</span>
-        <span className="text-[var(--text-secondary)] truncate" title={filePath}>
+      <div className="mr-3 flex items-center gap-2 overflow-hidden">
+        <Trash2 className="h-4 w-4 shrink-0 text-red-500" />
+        <span className="shrink-0 font-medium text-red-500">File deleted on disk:</span>
+        <span className="truncate text-(--text-secondary)" title={filePath}>
           This request was removed outside Reqit. You can save to recreate it, or close this tab.
         </span>
       </div>
 
-      <div className="flex items-center gap-1.5 shrink-0">
+      <div className="flex shrink-0 items-center gap-1.5">
         <Button
           id="deleted-recreate-btn"
           variant="primary"
           size="compact"
           onClick={onRecreate}
           title="Save draft back to disk to recreate file"
-          className="h-[24px] px-2 text-[11px] flex items-center gap-1"
+          className="flex h-6 items-center gap-1 px-2 text-[11px]"
         >
-          <RotateCcw className="w-3.5 h-3.5" />
+          <RotateCcw className="h-3.5 w-3.5" />
           <span>Re-create file</span>
         </Button>
         <Button
@@ -50,9 +50,9 @@ export function DeletedBanner({
           size="compact"
           onClick={onCloseTab}
           title="Close this tab"
-          className="h-[24px] px-2 text-[11px] flex items-center gap-1"
+          className="flex h-6 items-center gap-1 px-2 text-[11px]"
         >
-          <X className="w-3.5 h-3.5" />
+          <X className="h-3.5 w-3.5" />
           <span>Close tab</span>
         </Button>
       </div>

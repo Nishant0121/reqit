@@ -24,18 +24,18 @@ export function EmptyState({
     >
       {icon && (
         <div
-          className="w-10 h-10 flex items-center justify-center mb-3"
+          className="mb-3 flex h-10 w-10 items-center justify-center"
           style={{ color: 'var(--text-muted)' }}
           aria-hidden="true"
         >
           {icon}
         </div>
       )}
-      <h3 className="text-[14px] font-semibold mb-1" style={{ color: 'var(--text-primary)' }}>
+      <h3 className="mb-1 text-[14px] font-semibold" style={{ color: 'var(--text-primary)' }}>
         {title}
       </h3>
       <p
-        className="text-[12px] max-w-sm mb-4 leading-normal"
+        className="mb-4 max-w-sm text-[12px] leading-normal"
         style={{ color: 'var(--text-muted)' }}
       >
         {description}

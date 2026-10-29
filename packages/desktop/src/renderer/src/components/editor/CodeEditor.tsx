@@ -365,7 +365,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(function
   return (
     <div
       ref={containerRef}
-      className={`border rounded-[4px] overflow-hidden app-focus-ring ${className}`}
+      className={`app-focus-ring overflow-hidden rounded-sm border ${className}`}
       style={{
         borderColor: 'var(--border)',
         backgroundColor: background === 'surface' ? 'var(--bg-surface)' : 'var(--bg-base)',

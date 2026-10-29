@@ -301,10 +301,10 @@ export function EnvironmentSecretsModal({
         onClick: onClose,
       }}
     >
-      <div className="flex flex-col h-[520px] select-none text-[12px]">
+      <div className="flex h-130 flex-col text-[12px] select-none">
         {/* Top Tab Bar: Environments vs Secrets */}
         <div
-          className="flex items-center justify-between border-b pb-2 mb-3 shrink-0"
+          className="mb-3 flex shrink-0 items-center justify-between border-b pb-2"
           style={{ borderColor: 'var(--border)' }}
         >
           <div className="flex items-center gap-2">
@@ -314,14 +314,14 @@ export function EnvironmentSecretsModal({
                 setActiveTab('environments');
                 setStatusMessage(null);
               }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-[4px] font-medium transition-fast"
+              className="transition-fast flex items-center gap-1.5 rounded-sm px-3 py-1.5 font-medium"
               style={{
                 backgroundColor:
                   activeTab === 'environments' ? 'var(--accent-subtle)' : 'transparent',
                 color: activeTab === 'environments' ? 'var(--accent)' : 'var(--text-secondary)',
               }}
             >
-              <Globe className="w-4 h-4" />
+              <Globe className="h-4 w-4" />
               <span>Environments</span>
             </button>
 
@@ -331,13 +331,13 @@ export function EnvironmentSecretsModal({
                 setActiveTab('secrets');
                 setStatusMessage(null);
               }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-[4px] font-medium transition-fast"
+              className="transition-fast flex items-center gap-1.5 rounded-sm px-3 py-1.5 font-medium"
               style={{
                 backgroundColor: activeTab === 'secrets' ? 'var(--accent-subtle)' : 'transparent',
                 color: activeTab === 'secrets' ? 'var(--accent)' : 'var(--text-secondary)',
               }}
             >
-              <Lock className="w-4 h-4" />
+              <Lock className="h-4 w-4" />
               <span>Secrets</span>
             </button>
           </div>
@@ -345,16 +345,16 @@ export function EnvironmentSecretsModal({
           {/* Active Status Message */}
           {statusMessage && (
             <div
-              className={`flex items-center gap-1.5 text-[11px] font-medium px-2 py-0.5 rounded ${
+              className={`flex items-center gap-1.5 rounded px-2 py-0.5 text-[11px] font-medium ${
                 statusMessage.isError
-                  ? 'text-red-400 bg-red-950/40'
-                  : 'text-emerald-400 bg-emerald-950/40'
+                  ? 'bg-red-950/40 text-red-400'
+                  : 'bg-emerald-950/40 text-emerald-400'
               }`}
             >
               {statusMessage.isError ? (
-                <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
               ) : (
-                <Check className="w-3.5 h-3.5 shrink-0" />
+                <Check className="h-3.5 w-3.5 shrink-0" />
               )}
               <span>{statusMessage.text}</span>
             </div>
@@ -362,15 +362,15 @@ export function EnvironmentSecretsModal({
         </div>
 
         {/* Content Layout: Left sidebar (environment list) + Right table */}
-        <div className="flex flex-1 min-h-0 gap-4">
+        <div className="flex min-h-0 flex-1 gap-4">
           {/* Environments Sidebar */}
           <div
-            className="w-48 border-r pr-3 flex flex-col shrink-0 overflow-y-auto"
+            className="flex w-48 shrink-0 flex-col overflow-y-auto border-r pr-3"
             style={{ borderColor: 'var(--border)' }}
           >
-            <div className="flex items-center justify-between mb-2">
+            <div className="mb-2 flex items-center justify-between">
               <span
-                className="text-[11px] font-semibold uppercase tracking-wider"
+                className="text-[11px] font-semibold tracking-wider uppercase"
                 style={{ color: 'var(--text-muted)' }}
               >
                 Environments
@@ -381,17 +381,17 @@ export function EnvironmentSecretsModal({
                   setIsAddingEnv(true);
                   setNewEnvName('');
                 }}
-                className="p-1 rounded hover:bg-[var(--bg-hover)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                className="rounded p-1 text-(--text-secondary) hover:bg-(--bg-hover) hover:text-(--text-primary)"
                 title="Add Environment"
               >
-                <Plus className="w-3.5 h-3.5" />
+                <Plus className="h-3.5 w-3.5" />
               </button>
             </div>
 
             {/* Inline Add Environment Form */}
             {isAddingEnv && (
               <div
-                className="mb-2 p-1.5 rounded border bg-[var(--bg-input)]"
+                className="mb-2 rounded border bg-(--bg-input) p-1.5"
                 style={{ borderColor: 'var(--border)' }}
               >
                 <input
@@ -404,21 +404,21 @@ export function EnvironmentSecretsModal({
                     if (e.key === 'Escape') setIsAddingEnv(false);
                   }}
                   autoFocus
-                  className="w-full px-1.5 py-1 text-[11px] font-mono bg-transparent border-b outline-none mb-1 text-[var(--text-primary)]"
+                  className="mb-1 w-full border-b bg-transparent px-1.5 py-1 font-mono text-[11px] text-(--text-primary) outline-none"
                   style={{ borderColor: 'var(--accent)' }}
                 />
                 <div className="flex items-center justify-end gap-1">
                   <button
                     type="button"
                     onClick={() => setIsAddingEnv(false)}
-                    className="px-1.5 py-0.5 text-[10px] text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+                    className="px-1.5 py-0.5 text-[10px] text-(--text-muted) hover:text-(--text-primary)"
                   >
                     Cancel
                   </button>
                   <button
                     type="button"
                     onClick={handleAddEnv}
-                    className="px-1.5 py-0.5 text-[10px] font-medium rounded bg-[var(--accent)] text-[var(--accent-fg)]"
+                    className="rounded bg-(--accent) px-1.5 py-0.5 text-[10px] font-medium text-(--accent-fg)"
                   >
                     Create
                   </button>
@@ -427,10 +427,10 @@ export function EnvironmentSecretsModal({
             )}
 
             {/* List of Environments */}
-            <div className="flex flex-col gap-1 flex-1">
+            <div className="flex flex-1 flex-col gap-1">
               {envNames.length === 0 ? (
                 <div
-                  className="text-[11px] py-4 text-center italic"
+                  className="py-4 text-center text-[11px] italic"
                   style={{ color: 'var(--text-muted)' }}
                 >
                   No environments yet.
@@ -444,7 +444,7 @@ export function EnvironmentSecretsModal({
                     return (
                       <div
                         key={name}
-                        className="p-1 rounded border bg-[var(--bg-input)]"
+                        className="rounded border bg-(--bg-input) p-1"
                         style={{ borderColor: 'var(--border)' }}
                       >
                         <input
@@ -456,21 +456,21 @@ export function EnvironmentSecretsModal({
                             if (e.key === 'Escape') setRenamingEnv(null);
                           }}
                           autoFocus
-                          className="w-full px-1 py-0.5 text-[11px] font-mono bg-transparent outline-none border-b mb-1"
+                          className="mb-1 w-full border-b bg-transparent px-1 py-0.5 font-mono text-[11px] outline-none"
                           style={{ borderColor: 'var(--accent)' }}
                         />
                         <div className="flex items-center justify-end gap-1">
                           <button
                             type="button"
                             onClick={() => setRenamingEnv(null)}
-                            className="px-1 text-[10px] text-[var(--text-muted)]"
+                            className="px-1 text-[10px] text-(--text-muted)"
                           >
                             Cancel
                           </button>
                           <button
                             type="button"
                             onClick={() => handleRenameEnv(name)}
-                            className="px-1 text-[10px] bg-[var(--accent)] text-[var(--accent-fg)] rounded"
+                            className="rounded bg-(--accent) px-1 text-[10px] text-(--accent-fg)"
                           >
                             Save
                           </button>
@@ -483,14 +483,14 @@ export function EnvironmentSecretsModal({
                     <div
                       key={name}
                       onClick={() => setSelectedEnv(name)}
-                      className="group flex items-center justify-between px-2.5 py-1.5 rounded cursor-pointer transition-fast"
+                      className="group transition-fast flex cursor-pointer items-center justify-between rounded px-2.5 py-1.5"
                       style={{
                         backgroundColor: isSelected ? 'var(--accent-subtle)' : 'transparent',
                         color: isSelected ? 'var(--accent)' : 'var(--text-primary)',
                       }}
                     >
-                      <span className="font-mono text-[12px] truncate">{name}</span>
-                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-fast">
+                      <span className="truncate font-mono text-[12px]">{name}</span>
+                      <div className="transition-fast flex items-center gap-1 opacity-0 group-hover:opacity-100">
                         <button
                           type="button"
                           onClick={e => {
@@ -498,10 +498,10 @@ export function EnvironmentSecretsModal({
                             setRenamingEnv(name);
                             setRenameValue(name);
                           }}
-                          className="p-0.5 rounded hover:bg-[var(--bg-hover)] text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+                          className="rounded p-0.5 text-(--text-muted) hover:bg-(--bg-hover) hover:text-(--text-primary)"
                           title="Rename Environment"
                         >
-                          <Edit2 className="w-3 h-3" />
+                          <Edit2 className="h-3 w-3" />
                         </button>
                         <button
                           type="button"
@@ -509,10 +509,10 @@ export function EnvironmentSecretsModal({
                             e.stopPropagation();
                             handleDeleteEnv(name);
                           }}
-                          className="p-0.5 rounded hover:bg-red-950/40 text-[var(--text-muted)] hover:text-red-400"
+                          className="rounded p-0.5 text-(--text-muted) hover:bg-red-950/40 hover:text-red-400"
                           title="Delete Environment"
                         >
-                          <Trash2 className="w-3 h-3" />
+                          <Trash2 className="h-3 w-3" />
                         </button>
                       </div>
                     </div>
@@ -523,16 +523,16 @@ export function EnvironmentSecretsModal({
           </div>
 
           {/* Right Main Editor Area */}
-          <div className="flex-1 flex flex-col min-w-0">
+          <div className="flex min-w-0 flex-1 flex-col">
             {activeTab === 'environments' ? (
               <>
                 {/* Environments Table Header */}
-                <div className="flex items-center justify-between pb-2 mb-2">
+                <div className="mb-2 flex items-center justify-between pb-2">
                   <div className="flex items-center gap-2">
-                    <span className="text-[13px] font-semibold text-[var(--text-primary)]">
+                    <span className="text-[13px] font-semibold text-(--text-primary)">
                       Variables for:
                     </span>
-                    <span className="px-2 py-0.5 rounded text-[11px] font-mono font-semibold bg-[var(--accent-subtle)] text-[var(--accent)]">
+                    <span className="rounded bg-(--accent-subtle) px-2 py-0.5 font-mono text-[11px] font-semibold text-(--accent)">
                       {selectedEnv}
                     </span>
                   </div>
@@ -540,7 +540,7 @@ export function EnvironmentSecretsModal({
                     variant="secondary"
                     size="compact"
                     onClick={handleAddEnvVarRow}
-                    icon={<Plus className="w-3.5 h-3.5" />}
+                    icon={<Plus className="h-3.5 w-3.5" />}
                   >
                     Add Variable
                   </Button>
@@ -548,25 +548,25 @@ export function EnvironmentSecretsModal({
 
                 {/* Variables Table */}
                 <div
-                  className="flex-1 border rounded overflow-y-auto"
+                  className="flex-1 overflow-y-auto rounded border"
                   style={{ borderColor: 'var(--border)', backgroundColor: 'var(--bg-input)' }}
                 >
-                  <table className="w-full text-left border-collapse font-mono text-[12px]">
+                  <table className="w-full border-collapse text-left font-mono text-[12px]">
                     <thead
-                      className="sticky top-0 border-b select-none z-10"
+                      className="sticky top-0 z-10 border-b select-none"
                       style={{
                         backgroundColor: 'var(--bg-surface)',
                         borderColor: 'var(--border)',
                       }}
                     >
                       <tr>
-                        <th className="py-1.5 px-3 font-semibold text-[11px] uppercase tracking-wider text-[var(--text-muted)] w-1/3">
+                        <th className="w-1/3 px-3 py-1.5 text-[11px] font-semibold tracking-wider text-(--text-muted) uppercase">
                           Variable Key
                         </th>
-                        <th className="py-1.5 px-3 font-semibold text-[11px] uppercase tracking-wider text-[var(--text-muted)]">
+                        <th className="px-3 py-1.5 text-[11px] font-semibold tracking-wider text-(--text-muted) uppercase">
                           Value
                         </th>
-                        <th className="py-1.5 px-2 w-10 text-center text-[var(--text-muted)]">#</th>
+                        <th className="w-10 px-2 py-1.5 text-center text-(--text-muted)">#</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -574,7 +574,7 @@ export function EnvironmentSecretsModal({
                         <tr>
                           <td
                             colSpan={3}
-                            className="py-8 text-center text-[var(--text-muted)] italic font-sans"
+                            className="py-8 text-center font-sans text-(--text-muted) italic"
                           >
                             No variables defined for this environment. Click "Add Variable" to
                             start.
@@ -584,7 +584,7 @@ export function EnvironmentSecretsModal({
                         envVars.map(row => (
                           <tr
                             key={row.id}
-                            className="border-b transition-fast hover:bg-[var(--bg-hover)]"
+                            className="transition-fast border-b hover:bg-(--bg-hover)"
                             style={{ borderColor: 'var(--border)' }}
                           >
                             <td className="p-1 px-3">
@@ -593,7 +593,7 @@ export function EnvironmentSecretsModal({
                                 placeholder="KEY_NAME"
                                 value={row.key}
                                 onChange={e => handleUpdateEnvVar(row.id, 'key', e.target.value)}
-                                className="w-full px-2 py-1 rounded text-[12px] bg-transparent outline-none focus:bg-[var(--bg-surface)] text-[var(--text-primary)]"
+                                className="w-full rounded bg-transparent px-2 py-1 text-[12px] text-(--text-primary) outline-none focus:bg-(--bg-surface)"
                               />
                             </td>
                             <td className="p-1 px-3">
@@ -602,17 +602,17 @@ export function EnvironmentSecretsModal({
                                 placeholder="value"
                                 value={row.value}
                                 onChange={e => handleUpdateEnvVar(row.id, 'value', e.target.value)}
-                                className="w-full px-2 py-1 rounded text-[12px] bg-transparent outline-none focus:bg-[var(--bg-surface)] text-[var(--text-primary)]"
+                                className="w-full rounded bg-transparent px-2 py-1 text-[12px] text-(--text-primary) outline-none focus:bg-(--bg-surface)"
                               />
                             </td>
                             <td className="p-1 text-center">
                               <button
                                 type="button"
                                 onClick={() => handleRemoveEnvVar(row.id)}
-                                className="p-1 rounded hover:bg-red-950/40 text-[var(--text-muted)] hover:text-red-400 transition-fast"
+                                className="transition-fast rounded p-1 text-(--text-muted) hover:bg-red-950/40 hover:text-red-400"
                                 title="Remove row"
                               >
-                                <Trash2 className="w-3.5 h-3.5" />
+                                <Trash2 className="h-3.5 w-3.5" />
                               </button>
                             </td>
                           </tr>
@@ -626,19 +626,19 @@ export function EnvironmentSecretsModal({
               <>
                 {/* Secrets Banner */}
                 <div
-                  className="mb-2 p-2 rounded flex items-center justify-between border"
+                  className="mb-2 flex items-center justify-between rounded border p-2"
                   style={{
                     backgroundColor: 'var(--bg-surface)',
                     borderColor: 'var(--border)',
                   }}
                 >
                   <div className="flex items-center gap-2">
-                    <Lock className="w-4 h-4 text-emerald-400 shrink-0" />
+                    <Lock className="h-4 w-4 shrink-0 text-emerald-400" />
                     <div>
-                      <span className="font-semibold text-[12px] text-[var(--text-primary)]">
+                      <span className="text-[12px] font-semibold text-(--text-primary)">
                         Sensitive Secrets
                       </span>
-                      <p className="text-[11px] text-[var(--text-muted)]">
+                      <p className="text-[11px] text-(--text-muted)">
                         Stored in <code className="text-emerald-400">.reqit/secrets.yaml</code> and
                         gitignored. Never committed.
                       </p>
@@ -648,19 +648,19 @@ export function EnvironmentSecretsModal({
                     variant="secondary"
                     size="compact"
                     onClick={handleAddSecretVarRow}
-                    icon={<Plus className="w-3.5 h-3.5" />}
+                    icon={<Plus className="h-3.5 w-3.5" />}
                   >
                     Add Secret
                   </Button>
                 </div>
 
                 {/* Secrets Table Header */}
-                <div className="flex items-center justify-between pb-1 mb-2">
+                <div className="mb-2 flex items-center justify-between pb-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-[13px] font-semibold text-[var(--text-primary)]">
+                    <span className="text-[13px] font-semibold text-(--text-primary)">
                       Secrets for:
                     </span>
-                    <span className="px-2 py-0.5 rounded text-[11px] font-mono font-semibold bg-[var(--accent-subtle)] text-[var(--accent)]">
+                    <span className="rounded bg-(--accent-subtle) px-2 py-0.5 font-mono text-[11px] font-semibold text-(--accent)">
                       {selectedEnv}
                     </span>
                   </div>
@@ -668,25 +668,25 @@ export function EnvironmentSecretsModal({
 
                 {/* Secrets Table */}
                 <div
-                  className="flex-1 border rounded overflow-y-auto"
+                  className="flex-1 overflow-y-auto rounded border"
                   style={{ borderColor: 'var(--border)', backgroundColor: 'var(--bg-input)' }}
                 >
-                  <table className="w-full text-left border-collapse font-mono text-[12px]">
+                  <table className="w-full border-collapse text-left font-mono text-[12px]">
                     <thead
-                      className="sticky top-0 border-b select-none z-10"
+                      className="sticky top-0 z-10 border-b select-none"
                       style={{
                         backgroundColor: 'var(--bg-surface)',
                         borderColor: 'var(--border)',
                       }}
                     >
                       <tr>
-                        <th className="py-1.5 px-3 font-semibold text-[11px] uppercase tracking-wider text-[var(--text-muted)] w-1/3">
+                        <th className="w-1/3 px-3 py-1.5 text-[11px] font-semibold tracking-wider text-(--text-muted) uppercase">
                           Secret Key
                         </th>
-                        <th className="py-1.5 px-3 font-semibold text-[11px] uppercase tracking-wider text-[var(--text-muted)]">
+                        <th className="px-3 py-1.5 text-[11px] font-semibold tracking-wider text-(--text-muted) uppercase">
                           Secret Value (Masked)
                         </th>
-                        <th className="py-1.5 px-2 w-16 text-center text-[var(--text-muted)]">#</th>
+                        <th className="w-16 px-2 py-1.5 text-center text-(--text-muted)">#</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -694,7 +694,7 @@ export function EnvironmentSecretsModal({
                         <tr>
                           <td
                             colSpan={3}
-                            className="py-8 text-center text-[var(--text-muted)] italic font-sans"
+                            className="py-8 text-center font-sans text-(--text-muted) italic"
                           >
                             No secrets configured for this environment. Click "Add Secret" to add
                             one.
@@ -706,7 +706,7 @@ export function EnvironmentSecretsModal({
                           return (
                             <tr
                               key={row.id}
-                              className="border-b transition-fast hover:bg-[var(--bg-hover)]"
+                              className="transition-fast border-b hover:bg-(--bg-hover)"
                               style={{ borderColor: 'var(--border)' }}
                             >
                               <td className="p-1 px-3">
@@ -717,7 +717,7 @@ export function EnvironmentSecretsModal({
                                   onChange={e =>
                                     handleUpdateSecretVar(row.id, 'key', e.target.value)
                                   }
-                                  className="w-full px-2 py-1 rounded text-[12px] bg-transparent outline-none focus:bg-[var(--bg-surface)] text-[var(--text-primary)]"
+                                  className="w-full rounded bg-transparent px-2 py-1 text-[12px] text-(--text-primary) outline-none focus:bg-(--bg-surface)"
                                 />
                               </td>
                               <td className="p-1 px-3">
@@ -728,7 +728,7 @@ export function EnvironmentSecretsModal({
                                   onChange={e =>
                                     handleUpdateSecretVar(row.id, 'value', e.target.value)
                                   }
-                                  className="w-full px-2 py-1 rounded text-[12px] bg-transparent outline-none focus:bg-[var(--bg-surface)] text-[var(--text-primary)] tracking-wider"
+                                  className="w-full rounded bg-transparent px-2 py-1 text-[12px] tracking-wider text-(--text-primary) outline-none focus:bg-(--bg-surface)"
                                 />
                               </td>
                               <td className="p-1 text-center">
@@ -736,22 +736,22 @@ export function EnvironmentSecretsModal({
                                   <button
                                     type="button"
                                     onClick={() => toggleRevealSecret(row.id)}
-                                    className="p-1 rounded hover:bg-[var(--bg-hover)] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-fast"
+                                    className="transition-fast rounded p-1 text-(--text-muted) hover:bg-(--bg-hover) hover:text-(--text-primary)"
                                     title={isRevealed ? 'Mask secret' : 'Reveal secret'}
                                   >
                                     {isRevealed ? (
-                                      <EyeOff className="w-3.5 h-3.5" />
+                                      <EyeOff className="h-3.5 w-3.5" />
                                     ) : (
-                                      <Eye className="w-3.5 h-3.5" />
+                                      <Eye className="h-3.5 w-3.5" />
                                     )}
                                   </button>
                                   <button
                                     type="button"
                                     onClick={() => handleRemoveSecretVar(row.id)}
-                                    className="p-1 rounded hover:bg-red-950/40 text-[var(--text-muted)] hover:text-red-400 transition-fast"
+                                    className="transition-fast rounded p-1 text-(--text-muted) hover:bg-red-950/40 hover:text-red-400"
                                     title="Remove secret"
                                   >
-                                    <Trash2 className="w-3.5 h-3.5" />
+                                    <Trash2 className="h-3.5 w-3.5" />
                                   </button>
                                 </div>
                               </td>

@@ -31,7 +31,7 @@ export function Tabs({ items, activeId, onChange, className = '' }: TabsProps): 
             aria-selected={isActive}
             tabIndex={isActive ? 0 : -1}
             onClick={() => onChange(tab.id)}
-            className="relative flex items-center gap-1.5 px-3 py-2 text-[13px] font-medium transition-fast app-focus-ring"
+            className="transition-fast app-focus-ring relative flex items-center gap-1.5 px-3 py-2 text-[13px] font-medium"
             style={{
               color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
               borderBottom: isActive ? '2px solid var(--accent)' : '2px solid transparent',

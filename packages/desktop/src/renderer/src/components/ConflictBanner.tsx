@@ -17,31 +17,31 @@ export function ConflictBanner({
     <div
       role="alert"
       id="conflict-banner"
-      className="flex items-center justify-between px-3 py-1.5 border-b text-[12px] select-none transition-fast shrink-0"
+      className="transition-fast flex shrink-0 items-center justify-between border-b px-3 py-1.5 text-[12px] select-none"
       style={{
         backgroundColor: 'rgba(234, 179, 8, 0.1)',
         borderColor: 'rgba(234, 179, 8, 0.3)',
         color: 'var(--text-primary)',
       }}
     >
-      <div className="flex items-center gap-2 overflow-hidden mr-3">
-        <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />
-        <span className="font-medium text-amber-500 shrink-0">Conflict detected:</span>
-        <span className="text-[var(--text-secondary)] truncate">
+      <div className="mr-3 flex items-center gap-2 overflow-hidden">
+        <AlertTriangle className="h-4 w-4 shrink-0 text-amber-500" />
+        <span className="shrink-0 font-medium text-amber-500">Conflict detected:</span>
+        <span className="truncate text-(--text-secondary)">
           This file was changed on disk, but you have unsaved edits in Reqit.
         </span>
       </div>
 
-      <div className="flex items-center gap-1.5 shrink-0">
+      <div className="flex shrink-0 items-center gap-1.5">
         <Button
           id="conflict-view-diff-btn"
           variant="secondary"
           size="compact"
           onClick={onViewDiff}
           title="View side-by-side differences"
-          className="h-[24px] px-2 text-[11px] flex items-center gap-1"
+          className="flex h-6 items-center gap-1 px-2 text-[11px]"
         >
-          <FileDiff className="w-3.5 h-3.5" />
+          <FileDiff className="h-3.5 w-3.5" />
           <span>View diff</span>
         </Button>
         <Button
@@ -50,9 +50,9 @@ export function ConflictBanner({
           size="compact"
           onClick={onLoadDisk}
           title="Discard local edits and load version from disk"
-          className="h-[24px] px-2 text-[11px] flex items-center gap-1"
+          className="flex h-6 items-center gap-1 px-2 text-[11px]"
         >
-          <ArrowDownToLine className="w-3.5 h-3.5" />
+          <ArrowDownToLine className="h-3.5 w-3.5" />
           <span>Load disk version</span>
         </Button>
         <Button
@@ -61,9 +61,9 @@ export function ConflictBanner({
           size="compact"
           onClick={onKeepMine}
           title="Keep local edits and dismiss conflict"
-          className="h-[24px] px-2 text-[11px] flex items-center gap-1"
+          className="flex h-6 items-center gap-1 px-2 text-[11px]"
         >
-          <Check className="w-3.5 h-3.5" />
+          <Check className="h-3.5 w-3.5" />
           <span>Keep mine</span>
         </Button>
       </div>

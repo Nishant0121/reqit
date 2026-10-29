@@ -549,7 +549,7 @@ export default function App(): React.JSX.Element {
   });
 
   return (
-    <div className="flex flex-col h-screen w-screen overflow-hidden select-none bg-[var(--bg-base)] text-[var(--text-primary)]">
+    <div className="flex h-screen w-screen flex-col overflow-hidden bg-(--bg-base) text-(--text-primary) select-none">
       {/* 1. Top Bar (40px) */}
       <TopBar
         sidebarOpen={sidebarOpen}
@@ -587,7 +587,7 @@ export default function App(): React.JSX.Element {
         )}
 
         {/* Main Workspace Area */}
-        <main className="flex-1 flex flex-col min-w-0 overflow-hidden bg-[var(--bg-base)]">
+        <main className="flex min-w-0 flex-1 flex-col overflow-hidden bg-(--bg-base)">
           {/* Request Tabs (32px) */}
           <RequestTabs
             tabs={tabsWithStatus}
@@ -632,11 +632,11 @@ export default function App(): React.JSX.Element {
           />
 
           {/* Split Panes: Request Panel (top) + Response Panel (bottom) */}
-          <div ref={containerRef} className="flex-1 flex flex-col min-h-0 overflow-hidden relative">
+          <div ref={containerRef} className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
             {/* Request Panel (min 200px) */}
             <div
               style={{ height: `${splitHeight}px` }}
-              className="shrink-0 flex flex-col min-h-[200px] overflow-hidden"
+              className="flex min-h-50 shrink-0 flex-col overflow-hidden"
             >
               <RequestPanel
                 params={activeDraft.params}
@@ -674,7 +674,7 @@ export default function App(): React.JSX.Element {
             {/* Drag Handle / Split Divider */}
             <div
               onMouseDown={handleSplitResize}
-              className="h-[5px] w-full border-t border-b cursor-row-resize hover:bg-[var(--accent)] transition-fast select-none shrink-0 relative z-10 flex items-center justify-center"
+              className="transition-fast relative z-10 flex h-1.25 w-full shrink-0 cursor-row-resize items-center justify-center border-t border-b select-none hover:bg-(--accent)"
               style={{
                 borderColor: 'var(--border)',
                 backgroundColor: 'var(--bg-surface)',
@@ -683,13 +683,13 @@ export default function App(): React.JSX.Element {
               aria-hidden="true"
             >
               <div
-                className="w-8 h-[2px] rounded-full"
+                className="h-0.5 w-8 rounded-full"
                 style={{ backgroundColor: 'var(--border-strong)' }}
               />
             </div>
 
             {/* Response Panel (bottom pane, min 200px) */}
-            <div className="flex-1 min-h-[200px] overflow-hidden">
+            <div className="min-h-50 flex-1 overflow-hidden">
               <ResponsePanel
                 result={result}
                 error={error}

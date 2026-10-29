@@ -17,7 +17,7 @@ export function StatusBar({
 }: StatusBarProps): React.JSX.Element {
   return (
     <footer
-      className="h-[24px] px-3 flex items-center justify-between border-t text-[11px] leading-[16px] select-none shrink-0"
+      className="flex h-6 shrink-0 items-center justify-between border-t px-3 text-[11px] leading-4 select-none"
       style={{
         backgroundColor: 'var(--bg-surface)',
         borderColor: 'var(--border)',
@@ -26,13 +26,13 @@ export function StatusBar({
     >
       {/* Left: Branch and Environment */}
       <div className="flex items-center gap-4">
-        <div className="flex items-center gap-1.5 hover:text-[var(--text-primary)] transition-fast cursor-default">
-          <GitBranch className="w-4 h-4" strokeWidth={1.75} />
+        <div className="transition-fast flex cursor-default items-center gap-1.5 hover:text-(--text-primary)">
+          <GitBranch className="h-4 w-4" strokeWidth={1.75} />
           <span>{branch}</span>
         </div>
 
-        <div className="flex items-center gap-1.5 hover:text-[var(--text-primary)] transition-fast cursor-default">
-          <Globe className="w-4 h-4" strokeWidth={1.75} />
+        <div className="transition-fast flex cursor-default items-center gap-1.5 hover:text-(--text-primary)">
+          <Globe className="h-4 w-4" strokeWidth={1.75} />
           <span>{environmentName}</span>
         </div>
       </div>

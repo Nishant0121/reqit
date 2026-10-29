@@ -334,7 +334,7 @@ export function Sidebar({
             e.stopPropagation();
             setContextMenu({ node, x: e.clientX, y: e.clientY });
           }}
-          className="group flex items-center h-[28px] px-2 cursor-pointer text-[13px] transition-fast app-focus-ring relative select-none"
+          className="group transition-fast app-focus-ring relative flex h-7 cursor-pointer items-center px-2 text-[13px] select-none"
           style={{
             paddingLeft: `${depth * 14 + 8}px`,
             backgroundColor: isSelected
@@ -364,7 +364,7 @@ export function Sidebar({
           {/* Folder chevron / Request method icon */}
           {isFolder ? (
             <span
-              className="w-4 h-4 mr-1 flex items-center justify-center shrink-0"
+              className="mr-1 flex h-4 w-4 shrink-0 items-center justify-center"
               style={{ color: 'var(--text-muted)' }}
               onClick={e => {
                 e.stopPropagation();
@@ -372,9 +372,9 @@ export function Sidebar({
               }}
             >
               {isExpanded ? (
-                <ChevronDown className="w-3.5 h-3.5" />
+                <ChevronDown className="h-3.5 w-3.5" />
               ) : (
-                <ChevronRight className="w-3.5 h-3.5" />
+                <ChevronRight className="h-3.5 w-3.5" />
               )}
             </span>
           ) : (
@@ -387,9 +387,9 @@ export function Sidebar({
           {isFolder && (
             <span className="mr-1.5 shrink-0" style={{ color: 'var(--accent)' }}>
               {isExpanded ? (
-                <FolderOpen className="w-3.5 h-3.5" />
+                <FolderOpen className="h-3.5 w-3.5" />
               ) : (
-                <Folder className="w-3.5 h-3.5" />
+                <Folder className="h-3.5 w-3.5" />
               )}
             </span>
           )}
@@ -410,12 +410,12 @@ export function Sidebar({
               }}
               onBlur={handleRenameSubmit}
               onClick={e => e.stopPropagation()}
-              className="flex-1 h-[22px] px-1 bg-[var(--bg-input)] text-[12px] rounded border border-[var(--accent)] outline-none"
+              className="h-5.5 flex-1 rounded border border-(--accent) bg-(--bg-input) px-1 text-[12px] outline-none"
               style={{ color: 'var(--text-primary)' }}
             />
           ) : (
             <span
-              className="truncate flex-1"
+              className="flex-1 truncate"
               style={{
                 color: isSelected ? 'var(--text-primary)' : 'var(--text-secondary)',
                 fontWeight: isSelected || isFolder ? 500 : 400,
@@ -434,11 +434,11 @@ export function Sidebar({
           {/* Parse error warning indicator */}
           {node.parseError && (
             <span
-              className="ml-1.5 shrink-0 flex items-center"
+              className="ml-1.5 flex shrink-0 items-center"
               title={`YAML Parse Error:\n${node.parseError}`}
             >
               <AlertCircle
-                className="w-3.5 h-3.5"
+                className="h-3.5 w-3.5"
                 style={{ color: 'var(--status-err)' }}
                 strokeWidth={2}
               />
@@ -446,7 +446,7 @@ export function Sidebar({
           )}
 
           {/* Quick actions on hover */}
-          <div className="hidden group-hover:flex items-center gap-0.5 ml-1 shrink-0">
+          <div className="ml-1 hidden shrink-0 items-center gap-0.5 group-hover:flex">
             {isFolder && (
               <>
                 <button
@@ -458,9 +458,9 @@ export function Sidebar({
                     setCreatingName('');
                     setExpandedFolders(prev => new Set(prev).add(node.path));
                   }}
-                  className="p-1 rounded hover:bg-[var(--bg-elevated)] text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+                  className="rounded p-1 text-(--text-muted) hover:bg-(--bg-elevated) hover:text-(--text-primary)"
                 >
-                  <Plus className="w-5 h-5" strokeWidth={1.75} />
+                  <Plus className="h-5 w-5" strokeWidth={1.75} />
                 </button>
                 <button
                   type="button"
@@ -471,9 +471,9 @@ export function Sidebar({
                     setCreatingName('');
                     setExpandedFolders(prev => new Set(prev).add(node.path));
                   }}
-                  className="p-1 rounded hover:bg-[var(--bg-elevated)] text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+                  className="rounded p-1 text-(--text-muted) hover:bg-(--bg-elevated) hover:text-(--text-primary)"
                 >
-                  <FolderPlus className="w-5 h-5" strokeWidth={1.75} />
+                  <FolderPlus className="h-5 w-5" strokeWidth={1.75} />
                 </button>
               </>
             )}
@@ -484,9 +484,9 @@ export function Sidebar({
                 e.stopPropagation();
                 setContextMenu({ node, x: e.clientX, y: e.clientY });
               }}
-              className="p-1 rounded hover:bg-[var(--bg-elevated)] text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+              className="rounded p-1 text-(--text-muted) hover:bg-(--bg-elevated) hover:text-(--text-primary)"
             >
-              <MoreVertical className="w-5 h-5" strokeWidth={1.75} />
+              <MoreVertical className="h-5 w-5" strokeWidth={1.75} />
             </button>
           </div>
         </div>
@@ -497,13 +497,13 @@ export function Sidebar({
             {/* Inline creation input inside this folder */}
             {creatingItem?.parentDir === node.path && (
               <div
-                className="flex items-center h-[28px] px-2"
+                className="flex h-7 items-center px-2"
                 style={{ paddingLeft: `${(depth + 1) * 14 + 8}px` }}
               >
                 {creatingItem.type === 'folder' ? (
-                  <Folder className="w-3.5 h-3.5 mr-1.5 text-[var(--accent)] shrink-0" />
+                  <Folder className="mr-1.5 h-3.5 w-3.5 shrink-0 text-(--accent)" />
                 ) : (
-                  <FilePlus className="w-3.5 h-3.5 mr-1.5 text-[var(--text-muted)] shrink-0" />
+                  <FilePlus className="mr-1.5 h-3.5 w-3.5 shrink-0 text-(--text-muted)" />
                 )}
                 <input
                   ref={createInputRef}
@@ -516,7 +516,7 @@ export function Sidebar({
                     if (e.key === 'Escape') setCreatingItem(null);
                   }}
                   onBlur={handleCreateSubmit}
-                  className="flex-1 h-[22px] px-1 bg-[var(--bg-input)] text-[12px] rounded border border-[var(--accent)] outline-none"
+                  className="h-5.5 flex-1 rounded border border-(--accent) bg-(--bg-input) px-1 text-[12px] outline-none"
                   style={{ color: 'var(--text-primary)' }}
                 />
               </div>
@@ -528,7 +528,7 @@ export function Sidebar({
               )
             ) : creatingItem?.parentDir !== node.path ? (
               <div
-                className="text-[11px] py-1 select-none"
+                className="py-1 text-[11px] select-none"
                 style={{
                   paddingLeft: `${(depth + 1) * 14 + 8}px`,
                   color: 'var(--text-muted)',
@@ -547,7 +547,7 @@ export function Sidebar({
 
   return (
     <aside
-      className="relative flex flex-col h-full border-r select-none shrink-0"
+      className="relative flex h-full shrink-0 flex-col border-r select-none"
       style={{
         width: `${width}px`,
         backgroundColor: 'var(--bg-surface)',
@@ -556,14 +556,14 @@ export function Sidebar({
     >
       {/* Sidebar Navigation Tabs */}
       <div
-        className="flex items-center justify-between px-3 h-[36px] border-b"
+        className="flex h-9 items-center justify-between border-b px-3"
         style={{ borderColor: 'var(--border)' }}
       >
         <div className="flex items-center gap-4 text-[13px] font-medium">
           <button
             type="button"
             onClick={() => setActiveTab('collections')}
-            className="pb-1 transition-fast app-focus-ring"
+            className="transition-fast app-focus-ring pb-1"
             style={{
               color: activeTab === 'collections' ? 'var(--text-primary)' : 'var(--text-muted)',
               borderBottom:
@@ -575,7 +575,7 @@ export function Sidebar({
           <button
             type="button"
             onClick={() => setActiveTab('history')}
-            className="pb-1 transition-fast app-focus-ring"
+            className="transition-fast app-focus-ring pb-1"
             style={{
               color: activeTab === 'history' ? 'var(--text-primary)' : 'var(--text-muted)',
               borderBottom:
@@ -599,9 +599,9 @@ export function Sidebar({
                 }}
                 title="New Folder in root"
                 aria-label="New Folder"
-                className="w-7 h-7 p-0 flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                className="flex h-7 w-7 items-center justify-center p-0 text-(--text-secondary) hover:text-(--text-primary)"
               >
-                <FolderPlus className="w-5 h-5" strokeWidth={1.75} />
+                <FolderPlus className="h-5 w-5" strokeWidth={1.75} />
               </Button>
             )}
 
@@ -618,9 +618,9 @@ export function Sidebar({
               }}
               title={strings.sidebar.newRequest}
               aria-label={strings.sidebar.newRequest}
-              className="w-7 h-7 p-0 flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+              className="flex h-7 w-7 items-center justify-center p-0 text-(--text-secondary) hover:text-(--text-primary)"
             >
-              <Plus className="w-5 h-5" strokeWidth={1.75} />
+              <Plus className="h-5 w-5" strokeWidth={1.75} />
             </Button>
           </div>
         )}
@@ -631,16 +631,16 @@ export function Sidebar({
       ) : (
         <>
           {/* Filter Bar with Count and Clear Button */}
-          <div className="p-2 border-b" style={{ borderColor: 'var(--border)' }}>
+          <div className="border-b p-2" style={{ borderColor: 'var(--border)' }}>
             <div
-              className="relative flex items-center h-[28px] rounded-[4px] border px-2 text-[12px]"
+              className="relative flex h-7 items-center rounded-sm border px-2 text-[12px]"
               style={{
                 backgroundColor: 'var(--bg-input)',
                 borderColor: 'var(--border-strong)',
               }}
             >
               <Search
-                className="w-4 h-4 mr-1.5 shrink-0"
+                className="mr-1.5 h-4 w-4 shrink-0"
                 style={{ color: 'var(--text-muted)' }}
                 strokeWidth={1.75}
               />
@@ -649,7 +649,7 @@ export function Sidebar({
                 value={filterText}
                 onChange={e => setFilterText(e.target.value)}
                 placeholder={strings.sidebar.filterPlaceholder}
-                className="w-full bg-transparent outline-none app-focus-ring text-[12px]"
+                className="app-focus-ring w-full bg-transparent text-[12px] outline-none"
                 style={{ color: 'var(--text-primary)' }}
                 aria-label={strings.sidebar.filterRequests}
               />
@@ -657,12 +657,12 @@ export function Sidebar({
                 <button
                   type="button"
                   onClick={() => setFilterText('')}
-                  className="p-0.5 rounded-[2px] hover:bg-[var(--bg-hover)] transition-fast"
+                  className="transition-fast rounded-xs p-0.5 hover:bg-(--bg-hover)"
                   style={{ color: 'var(--text-muted)' }}
                   title={strings.sidebar.clearFilter}
                   aria-label={strings.sidebar.clearFilter}
                 >
-                  <X className="w-3.5 h-3.5" strokeWidth={1.75} />
+                  <X className="h-3.5 w-3.5" strokeWidth={1.75} />
                 </button>
               )}
             </div>
@@ -688,11 +688,11 @@ export function Sidebar({
           >
             {/* Inline input for root-level new item */}
             {tree?.rootPath && creatingItem?.parentDir === tree.rootPath && (
-              <div className="flex items-center h-[28px] px-3">
+              <div className="flex h-7 items-center px-3">
                 {creatingItem.type === 'folder' ? (
-                  <Folder className="w-3.5 h-3.5 mr-1.5 text-[var(--accent)] shrink-0" />
+                  <Folder className="mr-1.5 h-3.5 w-3.5 shrink-0 text-(--accent)" />
                 ) : (
-                  <FilePlus className="w-3.5 h-3.5 mr-1.5 text-[var(--text-muted)] shrink-0" />
+                  <FilePlus className="mr-1.5 h-3.5 w-3.5 shrink-0 text-(--text-muted)" />
                 )}
                 <input
                   ref={createInputRef}
@@ -705,7 +705,7 @@ export function Sidebar({
                     if (e.key === 'Escape') setCreatingItem(null);
                   }}
                   onBlur={handleCreateSubmit}
-                  className="flex-1 h-[22px] px-1 bg-[var(--bg-input)] text-[12px] rounded border border-[var(--accent)] outline-none"
+                  className="h-5.5 flex-1 rounded border border-(--accent) bg-(--bg-input) px-1 text-[12px] outline-none"
                   style={{ color: 'var(--text-primary)' }}
                 />
               </div>
@@ -738,7 +738,7 @@ export function Sidebar({
                       aria-selected={isSelected}
                       tabIndex={0}
                       onClick={() => onSelectRequest?.(req.id)}
-                      className="flex items-center h-[28px] px-3 cursor-pointer text-[13px] transition-fast app-focus-ring relative"
+                      className="transition-fast app-focus-ring relative flex h-7 cursor-pointer items-center px-3 text-[13px]"
                       style={{
                         backgroundColor: isSelected ? 'var(--accent-subtle)' : 'transparent',
                         borderLeft: isSelected
@@ -748,7 +748,7 @@ export function Sidebar({
                     >
                       <MethodBadge method={displayMethod} short />
                       <span
-                        className="truncate ml-1.5 flex-1"
+                        className="ml-1.5 flex-1 truncate"
                         style={{
                           color: isSelected ? 'var(--text-primary)' : 'var(--text-secondary)',
                           fontWeight: isSelected ? 500 : 400,
@@ -773,7 +773,7 @@ export function Sidebar({
       {/* Context Menu Modal / Popup */}
       {contextMenu && (
         <div
-          className="fixed rounded-[var(--radius-md)] border shadow-xl py-1 z-50 text-[12px]"
+          className="fixed z-50 rounded-md border py-1 text-[12px] shadow-xl"
           style={{
             top: `${contextMenu.y}px`,
             left: `${Math.min(contextMenu.x, window.innerWidth - 180)}px`,
@@ -793,9 +793,9 @@ export function Sidebar({
                   setExpandedFolders(prev => new Set(prev).add(contextMenu.node.path));
                   setContextMenu(null);
                 }}
-                className="w-full px-3 py-1.5 flex items-center gap-2 hover:bg-[var(--bg-hover)] text-left transition-fast text-[var(--text-primary)]"
+                className="transition-fast flex w-full items-center gap-2 px-3 py-1.5 text-left text-(--text-primary) hover:bg-(--bg-hover)"
               >
-                <Plus className="w-3.5 h-3.5" />
+                <Plus className="h-3.5 w-3.5" />
                 <span>New Request</span>
               </button>
               <button
@@ -806,9 +806,9 @@ export function Sidebar({
                   setExpandedFolders(prev => new Set(prev).add(contextMenu.node.path));
                   setContextMenu(null);
                 }}
-                className="w-full px-3 py-1.5 flex items-center gap-2 hover:bg-[var(--bg-hover)] text-left transition-fast text-[var(--text-primary)]"
+                className="transition-fast flex w-full items-center gap-2 px-3 py-1.5 text-left text-(--text-primary) hover:bg-(--bg-hover)"
               >
-                <FolderPlus className="w-3.5 h-3.5" />
+                <FolderPlus className="h-3.5 w-3.5" />
                 <span>New Folder</span>
               </button>
               <div className="my-1 border-t" style={{ borderColor: 'var(--border)' }} />
@@ -819,9 +819,9 @@ export function Sidebar({
                   setRenamingName(contextMenu.node.name);
                   setContextMenu(null);
                 }}
-                className="w-full px-3 py-1.5 flex items-center gap-2 hover:bg-[var(--bg-hover)] text-left transition-fast text-[var(--text-primary)]"
+                className="transition-fast flex w-full items-center gap-2 px-3 py-1.5 text-left text-(--text-primary) hover:bg-(--bg-hover)"
               >
-                <Edit2 className="w-3.5 h-3.5" />
+                <Edit2 className="h-3.5 w-3.5" />
                 <span>Rename Folder</span>
               </button>
               <button
@@ -831,9 +831,9 @@ export function Sidebar({
                   setContextMenu(null);
                   await deleteItem(toDelete);
                 }}
-                className="w-full px-3 py-1.5 flex items-center gap-2 hover:bg-[var(--bg-hover)] text-left transition-fast text-[var(--status-err)]"
+                className="transition-fast flex w-full items-center gap-2 px-3 py-1.5 text-left text-(--status-err) hover:bg-(--bg-hover)"
               >
-                <Trash2 className="w-3.5 h-3.5" />
+                <Trash2 className="h-3.5 w-3.5" />
                 <span>Delete Folder</span>
               </button>
             </>
@@ -849,9 +849,9 @@ export function Sidebar({
                     onSelectRequestNode(newNode);
                   }
                 }}
-                className="w-full px-3 py-1.5 flex items-center gap-2 hover:bg-[var(--bg-hover)] text-left transition-fast text-[var(--text-primary)]"
+                className="transition-fast flex w-full items-center gap-2 px-3 py-1.5 text-left text-(--text-primary) hover:bg-(--bg-hover)"
               >
-                <Copy className="w-3.5 h-3.5" />
+                <Copy className="h-3.5 w-3.5" />
                 <span>Duplicate Request</span>
               </button>
               <button
@@ -861,9 +861,9 @@ export function Sidebar({
                   setRenamingName(contextMenu.node.name);
                   setContextMenu(null);
                 }}
-                className="w-full px-3 py-1.5 flex items-center gap-2 hover:bg-[var(--bg-hover)] text-left transition-fast text-[var(--text-primary)]"
+                className="transition-fast flex w-full items-center gap-2 px-3 py-1.5 text-left text-(--text-primary) hover:bg-(--bg-hover)"
               >
-                <Edit2 className="w-3.5 h-3.5" />
+                <Edit2 className="h-3.5 w-3.5" />
                 <span>Rename Request</span>
               </button>
               <div className="my-1 border-t" style={{ borderColor: 'var(--border)' }} />
@@ -874,9 +874,9 @@ export function Sidebar({
                   setContextMenu(null);
                   await deleteItem(toDelete);
                 }}
-                className="w-full px-3 py-1.5 flex items-center gap-2 hover:bg-[var(--bg-hover)] text-left transition-fast text-[var(--status-err)]"
+                className="transition-fast flex w-full items-center gap-2 px-3 py-1.5 text-left text-(--status-err) hover:bg-(--bg-hover)"
               >
-                <Trash2 className="w-3.5 h-3.5" />
+                <Trash2 className="h-3.5 w-3.5" />
                 <span>Delete to Trash</span>
               </button>
             </>
@@ -887,7 +887,7 @@ export function Sidebar({
       {/* Drag handle for resizing */}
       <div
         onMouseDown={handleMouseDownResize}
-        className="absolute top-0 right-0 w-[4px] h-full cursor-col-resize hover:bg-[var(--accent)] transition-fast z-10"
+        className="transition-fast absolute top-0 right-0 z-10 h-full w-1 cursor-col-resize hover:bg-(--accent)"
         title="Resize sidebar"
         aria-hidden="true"
       />

@@ -55,7 +55,7 @@ export function Tooltip({
       {visible && content && (
         <div
           role="tooltip"
-          className={`absolute z-50 px-2 py-1 text-[11px] leading-[16px] max-w-[280px] rounded-[4px] border shadow-elevation select-none pointer-events-none whitespace-normal break-words transition-fast ${positionClasses[position]}`}
+          className={`shadow-elevation transition-fast pointer-events-none absolute z-50 max-w-70 rounded-sm border px-2 py-1 text-[11px] leading-4 wrap-break-word whitespace-normal select-none ${positionClasses[position]}`}
           style={{
             backgroundColor: 'var(--bg-elevated)',
             borderColor: 'var(--border)',

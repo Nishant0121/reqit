@@ -60,20 +60,20 @@ export function TimingWaterfall({
           </span>
           {isKeepAlive && (
             <span
-              className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-[4px] border"
+              className="inline-flex items-center gap-1 rounded-sm border px-2 py-0.5 text-[11px]"
               style={{
                 backgroundColor: 'var(--accent-subtle)',
                 borderColor: 'var(--accent)',
                 color: 'var(--accent)',
               }}
             >
-              <Zap className="w-3.5 h-3.5" />
+              <Zap className="h-3.5 w-3.5" />
               <span>Connection reused (keep-alive)</span>
             </span>
           )}
         </div>
         <span
-          className="text-[12px] font-mono font-medium"
+          className="font-mono text-[12px] font-medium"
           style={{ color: 'var(--text-secondary)' }}
         >
           Total duration: {totalMs} ms
@@ -100,12 +100,12 @@ export function TimingWaterfall({
 
               {/* Waterfall Track */}
               <div
-                className="relative w-full h-3.5 rounded-[2px] overflow-hidden"
+                className="relative h-3.5 w-full overflow-hidden rounded-xs"
                 style={{ backgroundColor: 'var(--bg-active)' }}
               >
                 {phase.ms > 0 ? (
                   <div
-                    className="absolute top-0 bottom-0 rounded-[2px] transition-panel"
+                    className="transition-panel absolute top-0 bottom-0 rounded-xs"
                     style={{
                       left: `${leftPercent}%`,
                       width: `${widthPercent}%`,
@@ -116,7 +116,7 @@ export function TimingWaterfall({
                   />
                 ) : (
                   <div
-                    className="absolute top-0 bottom-0 w-[2px]"
+                    className="absolute top-0 bottom-0 w-0.5"
                     style={{
                       left: `${leftPercent}%`,
                       backgroundColor: 'var(--text-muted)',
@@ -127,7 +127,7 @@ export function TimingWaterfall({
               </div>
 
               <span
-                className="font-mono text-right text-[12px]"
+                className="text-right font-mono text-[12px]"
                 style={{ color: 'var(--text-primary)' }}
               >
                 {phase.ms} ms
@@ -139,9 +139,9 @@ export function TimingWaterfall({
 
       {/* Redirect Hops Section */}
       {redirectHops && redirectHops.length > 0 && (
-        <div className="mt-4 pt-3 border-t space-y-2" style={{ borderColor: 'var(--border)' }}>
+        <div className="mt-4 space-y-2 border-t pt-3" style={{ borderColor: 'var(--border)' }}>
           <span
-            className="text-[12px] font-semibold block"
+            className="block text-[12px] font-semibold"
             style={{ color: 'var(--text-secondary)' }}
           >
             Redirect chain ({redirectHops.length} hops)
@@ -150,14 +150,14 @@ export function TimingWaterfall({
             {redirectHops.map((hop, index) => (
               <div
                 key={index}
-                className="flex items-center gap-2 text-[12px] font-mono px-2 py-1 rounded-[4px]"
+                className="flex items-center gap-2 rounded-sm px-2 py-1 font-mono text-[12px]"
                 style={{ backgroundColor: 'var(--bg-input)' }}
               >
                 <CornerDownRight
-                  className="w-4 h-4 text-[var(--text-muted)] shrink-0"
+                  className="h-4 w-4 shrink-0 text-(--text-muted)"
                   strokeWidth={1.75}
                 />
-                <span className="truncate flex-1" style={{ color: 'var(--text-primary)' }}>
+                <span className="flex-1 truncate" style={{ color: 'var(--text-primary)' }}>
                   Hop {index + 1}
                 </span>
                 <span style={{ color: 'var(--text-muted)' }}>{hop.totalMs} ms</span>

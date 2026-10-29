@@ -27,7 +27,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
     >
       <select
         ref={ref}
-        className={`h-full bg-transparent pl-2.5 pr-6 text-[13px] app-focus-ring outline-none appearance-none cursor-pointer ${className}`}
+        className={`app-focus-ring h-full cursor-pointer appearance-none bg-transparent pr-6 pl-2.5 text-[13px] outline-none ${className}`}
         style={{
           color: 'var(--text-primary)',
           ...style,
@@ -48,7 +48,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
         ))}
       </select>
       <div
-        className="absolute right-2 pointer-events-none text-[10px]"
+        className="pointer-events-none absolute right-2 text-[10px]"
         style={{ color: 'var(--text-muted)' }}
       >
         ▼

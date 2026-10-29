@@ -37,8 +37,8 @@ export function MethodBadge({
 
   return (
     <span
-      className={`font-mono font-bold uppercase inline-flex items-center justify-start text-[11px] leading-[16px] tracking-[0.02em] select-none ${
-        short ? 'w-[44px] shrink-0' : ''
+      className={`inline-flex items-center justify-start font-mono text-[11px] leading-4 font-bold tracking-[0.02em] uppercase select-none ${
+        short ? 'w-11 shrink-0' : ''
       } ${className}`}
       style={{ color }}
     >
@@ -100,7 +100,7 @@ export function StatusBadge({
 
   return (
     <span
-      className={`inline-flex items-center px-2 py-0.5 rounded-[4px] font-mono font-medium text-[11px] leading-[16px] border select-none ${className}`}
+      className={`inline-flex items-center rounded-sm border px-2 py-0.5 font-mono text-[11px] leading-4 font-medium select-none ${className}`}
       style={{
         color,
         backgroundColor: bg,
@@ -120,7 +120,7 @@ export interface CountBadgeProps {
 export function CountBadge({ count, className = '' }: CountBadgeProps): React.JSX.Element {
   return (
     <span
-      className={`inline-flex items-center px-1.5 py-0.5 rounded-[4px] text-[11px] leading-[16px] font-medium select-none ${className}`}
+      className={`inline-flex items-center rounded-sm px-1.5 py-0.5 text-[11px] leading-4 font-medium select-none ${className}`}
       style={{
         backgroundColor: 'var(--bg-elevated)',
         color: 'var(--text-secondary)',

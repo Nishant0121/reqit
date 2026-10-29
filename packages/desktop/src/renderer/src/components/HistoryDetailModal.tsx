@@ -85,17 +85,17 @@ export function HistoryDetailModal(): React.JSX.Element | null {
       title="Request History Inspection"
       size="xlarge"
     >
-      <div className="flex flex-col h-[70vh] -mx-6 -my-4">
+      <div className="-mx-6 -my-4 flex h-[70vh] flex-col">
         {/* Top summary banner */}
         <div
-          className="p-4 border-b flex flex-col gap-2 shrink-0 select-none"
+          className="flex shrink-0 flex-col gap-2 border-b p-4 select-none"
           style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border)' }}
         >
           <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2 overflow-hidden min-w-0">
+            <div className="flex min-w-0 items-center gap-2 overflow-hidden">
               <MethodBadge method={selectedDetail.method} />
               <span
-                className="font-semibold text-[14px] truncate"
+                className="truncate text-[14px] font-semibold"
                 style={{ color: 'var(--text-primary)' }}
                 title={selectedDetail.requestName}
               >
@@ -103,7 +103,7 @@ export function HistoryDetailModal(): React.JSX.Element | null {
               </span>
             </div>
 
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex shrink-0 items-center gap-2">
               <Button
                 variant="primary"
                 size="compact"
@@ -111,24 +111,24 @@ export function HistoryDetailModal(): React.JSX.Element | null {
                 className="flex items-center gap-1.5"
                 title="Create a new draft in tabs with these request parameters"
               >
-                <ExternalLink className="w-3.5 h-3.5" />
+                <ExternalLink className="h-3.5 w-3.5" />
                 <span>Open as new request</span>
               </Button>
               <Button
                 variant="ghost"
                 size="compact"
                 onClick={handleDelete}
-                className="text-[var(--status-err)] hover:bg-[var(--status-err-bg)] hover:text-[var(--status-err)] p-1.5"
+                className="p-1.5 text-(--status-err) hover:bg-(--status-err-bg) hover:text-(--status-err)"
                 title="Delete this history entry"
               >
-                <Trash2 className="w-3.5 h-3.5" />
+                <Trash2 className="h-3.5 w-3.5" />
               </Button>
             </div>
           </div>
 
           {/* URL bar preview */}
           <div
-            className="flex items-center justify-between gap-2 px-2.5 py-1.5 rounded border text-[12px] font-mono select-text"
+            className="flex items-center justify-between gap-2 rounded border px-2.5 py-1.5 font-mono text-[12px] select-text"
             style={{
               backgroundColor: 'var(--bg-input)',
               borderColor: 'var(--border)',
@@ -139,13 +139,13 @@ export function HistoryDetailModal(): React.JSX.Element | null {
             <button
               type="button"
               onClick={() => handleCopy(selectedDetail.url, 'url')}
-              className="p-1 hover:text-[var(--text-primary)] transition-fast shrink-0"
+              className="transition-fast shrink-0 p-1 hover:text-(--text-primary)"
               title="Copy URL"
             >
               {copiedField === 'url' ? (
-                <Check className="w-3.5 h-3.5 text-[var(--status-ok)]" />
+                <Check className="h-3.5 w-3.5 text-(--status-ok)" />
               ) : (
-                <Copy className="w-3.5 h-3.5" />
+                <Copy className="h-3.5 w-3.5" />
               )}
             </button>
           </div>
@@ -163,42 +163,42 @@ export function HistoryDetailModal(): React.JSX.Element | null {
                   statusText={selectedDetail.statusText}
                 />
               ) : (
-                <span className="px-1.5 py-0.5 rounded text-[11px] font-semibold bg-[var(--status-err-bg)] text-[var(--status-err)]">
+                <span className="rounded bg-(--status-err-bg) px-1.5 py-0.5 text-[11px] font-semibold text-(--status-err)">
                   Error
                 </span>
               )}
             </div>
             <div>
               <span>Duration: </span>
-              <span className="font-mono text-[var(--text-primary)]">
+              <span className="font-mono text-(--text-primary)">
                 {formatDuration(selectedDetail.durationMs)}
               </span>
             </div>
             <div>
               <span>Size: </span>
-              <span className="font-mono text-[var(--text-primary)]">
+              <span className="font-mono text-(--text-primary)">
                 {formatBytes(selectedDetail.sizeBytes)}
               </span>
             </div>
             <div>
               <span>Recorded: </span>
-              <span className="text-[var(--text-secondary)]">{timestampStr}</span>
+              <span className="text-(--text-secondary)">{timestampStr}</span>
             </div>
           </div>
         </div>
 
         {/* Modal tabs */}
         <div
-          className="flex items-center gap-1 px-4 border-b shrink-0 text-[13px] select-none"
+          className="flex shrink-0 items-center gap-1 border-b px-4 text-[13px] select-none"
           style={{ borderColor: 'var(--border)' }}
         >
           <button
             type="button"
             onClick={() => setActiveTab('response')}
-            className={`px-3 py-2 border-b-2 font-medium transition-fast ${
+            className={`transition-fast border-b-2 px-3 py-2 font-medium ${
               activeTab === 'response'
-                ? 'border-[var(--accent)] text-[var(--text-primary)]'
-                : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                ? 'border-(--accent) text-(--text-primary)'
+                : 'border-transparent text-(--text-secondary) hover:text-(--text-primary)'
             }`}
           >
             Response
@@ -206,10 +206,10 @@ export function HistoryDetailModal(): React.JSX.Element | null {
           <button
             type="button"
             onClick={() => setActiveTab('request')}
-            className={`px-3 py-2 border-b-2 font-medium transition-fast ${
+            className={`transition-fast border-b-2 px-3 py-2 font-medium ${
               activeTab === 'request'
-                ? 'border-[var(--accent)] text-[var(--text-primary)]'
-                : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                ? 'border-(--accent) text-(--text-primary)'
+                : 'border-transparent text-(--text-secondary) hover:text-(--text-primary)'
             }`}
           >
             Request
@@ -218,34 +218,34 @@ export function HistoryDetailModal(): React.JSX.Element | null {
             <button
               type="button"
               onClick={() => setActiveTab('error')}
-              className={`px-3 py-2 border-b-2 font-medium transition-fast flex items-center gap-1.5 ${
+              className={`transition-fast flex items-center gap-1.5 border-b-2 px-3 py-2 font-medium ${
                 activeTab === 'error'
-                  ? 'border-[var(--status-err)] text-[var(--status-err)]'
-                  : 'border-transparent text-[var(--status-err)] hover:opacity-80'
+                  ? 'border-(--status-err) text-(--status-err)'
+                  : 'border-transparent text-(--status-err) hover:opacity-80'
               }`}
             >
-              <AlertTriangle className="w-3.5 h-3.5" />
+              <AlertTriangle className="h-3.5 w-3.5" />
               <span>Error Details</span>
             </button>
           )}
         </div>
 
         {/* Tab content */}
-        <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4 text-[13px]">
+        <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-4 text-[13px]">
           {activeTab === 'response' && (
             <div className="flex flex-col gap-4">
               {/* Response Headers */}
               {selectedDetail.responseHeaders &&
                 Object.keys(selectedDetail.responseHeaders).length > 0 && (
                   <div className="flex flex-col gap-1.5">
-                    <span className="font-semibold text-[12px] text-[var(--text-secondary)] uppercase tracking-wider">
+                    <span className="text-[12px] font-semibold tracking-wider text-(--text-secondary) uppercase">
                       Response Headers ({Object.keys(selectedDetail.responseHeaders).length})
                     </span>
                     <div
-                      className="rounded border overflow-hidden"
+                      className="overflow-hidden rounded border"
                       style={{ borderColor: 'var(--border)' }}
                     >
-                      <table className="w-full text-left border-collapse text-[12px]">
+                      <table className="w-full border-collapse text-left text-[12px]">
                         <thead>
                           <tr
                             className="border-b font-medium"
@@ -255,21 +255,21 @@ export function HistoryDetailModal(): React.JSX.Element | null {
                               color: 'var(--text-muted)',
                             }}
                           >
-                            <th className="py-1.5 px-3">Header</th>
-                            <th className="py-1.5 px-3">Value</th>
+                            <th className="px-3 py-1.5">Header</th>
+                            <th className="px-3 py-1.5">Value</th>
                           </tr>
                         </thead>
                         <tbody>
                           {Object.entries(selectedDetail.responseHeaders).map(([k, v]) => (
                             <tr
                               key={k}
-                              className="border-b last:border-b-0 hover:bg-[var(--bg-hover)]"
+                              className="border-b last:border-b-0 hover:bg-(--bg-hover)"
                               style={{ borderColor: 'var(--border)' }}
                             >
-                              <td className="py-1.5 px-3 font-mono font-medium text-[var(--text-primary)]">
+                              <td className="px-3 py-1.5 font-mono font-medium text-(--text-primary)">
                                 {k}
                               </td>
-                              <td className="py-1.5 px-3 font-mono text-[var(--text-secondary)] select-text break-all">
+                              <td className="px-3 py-1.5 font-mono break-all text-(--text-secondary) select-text">
                                 {v}
                               </td>
                             </tr>
@@ -281,26 +281,26 @@ export function HistoryDetailModal(): React.JSX.Element | null {
                 )}
 
               {/* Response Body */}
-              <div className="flex flex-col gap-1.5 flex-1">
+              <div className="flex flex-1 flex-col gap-1.5">
                 <div className="flex items-center justify-between">
-                  <span className="font-semibold text-[12px] text-[var(--text-secondary)] uppercase tracking-wider">
+                  <span className="text-[12px] font-semibold tracking-wider text-(--text-secondary) uppercase">
                     Response Body
                   </span>
                   {selectedDetail.responseBody && (
                     <button
                       type="button"
                       onClick={() => handleCopy(selectedDetail.responseBody!, 'body')}
-                      className="flex items-center gap-1 text-[11px] hover:text-[var(--text-primary)] transition-fast text-[var(--text-muted)]"
+                      className="transition-fast flex items-center gap-1 text-[11px] text-(--text-muted) hover:text-(--text-primary)"
                       title="Copy response body"
                     >
                       {copiedField === 'body' ? (
                         <>
-                          <Check className="w-3.5 h-3.5 text-[var(--status-ok)]" />
+                          <Check className="h-3.5 w-3.5 text-(--status-ok)" />
                           <span>Copied</span>
                         </>
                       ) : (
                         <>
-                          <Copy className="w-3.5 h-3.5" />
+                          <Copy className="h-3.5 w-3.5" />
                           <span>Copy Body</span>
                         </>
                       )}
@@ -310,7 +310,7 @@ export function HistoryDetailModal(): React.JSX.Element | null {
 
                 {selectedDetail.responseBody ? (
                   <pre
-                    className="p-3 rounded border font-mono text-[12px] leading-relaxed overflow-x-auto whitespace-pre-wrap select-text max-h-[350px]"
+                    className="max-h-87.5 overflow-x-auto rounded border p-3 font-mono text-[12px] leading-relaxed whitespace-pre-wrap select-text"
                     style={{
                       backgroundColor: 'var(--bg-input)',
                       borderColor: 'var(--border)',
@@ -321,7 +321,7 @@ export function HistoryDetailModal(): React.JSX.Element | null {
                   </pre>
                 ) : (
                   <div
-                    className="p-6 text-center rounded border text-[12px]"
+                    className="rounded border p-6 text-center text-[12px]"
                     style={{
                       borderColor: 'var(--border)',
                       color: 'var(--text-muted)',
@@ -339,11 +339,11 @@ export function HistoryDetailModal(): React.JSX.Element | null {
             <div className="flex flex-col gap-5">
               {/* Endpoint Overview */}
               <div className="flex flex-col gap-1.5">
-                <span className="font-semibold text-[12px] text-[var(--text-secondary)] uppercase tracking-wider">
+                <span className="text-[12px] font-semibold tracking-wider text-(--text-secondary) uppercase">
                   Target Endpoint
                 </span>
                 <div
-                  className="flex items-center justify-between gap-2 p-2.5 rounded border text-[12px] font-mono select-text"
+                  className="flex items-center justify-between gap-2 rounded border p-2.5 font-mono text-[12px] select-text"
                   style={{
                     backgroundColor: 'var(--bg-input)',
                     borderColor: 'var(--border)',
@@ -357,13 +357,13 @@ export function HistoryDetailModal(): React.JSX.Element | null {
                   <button
                     type="button"
                     onClick={() => handleCopy(selectedDetail.url, 'req-url')}
-                    className="p-1 hover:text-[var(--text-primary)] transition-fast shrink-0 text-[var(--text-muted)]"
+                    className="transition-fast shrink-0 p-1 text-(--text-muted) hover:text-(--text-primary)"
                     title="Copy full URL"
                   >
                     {copiedField === 'req-url' ? (
-                      <Check className="w-3.5 h-3.5 text-[var(--status-ok)]" />
+                      <Check className="h-3.5 w-3.5 text-(--status-ok)" />
                     ) : (
-                      <Copy className="w-3.5 h-3.5" />
+                      <Copy className="h-3.5 w-3.5" />
                     )}
                   </button>
                 </div>
@@ -371,15 +371,15 @@ export function HistoryDetailModal(): React.JSX.Element | null {
 
               {/* Query Parameters */}
               <div className="flex flex-col gap-1.5">
-                <span className="font-semibold text-[12px] text-[var(--text-secondary)] uppercase tracking-wider">
+                <span className="text-[12px] font-semibold tracking-wider text-(--text-secondary) uppercase">
                   Query Parameters {displayParams.length > 0 ? `(${displayParams.length})` : ''}
                 </span>
                 {displayParams.length > 0 ? (
                   <div
-                    className="rounded border overflow-hidden"
+                    className="overflow-hidden rounded border"
                     style={{ borderColor: 'var(--border)' }}
                   >
-                    <table className="w-full text-left border-collapse text-[12px]">
+                    <table className="w-full border-collapse text-left text-[12px]">
                       <thead>
                         <tr
                           className="border-b font-medium"
@@ -389,21 +389,21 @@ export function HistoryDetailModal(): React.JSX.Element | null {
                             color: 'var(--text-muted)',
                           }}
                         >
-                          <th className="py-1.5 px-3">Parameter</th>
-                          <th className="py-1.5 px-3">Value</th>
+                          <th className="px-3 py-1.5">Parameter</th>
+                          <th className="px-3 py-1.5">Value</th>
                         </tr>
                       </thead>
                       <tbody>
                         {displayParams.map((p, i) => (
                           <tr
                             key={i}
-                            className="border-b last:border-b-0 hover:bg-[var(--bg-hover)]"
+                            className="border-b last:border-b-0 hover:bg-(--bg-hover)"
                             style={{ borderColor: 'var(--border)' }}
                           >
-                            <td className="py-1.5 px-3 font-mono font-medium text-[var(--text-primary)]">
+                            <td className="px-3 py-1.5 font-mono font-medium text-(--text-primary)">
                               {p.name}
                             </td>
-                            <td className="py-1.5 px-3 font-mono text-[var(--text-secondary)] select-text break-all">
+                            <td className="px-3 py-1.5 font-mono break-all text-(--text-secondary) select-text">
                               {p.value}
                             </td>
                           </tr>
@@ -413,7 +413,7 @@ export function HistoryDetailModal(): React.JSX.Element | null {
                   </div>
                 ) : (
                   <div
-                    className="p-3 rounded border text-[12px]"
+                    className="rounded border p-3 text-[12px]"
                     style={{
                       borderColor: 'var(--border)',
                       color: 'var(--text-muted)',
@@ -427,15 +427,15 @@ export function HistoryDetailModal(): React.JSX.Element | null {
 
               {/* Request Headers */}
               <div className="flex flex-col gap-1.5">
-                <span className="font-semibold text-[12px] text-[var(--text-secondary)] uppercase tracking-wider">
+                <span className="text-[12px] font-semibold tracking-wider text-(--text-secondary) uppercase">
                   Request Headers {displayHeaders.length > 0 ? `(${displayHeaders.length})` : ''}
                 </span>
                 {displayHeaders.length > 0 ? (
                   <div
-                    className="rounded border overflow-hidden"
+                    className="overflow-hidden rounded border"
                     style={{ borderColor: 'var(--border)' }}
                   >
-                    <table className="w-full text-left border-collapse text-[12px]">
+                    <table className="w-full border-collapse text-left text-[12px]">
                       <thead>
                         <tr
                           className="border-b font-medium"
@@ -445,21 +445,21 @@ export function HistoryDetailModal(): React.JSX.Element | null {
                             color: 'var(--text-muted)',
                           }}
                         >
-                          <th className="py-1.5 px-3">Header</th>
-                          <th className="py-1.5 px-3">Value</th>
+                          <th className="px-3 py-1.5">Header</th>
+                          <th className="px-3 py-1.5">Value</th>
                         </tr>
                       </thead>
                       <tbody>
                         {displayHeaders.map((h, i) => (
                           <tr
                             key={i}
-                            className="border-b last:border-b-0 hover:bg-[var(--bg-hover)]"
+                            className="border-b last:border-b-0 hover:bg-(--bg-hover)"
                             style={{ borderColor: 'var(--border)' }}
                           >
-                            <td className="py-1.5 px-3 font-mono font-medium text-[var(--text-primary)]">
+                            <td className="px-3 py-1.5 font-mono font-medium text-(--text-primary)">
                               {h.name}
                             </td>
-                            <td className="py-1.5 px-3 font-mono text-[var(--text-secondary)] select-text break-all">
+                            <td className="px-3 py-1.5 font-mono break-all text-(--text-secondary) select-text">
                               {h.value}
                             </td>
                           </tr>
@@ -469,7 +469,7 @@ export function HistoryDetailModal(): React.JSX.Element | null {
                   </div>
                 ) : (
                   <div
-                    className="p-3 rounded border text-[12px]"
+                    className="rounded border p-3 text-[12px]"
                     style={{
                       borderColor: 'var(--border)',
                       color: 'var(--text-muted)',
@@ -484,11 +484,11 @@ export function HistoryDetailModal(): React.JSX.Element | null {
 
               {/* Authentication */}
               <div className="flex flex-col gap-1.5">
-                <span className="font-semibold text-[12px] text-[var(--text-secondary)] uppercase tracking-wider">
+                <span className="text-[12px] font-semibold tracking-wider text-(--text-secondary) uppercase">
                   Authentication
                 </span>
                 <div
-                  className="p-3 rounded border text-[12px]"
+                  className="rounded border p-3 text-[12px]"
                   style={{
                     borderColor: 'var(--border)',
                     backgroundColor: 'var(--bg-secondary)',
@@ -502,7 +502,7 @@ export function HistoryDetailModal(): React.JSX.Element | null {
               {/* Request Body */}
               <div className="flex flex-col gap-1.5">
                 <div className="flex items-center justify-between">
-                  <span className="font-semibold text-[12px] text-[var(--text-secondary)] uppercase tracking-wider">
+                  <span className="text-[12px] font-semibold tracking-wider text-(--text-secondary) uppercase">
                     Request Body{' '}
                     {selectedDetail.requestSummary.bodyType
                       ? `(${selectedDetail.requestSummary.bodyType})`
@@ -514,17 +514,17 @@ export function HistoryDetailModal(): React.JSX.Element | null {
                       onClick={() =>
                         handleCopy(selectedDetail.requestSummary.bodyContent!, 'req-body')
                       }
-                      className="flex items-center gap-1 text-[11px] hover:text-[var(--text-primary)] transition-fast text-[var(--text-muted)]"
+                      className="transition-fast flex items-center gap-1 text-[11px] text-(--text-muted) hover:text-(--text-primary)"
                       title="Copy request body"
                     >
                       {copiedField === 'req-body' ? (
                         <>
-                          <Check className="w-3.5 h-3.5 text-[var(--status-ok)]" />
+                          <Check className="h-3.5 w-3.5 text-(--status-ok)" />
                           <span>Copied</span>
                         </>
                       ) : (
                         <>
-                          <Copy className="w-3.5 h-3.5" />
+                          <Copy className="h-3.5 w-3.5" />
                           <span>Copy Body</span>
                         </>
                       )}
@@ -534,7 +534,7 @@ export function HistoryDetailModal(): React.JSX.Element | null {
 
                 {selectedDetail.requestSummary.bodyContent ? (
                   <pre
-                    className="p-3 rounded border font-mono text-[12px] leading-relaxed overflow-x-auto whitespace-pre-wrap select-text max-h-[250px]"
+                    className="max-h-62.5 overflow-x-auto rounded border p-3 font-mono text-[12px] leading-relaxed whitespace-pre-wrap select-text"
                     style={{
                       backgroundColor: 'var(--bg-input)',
                       borderColor: 'var(--border)',
@@ -545,7 +545,7 @@ export function HistoryDetailModal(): React.JSX.Element | null {
                   </pre>
                 ) : (
                   <div
-                    className="p-3 rounded border text-[12px]"
+                    className="rounded border p-3 text-[12px]"
                     style={{
                       borderColor: 'var(--border)',
                       color: 'var(--text-muted)',
@@ -561,17 +561,17 @@ export function HistoryDetailModal(): React.JSX.Element | null {
 
           {activeTab === 'error' && selectedDetail.errorMessage && (
             <div
-              className="p-4 rounded border flex flex-col gap-2"
+              className="flex flex-col gap-2 rounded border p-4"
               style={{
                 backgroundColor: 'var(--status-err-bg)',
                 borderColor: 'var(--status-err)',
               }}
             >
-              <div className="flex items-center gap-2 text-[var(--status-err)] font-semibold">
-                <AlertTriangle className="w-4 h-4" />
+              <div className="flex items-center gap-2 font-semibold text-(--status-err)">
+                <AlertTriangle className="h-4 w-4" />
                 <span>Execution Error</span>
               </div>
-              <pre className="font-mono text-[12px] text-[var(--status-err)] whitespace-pre-wrap select-text">
+              <pre className="font-mono text-[12px] whitespace-pre-wrap text-(--status-err) select-text">
                 {selectedDetail.errorMessage}
               </pre>
             </div>
