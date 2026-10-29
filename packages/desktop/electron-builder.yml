@@ -1,5 +1,6 @@
 appId: com.reqit.desktop
 productName: Reqit
+executableName: reqit
 artifactName: ${productName}-${version}-${os}-${arch}.${ext}
 directories:
   output: release/${version}
@@ -29,6 +30,8 @@ mac:
         - arm64
   category: public.app-category.developer-tools
 linux:
+  executableName: reqit
+  desktopName: reqit
   target:
     - target: AppImage
     - target: deb
