@@ -40,6 +40,7 @@ export interface ScopeVariableEntry {
 export interface ResolveOptions {
   activeEnvironment?: string;
   callStack?: string[];
+  allowUndefined?: boolean;
 }
 
 export interface ResolveRequestOptions extends ResolveOptions {

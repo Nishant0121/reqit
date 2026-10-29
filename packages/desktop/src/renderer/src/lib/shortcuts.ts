@@ -36,6 +36,13 @@ export const SHORTCUT_REGISTRY: ShortcutDefinition[] = [
     description: 'Create a new request in the current collection',
   },
   {
+    id: 'request.importCurl',
+    name: 'Import cURL',
+    section: 'Request',
+    keyCombination: 'Ctrl+I',
+    description: 'Import an HTTP request from a cURL command',
+  },
+  {
     id: 'tab.close',
     name: 'Close tab',
     section: 'Navigation',

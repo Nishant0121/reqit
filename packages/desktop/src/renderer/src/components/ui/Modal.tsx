@@ -21,6 +21,7 @@ export interface ModalProps {
     label: string;
     onClick?: () => void;
   };
+  customFooter?: React.ReactNode;
 }
 
 export function Modal({
@@ -31,6 +32,7 @@ export function Modal({
   children,
   primaryAction,
   secondaryAction,
+  customFooter,
 }: ModalProps): React.JSX.Element | null {
   const modalRef = useRef<HTMLDivElement>(null);
   const previouslyFocusedRef = useRef<HTMLElement | null>(null);
@@ -138,7 +140,7 @@ export function Modal({
         </div>
 
         {/* Footer */}
-        {(primaryAction || secondaryAction) && (
+        {customFooter ? (
           <div
             className="flex items-center justify-end gap-3 px-6 py-3 border-t shrink-0 select-none"
             style={{
@@ -146,27 +148,39 @@ export function Modal({
               backgroundColor: 'var(--bg-surface)',
             }}
           >
-            {secondaryAction && (
-              <Button
-                variant="secondary"
-                size="default"
-                onClick={secondaryAction.onClick || onClose}
-              >
-                {secondaryAction.label}
-              </Button>
-            )}
-            {primaryAction && (
-              <Button
-                variant={primaryAction.variant || 'primary'}
-                size="default"
-                loading={primaryAction.loading}
-                disabled={primaryAction.disabled}
-                onClick={primaryAction.onClick}
-              >
-                {primaryAction.label}
-              </Button>
-            )}
+            {customFooter}
           </div>
+        ) : (
+          (primaryAction || secondaryAction) && (
+            <div
+              className="flex items-center justify-end gap-3 px-6 py-3 border-t shrink-0 select-none"
+              style={{
+                borderColor: 'var(--border)',
+                backgroundColor: 'var(--bg-surface)',
+              }}
+            >
+              {secondaryAction && (
+                <Button
+                  variant="secondary"
+                  size="default"
+                  onClick={secondaryAction.onClick || onClose}
+                >
+                  {secondaryAction.label}
+                </Button>
+              )}
+              {primaryAction && (
+                <Button
+                  variant={primaryAction.variant || 'primary'}
+                  size="default"
+                  loading={primaryAction.loading}
+                  disabled={primaryAction.disabled}
+                  onClick={primaryAction.onClick}
+                >
+                  {primaryAction.label}
+                </Button>
+              )}
+            </div>
+          )
         )}
       </div>
     </div>

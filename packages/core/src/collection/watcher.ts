@@ -1,7 +1,7 @@
 import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { watch, type FSWatcher } from 'chokidar';
+import type { FSWatcher } from 'chokidar';
 import { parseRequest } from '../format/parser.js';
 import { scanCollection } from './scanner.js';
 import type {
@@ -116,6 +116,7 @@ export class CollectionWatcher {
       this.listeners.push(onEvent);
     }
 
+    const { watch } = await import('chokidar');
     const currentWatcher = watch(this.rootPath, {
       ignored: this.ignored,
       ignoreInitial: true,

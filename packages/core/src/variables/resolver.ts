@@ -63,6 +63,9 @@ function resolveVariable(
   // 2. Undefined variable check
   const entry = mergedVars.get(varName);
   if (!entry || entry.value === undefined) {
+    if (options?.allowUndefined) {
+      return `{{${varName}}}`;
+    }
     throw new UndefinedVariableError(varName);
   }
 

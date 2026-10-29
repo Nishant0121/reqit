@@ -450,7 +450,8 @@ test.describe('Desktop App Shell Smoke Test (Phase 5)', () => {
         await window.reqitApi.createCollection({ name: 'Badge Collection', targetDir: dir });
         await window.reqitApi.createRequest({ parentDir: dir, name: 'Badge Test' });
       }, tmpDir);
-      await page.locator('aside [role="treeitem"]').first().click();
+      await expect(sidebarItem.first()).toBeVisible({ timeout: 5000 });
+      await sidebarItem.first().click();
     }
 
     const methodSelect = page.locator('#method-select');
@@ -765,5 +766,87 @@ test.describe('Desktop App Shell Smoke Test (Phase 5)', () => {
 
     // Verify history entries are cleared
     await expect(page.locator('text=No requests sent yet')).toBeVisible();
+  });
+
+  test('verifies Phase 13: cURL import via paste, Import cURL modal with live preview, and Copy as cURL', async () => {
+    // 1. Test pasting cURL directly into the URL input
+    const urlInput = page.locator('#url-input');
+    await expect(urlInput).toBeVisible();
+
+    // Trigger paste event with a cURL POST command
+    const sampleCurl = `curl -X POST https://httpbin.org/post \\\n  -H 'Authorization: Bearer my-token' \\\n  -H 'Content-Type: application/json' \\\n  -d '{"client": "smoke-test"}'`;
+
+    await urlInput.evaluate((el: HTMLInputElement, text: string) => {
+      const dt = new DataTransfer();
+      dt.setData('text', text);
+      const pasteEvent = new ClipboardEvent('paste', {
+        bubbles: true,
+        cancelable: true,
+        clipboardData: dt,
+      });
+      el.dispatchEvent(pasteEvent);
+    }, sampleCurl);
+
+    // Toast confirmation should appear
+    await expect(page.locator('text=Imported request from cURL').first()).toBeVisible();
+
+    // Verify method changed to POST
+    const methodSelect = page.locator('#method-select');
+    await expect(methodSelect).toHaveValue('POST');
+
+    // Verify URL changed
+    await expect(urlInput).toHaveValue('https://httpbin.org/post');
+
+    // 2. Test "Copy as cURL" button and dropdown options
+    const curlCopyBtn = page.locator('#copy-curl-btn');
+    await expect(curlCopyBtn).toBeVisible();
+
+    const curlMenuBtn = page.locator('#copy-curl-menu-btn');
+    await expect(curlMenuBtn).toBeVisible();
+
+    // Open cURL options menu
+    await curlMenuBtn.click();
+    await expect(page.locator('text=Shell Format')).toBeVisible();
+    await expect(page.locator('text=Windows PowerShell')).toBeVisible();
+
+    // Click "Windows PowerShell" to copy PowerShell formatted cURL
+    await page.locator('button:has-text("Windows PowerShell")').click();
+    await expect(page.locator('text=Copied as cURL (PowerShell, Resolved)').first()).toBeVisible();
+
+    // Click main cURL button to copy default format
+    await curlCopyBtn.click();
+    await expect(page.locator('text=Copied as cURL').first()).toBeVisible();
+
+    // 3. Test "Import cURL" modal
+    // Trigger via Ctrl+I keyboard shortcut
+    await page.keyboard.press('Control+i');
+
+    const importModalTitle = page.locator('#modal-title:has-text("Import cURL")');
+    await expect(importModalTitle).toBeVisible();
+
+    const textarea = page.locator('textarea[placeholder*="curl -X POST"]');
+    await expect(textarea).toBeVisible();
+
+    // Type a cURL command into the modal textarea
+    const modalCurl = `curl -X PUT https://httpbin.org/put -H "X-Custom-Header: smoke-val" -d '{"updated": true}'`;
+    await textarea.fill(modalCurl);
+
+    // Live preview card should appear with PUT badge and URL
+    await expect(page.locator('text=Parsed Request Preview')).toBeVisible();
+    await expect(page.locator('div[title="https://httpbin.org/put"]')).toBeVisible();
+    await expect(page.locator('text=2 headers')).toBeVisible();
+
+    // Click "Open as New Request"
+    const openAsNewBtn = page.locator('button:has-text("Open as New Request")');
+    await expect(openAsNewBtn).toBeVisible();
+    await openAsNewBtn.click();
+
+    // Modal should close
+    await expect(importModalTitle).not.toBeVisible();
+    await expect(page.locator('text=cURL imported as new request').first()).toBeVisible();
+
+    // Active method should now be PUT and URL https://httpbin.org/put
+    await expect(methodSelect).toHaveValue('PUT');
+    await expect(urlInput).toHaveValue('https://httpbin.org/put');
   });
 });

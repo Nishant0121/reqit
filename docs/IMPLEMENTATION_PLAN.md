@@ -309,17 +309,17 @@ This plan breaks the whole project into small phases. Each phase is meant to tak
 
 **Goal:** the fastest way to get requests in and out.
 
-- [ ] cURL parser covering `-X`, `-H`, `-d`/`--data`/`--data-raw`/`--data-binary`, `--data-urlencode`, `-F`, `-u`, `-A`, `-b`, `-L`, `-k`, `--compressed`, `--url`, and multi-line input with `\`
-- [ ] Import by pasting into the URL bar, or via an "Import cURL" dialog
-- [ ] "Copy as cURL" for the current request, resolved or unresolved (user's choice)
-- [ ] Proper shell escaping for bash, with a Windows (cmd/PowerShell) option
-- [ ] Detect JSON bodies and set the body type automatically
-- [ ] Report anything that could not be converted
+- [x] cURL parser covering `-X`, `-H`, `-d`/`--data`/`--data-raw`/`--data-binary`, `--data-urlencode`, `-F`, `-u`, `-A`, `-b`, `-L`, `-k`, `--compressed`, `--url`, and multi-line input with `\`
+- [x] Import by pasting into the URL bar, or via an "Import cURL" dialog
+- [x] "Copy as cURL" for the current request, resolved or unresolved (user's choice)
+- [x] Proper shell escaping for bash, with a Windows (cmd/PowerShell) option
+- [x] Detect JSON bodies and set the body type automatically
+- [x] Report anything that could not be converted
 
 **Tests**
 
-- [ ] 30+ real cURL commands (copied from browser dev tools and API docs) import correctly
-- [ ] Export then import round-trips
+- [x] 30+ real cURL commands (copied from browser dev tools and API docs) import correctly
+- [x] Export then import round-trips
 
 **Done when:** copying a request from Chrome dev tools as cURL and pasting it into the app gives a working request.
 

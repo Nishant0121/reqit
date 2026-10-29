@@ -15,6 +15,10 @@
     "./variables": {
       "types": "./src/variables/index.ts",
       "import": "./src/variables/index.ts"
+    },
+    "./curl": {
+      "types": "./src/curl/index.ts",
+      "import": "./src/curl/index.ts"
     }
   },
   "scripts": {

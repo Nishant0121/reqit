@@ -12,6 +12,7 @@ import {
   Keyboard,
   Settings as SettingsIcon,
   Globe,
+  Terminal,
 } from 'lucide-react';
 import { Button } from './ui/Button';
 import { strings } from '../lib/strings';
@@ -30,6 +31,7 @@ export interface TopBarProps {
   collectionName?: string;
   collectionPath?: string;
   onOpenShortcuts?: () => void;
+  onOpenImportCurl?: () => void;
   onOpenCollection?: () => void;
   onNewCollection?: () => void;
   recentCollections?: string[];
@@ -48,6 +50,7 @@ export function TopBar({
   collectionName = strings.topBar.defaultCollection,
   collectionPath,
   onOpenShortcuts,
+  onOpenImportCurl,
   onOpenCollection,
   onNewCollection,
   recentCollections = [],
@@ -179,6 +182,20 @@ export function TopBar({
                 <span className="flex-1 font-medium">New Collection...</span>
               </button>
 
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuOpen(false);
+                  onOpenImportCurl?.();
+                }}
+                className="w-full px-3 py-1.5 flex items-center gap-2 hover:bg-[var(--bg-hover)] text-left transition-fast"
+                style={{ color: 'var(--text-primary)' }}
+              >
+                <Terminal className="w-5 h-5 text-[var(--accent)]" strokeWidth={1.75} />
+                <span className="flex-1 font-medium">Import cURL...</span>
+                <span className="text-[10px] text-[var(--text-muted)] font-mono">Ctrl+I</span>
+              </button>
+
               {recentCollections.length > 0 && (
                 <>
                   <div className="my-1 border-t" style={{ borderColor: 'var(--border)' }} />
@@ -278,6 +295,19 @@ export function TopBar({
             </button>
           )}
         </div>
+
+        {onOpenImportCurl && (
+          <Button
+            variant="ghost"
+            size="compact"
+            onClick={onOpenImportCurl}
+            title="Import cURL (Ctrl+I)"
+            aria-label="Import cURL"
+            className="w-8 h-8 p-0 flex items-center justify-center rounded-[var(--radius-sm)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] transition-fast"
+          >
+            <Terminal className="w-5 h-5" strokeWidth={1.75} />
+          </Button>
+        )}
 
         <Button
           variant="ghost"

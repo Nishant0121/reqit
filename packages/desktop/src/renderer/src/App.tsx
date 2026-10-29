@@ -16,6 +16,7 @@ import { EnvironmentSecretsModal } from './components/EnvironmentSecretsModal';
 import { HistoryDetailModal } from './components/HistoryDetailModal';
 import { HistorySettingsModal } from './components/HistorySettingsModal';
 import { ClearHistoryConfirmModal } from './components/ClearHistoryConfirmModal';
+import { ImportCurlModal } from './components/ImportCurlModal';
 import { useAppStore } from './stores/appStore';
 import { useCollectionStore } from './stores/collectionStore';
 import { useRequestStore } from './stores/requestStore';
@@ -26,7 +27,9 @@ import { draftToRequestFile } from './lib/request-mapper';
 import { serializeRequest } from '@reqit/core/format';
 import type { ThemeMode } from './lib/theme';
 import type { KeyValueRow } from './components/ui/KeyValueTable';
-import type { CollectionTreeNode } from '@reqit/core';
+import type { CollectionTreeNode, ShellTarget } from '@reqit/core';
+import { generateCurl } from '@reqit/core/curl';
+import { resolveRequest } from '@reqit/core/variables';
 
 const KNOWN_VARIABLES = ['baseUrl', 'token', 'userId', 'apiKey', 'env', 'apiVersion', 'port'];
 
@@ -55,6 +58,7 @@ export default function App(): React.JSX.Element {
   const [envModalOpen, setEnvModalOpen] = useState(false);
   const [envModalTab, setEnvModalTab] = useState<'environments' | 'secrets'>('environments');
   const [envModalVarName, setEnvModalVarName] = useState<string | undefined>(undefined);
+  const [importCurlModalOpen, setImportCurlModalOpen] = useState(false);
 
   // 2. Collection store
   const {
@@ -92,6 +96,7 @@ export default function App(): React.JSX.Element {
     activeExecutionId,
     historyCount,
     createRequest,
+    importCurlToDraft,
     openRequest,
     openDraftFromFile,
     closeTab,
@@ -327,6 +332,75 @@ export default function App(): React.JSX.Element {
     }
   }, [activeExecutionId, setLoading, setActiveExecutionId]);
 
+  // Import cURL command into current draft
+  const handleImportCurl = useCallback(
+    (curlCommand: string) => {
+      try {
+        const { warnings } = importCurlToDraft(activeRequestId, curlCommand);
+        addToast({
+          type: 'success',
+          message: 'Imported request from cURL',
+        });
+        if (warnings.length > 0) {
+          addToast({
+            type: 'warning',
+            message: `cURL warning: ${warnings.join('; ')}`,
+          });
+        }
+      } catch (err: unknown) {
+        addToast({
+          type: 'error',
+          message: `Failed to import cURL: ${err instanceof Error ? err.message : String(err)}`,
+        });
+      }
+    },
+    [activeRequestId, importCurlToDraft, addToast],
+  );
+
+  // Copy active request as cURL command
+  const handleCopyCurl = useCallback(
+    (options: { target: ShellTarget; resolveVariables: boolean }) => {
+      try {
+        const baseReq = draftToRequestFile(activeDraft);
+        let reqToExport = baseReq;
+
+        if (options.resolveVariables) {
+          const simpleVars: Record<string, unknown> = {};
+          for (const [k, v] of Object.entries(variablesMap)) {
+            simpleVars[k] = v.value;
+          }
+          reqToExport = resolveRequest(
+            baseReq,
+            { environment: simpleVars },
+            { allowUndefined: true },
+          );
+        }
+
+        const curlStr = generateCurl(reqToExport, { target: options.target });
+        navigator.clipboard.writeText(curlStr);
+
+        const targetName =
+          options.target === 'bash'
+            ? 'Bash'
+            : options.target === 'powershell'
+              ? 'PowerShell'
+              : 'cmd';
+        const modeName = options.resolveVariables ? 'Resolved' : 'Raw';
+
+        addToast({
+          type: 'success',
+          message: `Copied as cURL (${targetName}, ${modeName})`,
+        });
+      } catch (err: unknown) {
+        addToast({
+          type: 'error',
+          message: `Failed to copy cURL: ${err instanceof Error ? err.message : String(err)}`,
+        });
+      }
+    },
+    [activeDraft, variablesMap, addToast],
+  );
+
   // Keyboard shortcut registry listener (Section 10.1)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -392,6 +466,13 @@ export default function App(): React.JSX.Element {
         setShortcutsModalOpen(true);
         return;
       }
+
+      // 10. Import cURL (Ctrl/Cmd + I)
+      if (matchesShortcut(e, 'Ctrl+I')) {
+        e.preventDefault();
+        setImportCurlModalOpen(true);
+        return;
+      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
@@ -406,6 +487,7 @@ export default function App(): React.JSX.Element {
     closeTab,
     activeRequestId,
     setShortcutsModalOpen,
+    setImportCurlModalOpen,
     loadCollection,
   ]);
 
@@ -481,6 +563,7 @@ export default function App(): React.JSX.Element {
         collectionName={activeCollection.name}
         collectionPath={activeCollection.path}
         onOpenShortcuts={() => setShortcutsModalOpen(true)}
+        onOpenImportCurl={() => setImportCurlModalOpen(true)}
         onOpenCollection={() => loadCollection()}
         onNewCollection={() => setNewCollectionModalOpen(true)}
         recentCollections={recentCollections}
@@ -543,6 +626,9 @@ export default function App(): React.JSX.Element {
             loading={loading}
             knownVariables={knownVariableNames}
             variablesMap={variablesMap}
+            onImportCurl={handleImportCurl}
+            onOpenImportCurl={() => setImportCurlModalOpen(true)}
+            onCopyCurl={handleCopyCurl}
           />
 
           {/* Split Panes: Request Panel (top) + Response Panel (bottom) */}
@@ -656,6 +742,7 @@ export default function App(): React.JSX.Element {
       <HistoryDetailModal />
       <HistorySettingsModal />
       <ClearHistoryConfirmModal />
+      <ImportCurlModal isOpen={importCurlModalOpen} onClose={() => setImportCurlModalOpen(false)} />
     </div>
   );
 }

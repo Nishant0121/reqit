@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { parseCurl } from '@reqit/core/curl';
 import type { HttpMethod, ResponseResult, RequestFile, WatcherChangedFile } from '@reqit/core';
 import type { KeyValueRow } from '../components/ui/KeyValueTable';
 import type { AuthType, BodyType } from '../components/RequestPanel';
@@ -59,6 +60,8 @@ export interface RequestState {
 
   createRequest: (initialUrl?: string) => string;
   createRequestFromHistory: (historyDetail: HistoryEntryDetail) => string;
+  importCurlToDraft: (id: string, curlCommand: string) => { warnings: string[] };
+  importCurlAsNewRequest: (curlCommand: string) => { id: string; warnings: string[] };
   openRequest: (id: string) => void;
   openDraftFromFile: (filePath: string, file: RequestFile) => void;
   onItemRenamed: (oldPath: string, newPath: string, newName: string) => void;
@@ -153,6 +156,67 @@ export const useRequestStore = create<RequestState>((set, get) => ({
     }));
 
     return id;
+  },
+
+  importCurlToDraft: (id: string, curlCommand: string) => {
+    const { drafts, tabs } = get();
+    const existing = drafts[id];
+    if (!existing) {
+      throw new Error(`Draft ${id} not found`);
+    }
+
+    const { request, warnings } = parseCurl(curlCommand);
+    const converted = requestFileToDraft(request, existing.filePath, id);
+
+    const updatedDraft: RequestDraft = {
+      ...converted,
+      filePath: existing.filePath,
+      name:
+        existing.name.startsWith('New request') ||
+        existing.name === 'Untitled' ||
+        existing.name === 'Smoke test GET'
+          ? converted.name
+          : existing.name,
+      isDirty: true,
+    };
+
+    const updatedTabs = tabs.map(t => {
+      if (t.id === id) {
+        return {
+          ...t,
+          name: updatedDraft.name,
+          method: updatedDraft.method,
+          isDirty: true,
+        };
+      }
+      return t;
+    });
+
+    set({
+      drafts: { ...drafts, [id]: updatedDraft },
+      tabs: updatedTabs,
+      activeRequestId: id,
+    });
+
+    return { warnings };
+  },
+
+  importCurlAsNewRequest: (curlCommand: string) => {
+    const { drafts, tabs } = get();
+    const { request, warnings } = parseCurl(curlCommand);
+    const id = `req-${Date.now()}`;
+    const converted = requestFileToDraft(request, undefined, id);
+    converted.isDirty = true;
+
+    set({
+      drafts: { ...drafts, [id]: converted },
+      tabs: [...tabs, { id, name: converted.name, method: converted.method, isDirty: true }],
+      activeRequestId: id,
+      result: null,
+      error: null,
+    });
+
+    return { id, warnings };
   },
 
   createRequestFromHistory: (historyDetail: HistoryEntryDetail) => {

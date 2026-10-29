@@ -40,6 +40,14 @@ export default defineConfig({
   },
   renderer: {
     root: resolve(__dirname, 'src/renderer'),
+    resolve: {
+      alias: {
+        chokidar: resolve(__dirname, 'src/renderer/src/lib/chokidar-mock.ts'),
+      },
+    },
+    optimizeDeps: {
+      exclude: ['chokidar'],
+    },
     define: {
       'process.env': {},
       'process.platform': JSON.stringify(process.platform),
