@@ -52,12 +52,13 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libfuse2t64 || sudo apt-get install -y libfuse2 || true
+          sudo apt-get install -y libfuse2t64 libfuse2 dpkg fakeroot libarchive-tools || sudo apt-get install -y dpkg fakeroot || true
 
       - name: Package application
         run: ${{ matrix.package-cmd }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEBUG: electron-builder
 
       - name: Upload Release Assets
         uses: softprops/action-gh-release@v2
