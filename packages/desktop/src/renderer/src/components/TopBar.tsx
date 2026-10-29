@@ -11,16 +11,20 @@ import {
   PanelLeftClose,
   Keyboard,
   Settings as SettingsIcon,
+  Globe,
 } from 'lucide-react';
 import { Button } from './ui/Button';
 import { strings } from '../lib/strings';
 import type { ThemeMode } from '../lib/theme';
+import type { EnvironmentFile } from '@reqit/core/format';
 
 export interface TopBarProps {
   sidebarOpen: boolean;
   onToggleSidebar: () => void;
   activeEnvironment: string;
   onEnvironmentChange: (env: string) => void;
+  environments?: Record<string, EnvironmentFile> | string[];
+  onManageEnvironments?: () => void;
   theme: ThemeMode;
   onToggleTheme: () => void;
   collectionName?: string;
@@ -37,6 +41,8 @@ export function TopBar({
   onToggleSidebar,
   activeEnvironment,
   onEnvironmentChange,
+  environments,
+  onManageEnvironments,
   theme,
   onToggleTheme,
   collectionName = strings.topBar.defaultCollection,
@@ -243,19 +249,34 @@ export function TopBar({
             >
               {strings.topBar.noEnvironment}
             </option>
-            <option
-              value="dev"
-              style={{ backgroundColor: 'var(--bg-elevated)', color: 'var(--text-primary)' }}
-            >
-              {strings.topBar.devEnvironment}
-            </option>
-            <option
-              value="prod"
-              style={{ backgroundColor: 'var(--bg-elevated)', color: 'var(--text-primary)' }}
-            >
-              {strings.topBar.prodEnvironment}
-            </option>
+            {(() => {
+              const envList = Array.isArray(environments)
+                ? environments
+                : environments && Object.keys(environments).length > 0
+                  ? Object.keys(environments)
+                  : ['dev', 'prod'];
+              return envList.map(env => (
+                <option
+                  key={env}
+                  value={env}
+                  style={{ backgroundColor: 'var(--bg-elevated)', color: 'var(--text-primary)' }}
+                >
+                  {env}
+                </option>
+              ));
+            })()}
           </select>
+          {onManageEnvironments && (
+            <button
+              type="button"
+              onClick={onManageEnvironments}
+              className="w-7 h-7 flex items-center justify-center rounded-[var(--radius-sm)] hover:bg-[var(--bg-hover)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-fast"
+              title="Manage Environments & Secrets"
+              aria-label="Manage Environments & Secrets"
+            >
+              <Globe className="w-4 h-4" />
+            </button>
+          )}
         </div>
 
         <Button

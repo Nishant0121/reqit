@@ -11,6 +11,10 @@
     "./format": {
       "types": "./src/format/index.ts",
       "import": "./src/format/index.ts"
+    },
+    "./variables": {
+      "types": "./src/variables/index.ts",
+      "import": "./src/variables/index.ts"
     }
   },
   "scripts": {

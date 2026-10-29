@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Trash2 } from 'lucide-react';
-import { VariableInput } from './VariableInput';
+import { VariableInput, type VariableDetail } from './VariableInput';
 
 export interface KeyValueRow {
   id: string;
@@ -20,6 +20,7 @@ export interface KeyValueTableProps {
   keySuggestions?: string[];
   valueSuggestions?: (key: string) => string[];
   knownVariables?: string[];
+  variablesMap?: Record<string, VariableDetail>;
 }
 
 export function KeyValueTable({
@@ -32,6 +33,7 @@ export function KeyValueTable({
   keySuggestions = [],
   valueSuggestions,
   knownVariables,
+  variablesMap,
 }: KeyValueTableProps): React.JSX.Element {
   // Autocomplete state
   const [activeKeySuggestRow, setActiveKeySuggestRow] = useState<number | null>(null);
@@ -268,6 +270,7 @@ export function KeyValueTable({
                     value={row.value}
                     placeholder={valuePlaceholder}
                     knownVariables={knownVariables}
+                    variablesMap={variablesMap}
                     onFocus={() => {
                       setActiveValueSuggestRow(idx);
                       setActiveKeySuggestRow(null);

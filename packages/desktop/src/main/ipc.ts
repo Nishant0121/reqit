@@ -1,6 +1,17 @@
 import { app, ipcMain, dialog } from 'electron';
 import fs from 'node:fs';
-import { sendRequest } from '@reqit/core';
+import path from 'node:path';
+import {
+  sendRequest,
+  resolveRequest,
+  UndefinedVariableError,
+  loadEnvironments,
+  loadSecrets,
+  parseCollection,
+  parseFolder,
+  type VariableScopes,
+  type RequestFile,
+} from '@reqit/core';
 import { fileService } from './services/file-service.js';
 import type {
   SendRequestPayload,
@@ -14,6 +25,9 @@ import type {
   MoveItemPayload,
   ReorderFolderPayload,
   SaveRequestPayload,
+  SaveEnvironmentPayload,
+  DeleteEnvironmentPayload,
+  SaveSecretsPayload,
 } from '../shared/ipc-types.js';
 
 const activeRequests = new Map<string, AbortController>();
@@ -102,14 +116,85 @@ export function registerIpcHandlers(): void {
     },
   );
 
-  // 6. request:send
+  // 6. request:send (Phase 11: resolves variables across all scopes)
   ipcMain.handle('request:send', async (_event, payload: SendRequestPayload) => {
     const { requestId, request, options } = payload;
     const abortController = new AbortController();
     activeRequests.set(requestId, abortController);
 
     try {
-      const result = await sendRequest(request, {
+      // 1. Gather all variable scopes according to priority:
+      // collection < folder < environment < secrets < runtime
+      const scopes: VariableScopes = {};
+
+      if (payload.collectionPath && fs.existsSync(payload.collectionPath)) {
+        // Scope 1: Collection defaults
+        const reqitPath = path.join(payload.collectionPath, 'reqit.yaml');
+        if (fs.existsSync(reqitPath)) {
+          try {
+            const colData = parseCollection(fs.readFileSync(reqitPath, 'utf-8'), reqitPath);
+            if (colData.defaults?.variables) {
+              scopes.collection = colData.defaults.variables as Record<string, unknown>;
+            }
+          } catch {
+            // ignore
+          }
+        }
+
+        // Scope 2: Folder level variables
+        if ((request as { filePath?: string }).filePath) {
+          const folderDir = path.dirname((request as { filePath?: string }).filePath!);
+          const folderPath = path.join(folderDir, 'folder.yaml');
+          if (fs.existsSync(folderPath)) {
+            try {
+              const fData = parseFolder(fs.readFileSync(folderPath, 'utf-8'), folderPath);
+              if (fData.variables) {
+                scopes.folder = fData.variables as Record<string, unknown>;
+              }
+            } catch {
+              // ignore
+            }
+          }
+        }
+
+        // Scope 3: Environment variables & Scope 4: Secrets
+        const activeEnv = payload.activeEnvironment;
+        if (activeEnv && activeEnv !== 'none') {
+          const envs = await loadEnvironments(payload.collectionPath);
+          const env = envs[activeEnv];
+          if (env?.variables) {
+            scopes.environment = env.variables;
+          }
+
+          const secrets = await loadSecrets(payload.collectionPath);
+          if (secrets?.environments?.[activeEnv]) {
+            scopes.secrets = secrets.environments[activeEnv];
+          }
+        }
+      }
+
+      // Scope 5: Runtime variables
+      if (payload.runtimeVariables) {
+        scopes.runtime = payload.runtimeVariables;
+      }
+
+      // 2. Resolve request variables
+      let resolvedRequest: RequestFile = request;
+      try {
+        resolvedRequest = resolveRequest(request, scopes, {
+          activeEnvironment:
+            payload.activeEnvironment !== 'none' ? payload.activeEnvironment : undefined,
+        });
+      } catch (err: unknown) {
+        if (err instanceof UndefinedVariableError) {
+          throw new Error(
+            `Undefined variable "{{${err.variableName}}}" in request "${request.name}" (field: ${err.field || 'unknown'}).`,
+          );
+        }
+        throw err;
+      }
+
+      const result = await sendRequest(resolvedRequest, {
         ...options,
         signal: abortController.signal,
       });
@@ -197,5 +282,25 @@ export function registerIpcHandlers(): void {
   // 18. collection:saveRequest
   ipcMain.handle('collection:saveRequest', async (_event, payload: SaveRequestPayload) => {
     return fileService.saveRequest(payload);
+  });
+
+  // 19. environment:save
+  ipcMain.handle('environment:save', async (_event, payload: SaveEnvironmentPayload) => {
+    return fileService.saveEnvironment(payload);
+  });
+
+  // 20. environment:delete
+  ipcMain.handle('environment:delete', async (_event, payload: DeleteEnvironmentPayload) => {
+    return fileService.deleteEnvironment(payload);
+  });
+
+  // 21. secrets:save
+  ipcMain.handle('secrets:save', async (_event, payload: SaveSecretsPayload) => {
+    return fileService.saveSecrets(payload);
+  });
+
+  // 22. secrets:ensureGitignored
+  ipcMain.handle('secrets:ensureGitignored', async (_event, rootPath: string) => {
+    return fileService.ensureSecretsGitignored(rootPath);
   });
 }

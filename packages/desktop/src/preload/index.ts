@@ -10,6 +10,10 @@ import type {
   MoveItemPayload,
   ReorderFolderPayload,
   SaveRequestPayload,
+  SaveEnvironmentPayload,
+  DeleteEnvironmentPayload,
+  SaveSecretsPayload,
+  EnsureSecretsGitignoredResult,
 } from '../shared/ipc-types.js';
 
 const api: ReqitApi = {
@@ -22,9 +26,21 @@ const api: ReqitApi = {
   sendRequest: (
     request: RequestFile,
     options?: SendOptions,
+    context?: {
+      activeEnvironment?: string;
+      collectionPath?: string;
+      runtimeVariables?: Record<string, unknown>;
+    },
   ): { requestId: string; promise: Promise<ResponseResult> } => {
     const requestId = crypto.randomUUID();
-    const payload: SendRequestPayload = { requestId, request, options };
+    const payload: SendRequestPayload = {
+      requestId,
+      request,
+      options,
+      activeEnvironment: context?.activeEnvironment,
+      collectionPath: context?.collectionPath,
+      runtimeVariables: context?.runtimeVariables,
+    };
     const promise = (async (): Promise<ResponseResult> => {
       const raw = await ipcRenderer.invoke('request:send', payload);
       return {
@@ -96,6 +112,18 @@ const api: ReqitApi = {
   },
   saveRequest: (payload: SaveRequestPayload) => {
     return ipcRenderer.invoke('collection:saveRequest', payload);
+  },
+  saveEnvironment: (payload: SaveEnvironmentPayload): Promise<string> => {
+    return ipcRenderer.invoke('environment:save', payload);
+  },
+  deleteEnvironment: (payload: DeleteEnvironmentPayload): Promise<boolean> => {
+    return ipcRenderer.invoke('environment:delete', payload);
+  },
+  saveSecrets: (payload: SaveSecretsPayload): Promise<string> => {
+    return ipcRenderer.invoke('secrets:save', payload);
+  },
+  ensureSecretsGitignored: (rootPath: string): Promise<EnsureSecretsGitignoredResult> => {
+    return ipcRenderer.invoke('secrets:ensureGitignored', rootPath);
   },
   onCollectionChange: (callback: (event: WatcherChangeEvent) => void) => {
     const handler = (_event: Electron.IpcRendererEvent, data: WatcherChangeEvent) => {

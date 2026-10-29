@@ -5,6 +5,7 @@ import type {
   RequestFile,
   WatcherChangeEvent,
 } from '@reqit/core';
+import type { EnvironmentFile, SecretsFile } from '@reqit/core/format';
 import { useRequestStore } from './requestStore';
 
 export interface CollectionItem {
@@ -19,9 +20,13 @@ export interface CollectionState {
   recentCollections: string[];
   isLoading: boolean;
   error: string | null;
+  environments: Record<string, EnvironmentFile>;
+  secrets: SecretsFile | null;
+  activeEnvironment: string;
 
   setActiveCollection: (collection: CollectionItem) => void;
   setRecentCollections: (recents: string[]) => void;
+  setActiveEnvironment: (env: string) => void;
   loadCollection: (folderPath?: string) => Promise<CollectionTree | null>;
   createCollection: (name: string, targetDir?: string) => Promise<CollectionTree | null>;
   refreshTree: () => Promise<void>;
@@ -34,6 +39,10 @@ export interface CollectionState {
   moveItem: (sourcePath: string, targetDirPath: string) => Promise<boolean>;
   reorderFolder: (folderPath: string, order: string[]) => Promise<boolean>;
   saveRequest: (filePath: string, request: RequestFile) => Promise<boolean>;
+  saveEnvironment: (name: string, env: EnvironmentFile) => Promise<boolean>;
+  deleteEnvironment: (name: string) => Promise<boolean>;
+  saveSecrets: (secrets: SecretsFile) => Promise<boolean>;
+  getResolvedVariables: (filePath?: string) => Record<string, { value: unknown; scope: string }>;
 }
 
 export const useCollectionStore = create<CollectionState>((set, get) => ({
@@ -45,6 +54,9 @@ export const useCollectionStore = create<CollectionState>((set, get) => ({
   recentCollections: [],
   isLoading: false,
   error: null,
+  environments: {},
+  secrets: null,
+  activeEnvironment: 'none',
 
   setActiveCollection: (collection: CollectionItem) => {
     set({ activeCollection: collection });
@@ -54,14 +66,34 @@ export const useCollectionStore = create<CollectionState>((set, get) => ({
     set({ recentCollections: recents });
   },
 
+  setActiveEnvironment: (env: string) => {
+    const { currentTree } = get();
+    if (currentTree?.rootPath) {
+      try {
+        localStorage.setItem(`reqit:active-env:${currentTree.rootPath}`, env);
+      } catch {
+        // ignore
+      }
+    }
+    set({ activeEnvironment: env });
+  },
+
   loadCollection: async (folderPath?: string): Promise<CollectionTree | null> => {
     if (!window.reqitApi?.openCollection) return null;
     set({ isLoading: true, error: null });
     try {
       const tree = await window.reqitApi.openCollection(folderPath);
       if (tree) {
+        const storedEnv = localStorage.getItem(`reqit:active-env:${tree.rootPath}`);
+        const savedEnv =
+          storedEnv !== null
+            ? storedEnv
+            : (tree.environments && Object.keys(tree.environments)[0]) || 'none';
         set({
           currentTree: tree,
+          environments: tree.environments || {},
+          secrets: tree.secrets || null,
+          activeEnvironment: savedEnv,
           activeCollection: {
             id: tree.rootPath,
             name: tree.collection.name,
@@ -89,6 +121,9 @@ export const useCollectionStore = create<CollectionState>((set, get) => ({
       if (tree) {
         set({
           currentTree: tree,
+          environments: tree.environments || {},
+          secrets: tree.secrets || null,
+          activeEnvironment: 'none',
           activeCollection: {
             id: tree.rootPath,
             name: tree.collection.name,
@@ -116,6 +151,8 @@ export const useCollectionStore = create<CollectionState>((set, get) => ({
       if (refreshed) {
         set({
           currentTree: refreshed,
+          environments: refreshed.environments || {},
+          secrets: refreshed.secrets || null,
           activeCollection: {
             id: refreshed.rootPath,
             name: refreshed.collection.name,
@@ -132,6 +169,8 @@ export const useCollectionStore = create<CollectionState>((set, get) => ({
     // 1. Update collection tree incrementally
     set({
       currentTree: event.tree,
+      environments: event.tree.environments || {},
+      secrets: event.tree.secrets || null,
       activeCollection: {
         id: event.tree.rootPath,
         name: event.tree.collection.name,
@@ -264,5 +303,128 @@ export const useCollectionStore = create<CollectionState>((set, get) => ({
       set({ error: msg });
       return false;
     }
+  },
+
+  saveEnvironment: async (name: string, env: EnvironmentFile): Promise<boolean> => {
+    const { currentTree } = get();
+    if (!currentTree?.rootPath || !window.reqitApi?.saveEnvironment) return false;
+    try {
+      await window.reqitApi.saveEnvironment({
+        rootPath: currentTree.rootPath,
+        name,
+        environment: env,
+      });
+      const updated = { ...get().environments, [name]: env };
+      set({ environments: updated });
+      await get().refreshTree();
+      return true;
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      set({ error: msg });
+      return false;
+    }
+  },
+
+  deleteEnvironment: async (name: string): Promise<boolean> => {
+    const { currentTree, activeEnvironment } = get();
+    if (!currentTree?.rootPath || !window.reqitApi?.deleteEnvironment) return false;
+    try {
+      await window.reqitApi.deleteEnvironment({
+        rootPath: currentTree.rootPath,
+        name,
+      });
+      const updated = { ...get().environments };
+      delete updated[name];
+      const newActive = activeEnvironment === name ? 'none' : activeEnvironment;
+      set({ environments: updated, activeEnvironment: newActive });
+      if (activeEnvironment === name) {
+        try {
+          localStorage.setItem(`reqit:active-env:${currentTree.rootPath}`, 'none');
+        } catch {
+          // ignore
+        }
+      }
+      await get().refreshTree();
+      return true;
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      set({ error: msg });
+      return false;
+    }
+  },
+
+  saveSecrets: async (secrets: SecretsFile): Promise<boolean> => {
+    const { currentTree } = get();
+    if (!currentTree?.rootPath || !window.reqitApi?.saveSecrets) return false;
+    try {
+      await window.reqitApi.saveSecrets({
+        rootPath: currentTree.rootPath,
+        secrets,
+      });
+      set({ secrets });
+      await get().refreshTree();
+      return true;
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      set({ error: msg });
+      return false;
+    }
+  },
+
+  getResolvedVariables: (filePath?: string): Record<string, { value: unknown; scope: string }> => {
+    const { currentTree, activeEnvironment, environments, secrets } = get();
+    const result: Record<string, { value: unknown; scope: string }> = {};
+
+    // 1. Collection variables
+    if (currentTree?.collection?.defaults?.variables) {
+      for (const [k, v] of Object.entries(currentTree.collection.defaults.variables)) {
+        result[k] = { value: v, scope: 'collection' };
+      }
+    }
+
+    // 2. Folder variables
+    if (filePath && currentTree?.tree) {
+      const findFolderVars = (
+        nodes: CollectionTreeNode[],
+        targetPath: string,
+      ): Record<string, unknown> => {
+        let acc: Record<string, unknown> = {};
+        for (const node of nodes) {
+          if (node.type === 'folder' && targetPath.startsWith(node.path)) {
+            if (node.folder?.variables) {
+              acc = { ...acc, ...node.folder.variables };
+            }
+            if (node.children) {
+              acc = { ...acc, ...findFolderVars(node.children, targetPath) };
+            }
+          }
+        }
+        return acc;
+      };
+
+      const folderVars = findFolderVars(currentTree.tree, filePath);
+      for (const [k, v] of Object.entries(folderVars)) {
+        result[k] = { value: v, scope: 'folder' };
+      }
+    }
+
+    // 3. Environment variables
+    if (activeEnvironment && activeEnvironment !== 'none') {
+      const env = environments[activeEnvironment];
+      if (env?.variables) {
+        for (const [k, v] of Object.entries(env.variables)) {
+          result[k] = { value: v, scope: `environment (${activeEnvironment})` };
+        }
+      }
+
+      // 4. Secrets
+      if (secrets?.environments?.[activeEnvironment]) {
+        for (const [k, v] of Object.entries(secrets.environments[activeEnvironment])) {
+          result[k] = { value: v, scope: `secrets (${activeEnvironment})` };
+        }
+      }
+    }
+
+    return result;
   },
 }));

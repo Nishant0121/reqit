@@ -13,6 +13,10 @@ import {
   saveRequest,
   scanCollection,
   serializeRequest,
+  saveEnvironment,
+  deleteEnvironment,
+  saveSecrets,
+  ensureSecretsGitignored,
   CollectionWatcher,
   type CollectionTree,
   type CollectionTreeNode,
@@ -26,6 +30,10 @@ import type {
   RenameItemPayload,
   ReorderFolderPayload,
   SaveRequestPayload,
+  SaveEnvironmentPayload,
+  DeleteEnvironmentPayload,
+  SaveSecretsPayload,
+  EnsureSecretsGitignoredResult,
 } from '../../shared/ipc-types.js';
 
 const RECENT_COLLECTIONS_FILE = 'recent-collections.json';
@@ -105,6 +113,7 @@ export class FileService {
 
     const tree = await scanCollection(target);
     addRecentCollection(target);
+    await ensureSecretsGitignored(target);
 
     // Watch target folder if not already watching it
     const normalizedTarget = path.resolve(target);
@@ -137,6 +146,7 @@ export class FileService {
     const { rootPath } = await createCollection(targetDir, name);
     const tree = await scanCollection(rootPath);
     addRecentCollection(rootPath);
+    await ensureSecretsGitignored(rootPath);
 
     const normalizedRoot = path.resolve(rootPath);
     if (this.watcher.getRootPath() !== normalizedRoot) {
@@ -220,6 +230,27 @@ export class FileService {
     this.watcher.registerAppWrite(payload.filePath, yaml);
     await saveRequest(payload.filePath, payload.request);
     return true;
+  }
+
+  async saveEnvironment(payload: SaveEnvironmentPayload): Promise<string> {
+    const filePath = await saveEnvironment(payload.rootPath, payload.name, payload.environment);
+    this.watcher.registerAppWrite(filePath);
+    return filePath;
+  }
+
+  async deleteEnvironment(payload: DeleteEnvironmentPayload): Promise<boolean> {
+    const success = await deleteEnvironment(payload.rootPath, payload.name);
+    return success;
+  }
+
+  async saveSecrets(payload: SaveSecretsPayload): Promise<string> {
+    const filePath = await saveSecrets(payload.rootPath, payload.secrets);
+    this.watcher.registerAppWrite(filePath);
+    return filePath;
+  }
+
+  async ensureSecretsGitignored(rootPath: string): Promise<EnsureSecretsGitignoredResult> {
+    return ensureSecretsGitignored(rootPath);
   }
 }
 

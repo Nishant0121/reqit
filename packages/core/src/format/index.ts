@@ -5,3 +5,4 @@ export * from './migrate.js';
 export * from './serializer.js';
 export * from './parser.js';
 export * from './symbols.js';
+export * from './secrets-detector.js';

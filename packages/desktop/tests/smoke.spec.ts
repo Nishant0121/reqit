@@ -35,6 +35,7 @@ test.describe('Desktop App Shell Smoke Test (Phase 5)', () => {
         JSON.stringify({
           message: 'Hello from main process request engine!',
           method: req.method,
+          url: req.url,
           ok: true,
         }),
       );
@@ -589,6 +590,112 @@ test.describe('Desktop App Shell Smoke Test (Phase 5)', () => {
       await recreateBtn.click();
       await expect(deletedBanner).not.toBeVisible();
       expect(fs.existsSync(reqNode.path)).toBe(true);
+    } finally {
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    }
+  });
+
+  test('verifies Phase 11 Environments, secrets, gitignore, switching destinations, and undefined variable errors', async () => {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'reqit-phase11-smoke-'));
+    try {
+      // 1. Create a collection and open it
+      await page.evaluate(async dir => {
+        return window.reqitApi.createCollection({ name: 'Env Col', targetDir: dir });
+      }, tmpDir);
+
+      // Verify .gitignore contains .reqit/secrets.yaml on first run
+      const gitignorePath = path.join(tmpDir, '.gitignore');
+      expect(fs.existsSync(gitignorePath)).toBe(true);
+      const gitignoreContent = fs.readFileSync(gitignorePath, 'utf-8');
+      expect(gitignoreContent).toContain('.reqit/secrets.yaml');
+
+      // Verify .reqit/secrets.yaml exists
+      const secretsPath = path.join(tmpDir, '.reqit', 'secrets.yaml');
+      expect(fs.existsSync(secretsPath)).toBe(true);
+
+      // 2. Save two environments on disk: dev and staging
+      const envDir = path.join(tmpDir, 'environments');
+      fs.mkdirSync(envDir, { recursive: true });
+      fs.writeFileSync(
+        path.join(envDir, 'dev.yaml'),
+        `version: 1\nname: dev\nvariables:\n  apiBase: http://127.0.0.1:${port}/env-dev\n`,
+        'utf-8',
+      );
+      fs.writeFileSync(
+        path.join(envDir, 'staging.yaml'),
+        `version: 1\nname: staging\nvariables:\n  apiBase: http://127.0.0.1:${port}/env-staging\n`,
+        'utf-8',
+      );
+
+      // Add secrets for dev
+      fs.writeFileSync(
+        secretsPath,
+        'version: 1\nenvironments:\n  dev:\n    apiKey: secret-token-xyz\n',
+        'utf-8',
+      );
+
+      // Reload collection to pick up the new environment files
+      await page.evaluate(async dir => {
+        const tree = await window.reqitApi.openCollection(dir);
+        // Dispatch watcher/update directly to collection store
+        window.dispatchEvent(new CustomEvent('test:reload', { detail: dir }));
+        return tree;
+      }, tmpDir);
+
+      // 3. Create a request using {{apiBase}}/status
+      await page.evaluate(async dir => {
+        return window.reqitApi.createRequest({ parentDir: dir, name: 'Env Request' });
+      }, tmpDir);
+
+      const treeItem = page.locator('aside [role="treeitem"]:has-text("Env Request")');
+      await expect(treeItem).toBeVisible();
+      await treeItem.click();
+
+      const urlInput = page.locator('#url-input');
+      await expect(urlInput).toBeVisible();
+      await urlInput.fill('{{apiBase}}/status?token={{apiKey}}');
+
+      // Select 'dev' environment
+      const envSelector = page.locator('select[aria-label="Active environment"]');
+      await expect(envSelector).toBeVisible();
+      await envSelector.selectOption('dev');
+
+      // Hover over {{apiBase}} pill and verify popover appears with resolved value and scope
+      const apiBasePill = page.locator('span:has-text("{{apiBase}}")');
+      await expect(apiBasePill).toBeVisible();
+      await apiBasePill.hover();
+
+      const hoverCard = page.locator('div:has-text("value:")').first();
+      await expect(hoverCard).toBeVisible();
+      await expect(hoverCard).toContainText('/env-dev');
+      await expect(hoverCard).toContainText('environment (dev)');
+
+      // Send request
+      const sendButton = page.locator('#send-test-btn');
+      await sendButton.click();
+
+      // Verify response routed to /env-dev and received the secret token
+      const responseBox = page.locator('#response-result');
+      await expect(responseBox).toBeVisible();
+      await expect(responseBox).toContainText('/env-dev/status?token=secret-token-xyz');
+
+      // Switch environment to 'staging'
+      await envSelector.selectOption('staging');
+      // In staging, apiBase changes to /env-staging, but apiKey is not defined in staging -> undefined variable error
+      await sendButton.click();
+      await expect(responseBox).toContainText('Undefined variable');
+      await expect(responseBox).toContainText('apiKey');
+
+      // "Add variable" button is visible
+      const addVarBtn = page.locator('#add-undefined-variable-btn');
+      await expect(addVarBtn).toBeVisible();
+      await addVarBtn.click();
+
+      // Environment modal opens with "apiKey" prefilled
+      const modal = page.locator('#modal-title:has-text("Environments & Secrets")');
+      await expect(modal).toBeVisible();
+      await page.keyboard.press('Escape');
+      await expect(modal).not.toBeVisible();
     } finally {
       fs.rmSync(tmpDir, { recursive: true, force: true });
     }

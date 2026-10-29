@@ -3,6 +3,7 @@ import * as path from 'node:path';
 import { parseCollection, parseFolder, parseRequest } from '../format/parser.js';
 import { serializeCollection } from '../format/serializer.js';
 import type { CollectionFile } from '../format/types.js';
+import { loadEnvironments, loadSecrets } from './environments.js';
 import { readFolderFile } from './order.js';
 import type { CollectionTree, CollectionTreeNode } from './types.js';
 
@@ -17,6 +18,8 @@ const IGNORED_NAMES = new Set([
   'Thumbs.db',
   'reqit.yaml',
   'folder.yaml',
+  'environments',
+  '.reqit',
 ]);
 
 /**
@@ -57,10 +60,16 @@ export async function scanCollection(rootPath: string): Promise<CollectionTree> 
   // 2. Scan children recursively starting at root
   const tree = await scanDirectory(resolvedRoot, resolvedRoot);
 
+  // 3. Load environments and secrets
+  const environments = await loadEnvironments(resolvedRoot);
+  const secrets = await loadSecrets(resolvedRoot);
+
   return {
     rootPath: resolvedRoot,
     collection,
     tree,
+    environments,
+    secrets,
   };
 }
 

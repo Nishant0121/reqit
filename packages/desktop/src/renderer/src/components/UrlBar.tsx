@@ -1,7 +1,7 @@
 import React from 'react';
 import type { HttpMethod } from '@reqit/core';
 import { Button } from './ui/Button';
-import { VariableInput } from './ui/VariableInput';
+import { VariableInput, type VariableDetail } from './ui/VariableInput';
 import { strings } from '../lib/strings';
 
 export interface UrlBarProps {
@@ -13,6 +13,7 @@ export interface UrlBarProps {
   onCancel: () => void;
   loading: boolean;
   knownVariables?: string[];
+  variablesMap?: Record<string, VariableDetail>;
 }
 
 const HTTP_METHODS: HttpMethod[] = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'];
@@ -26,6 +27,7 @@ export function UrlBar({
   onCancel,
   loading,
   knownVariables,
+  variablesMap,
 }: UrlBarProps): React.JSX.Element {
   return (
     <div
@@ -82,6 +84,7 @@ export function UrlBar({
           value={url}
           onChange={onUrlChange}
           knownVariables={knownVariables}
+          variablesMap={variablesMap}
           onKeyDown={e => {
             if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
               e.preventDefault();

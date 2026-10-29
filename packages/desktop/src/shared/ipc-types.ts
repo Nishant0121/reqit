@@ -5,12 +5,17 @@ import type {
   CollectionTree,
   CollectionTreeNode,
   WatcherChangeEvent,
+  EnvironmentFile,
+  SecretsFile,
 } from '@reqit/core';
 
 export interface SendRequestPayload {
   requestId: string;
   request: RequestFile;
   options?: SendOptions;
+  activeEnvironment?: string;
+  collectionPath?: string;
+  runtimeVariables?: Record<string, unknown>;
 }
 
 export interface ReadBodyChunkPayload {
@@ -69,6 +74,28 @@ export interface SaveRequestPayload {
   request: RequestFile;
 }
 
+export interface SaveEnvironmentPayload {
+  rootPath: string;
+  name: string;
+  environment: EnvironmentFile;
+}
+
+export interface DeleteEnvironmentPayload {
+  rootPath: string;
+  name: string;
+}
+
+export interface SaveSecretsPayload {
+  rootPath: string;
+  secrets: SecretsFile;
+}
+
+export interface EnsureSecretsGitignoredResult {
+  gitignoreCreated: boolean;
+  added: boolean;
+  secretsCreated: boolean;
+}
+
 export interface IpcChannels {
   'app:getVersion': () => Promise<string>;
   'app:getTestUrl': () => Promise<string>;
@@ -92,6 +119,10 @@ export interface IpcChannels {
   ) => Promise<{ newPath: string; newSlug: string }>;
   'collection:reorder': (payload: ReorderFolderPayload) => Promise<boolean>;
   'collection:saveRequest': (payload: SaveRequestPayload) => Promise<boolean>;
+  'environment:save': (payload: SaveEnvironmentPayload) => Promise<string>;
+  'environment:delete': (payload: DeleteEnvironmentPayload) => Promise<boolean>;
+  'secrets:save': (payload: SaveSecretsPayload) => Promise<string>;
+  'secrets:ensureGitignored': (rootPath: string) => Promise<EnsureSecretsGitignoredResult>;
 }
 
 export type IpcChannelName = keyof IpcChannels;
@@ -105,6 +136,11 @@ export interface ReqitApi {
   sendRequest: (
     request: RequestFile,
     options?: SendOptions,
+    context?: {
+      activeEnvironment?: string;
+      collectionPath?: string;
+      runtimeVariables?: Record<string, unknown>;
+    },
   ) => { requestId: string; promise: Promise<ResponseResult> };
   /** Cancels an in-flight request by requestId */
   cancelRequest: (requestId: string) => Promise<boolean>;
@@ -136,6 +172,14 @@ export interface ReqitApi {
   reorderFolder: (payload: ReorderFolderPayload) => Promise<boolean>;
   /** Saves a request directly to its YAML file */
   saveRequest: (payload: SaveRequestPayload) => Promise<boolean>;
+  /** Saves an environment YAML definition */
+  saveEnvironment: (payload: SaveEnvironmentPayload) => Promise<string>;
+  /** Deletes an environment YAML file */
+  deleteEnvironment: (payload: DeleteEnvironmentPayload) => Promise<boolean>;
+  /** Saves secrets to .reqit/secrets.yaml */
+  saveSecrets: (payload: SaveSecretsPayload) => Promise<string>;
+  /** Ensures .reqit/secrets.yaml is in .gitignore and creates starter secrets */
+  ensureSecretsGitignored: (rootPath: string) => Promise<EnsureSecretsGitignoredResult>;
   /** Subscribes to live collection file watcher changes */
   onCollectionChange: (callback: (event: WatcherChangeEvent) => void) => () => void;
 }

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import {
   Sparkles,
   AlertCircle,
+  AlertTriangle,
   CircleOff,
   Braces,
   FileText,
@@ -10,12 +11,13 @@ import {
 } from 'lucide-react';
 import { Tabs } from './ui/Tabs';
 import { KeyValueTable, type KeyValueRow } from './ui/KeyValueTable';
-import { VariableInput } from './ui/VariableInput';
+import { VariableInput, type VariableDetail } from './ui/VariableInput';
 import { CodeEditor } from './editor/CodeEditor';
 import { MultipartTable } from './MultipartTable';
 import { COMMON_HEADER_NAMES, getHeaderValueSuggestions } from '../lib/http-constants';
 import { strings } from '../lib/strings';
 import type { MultipartRow } from '../stores/requestStore';
+import { detectHardcodedSecrets } from '@reqit/core/format';
 
 export type AuthType = 'none' | 'bearer' | 'basic' | 'apiKey';
 export type BodyType = 'none' | 'json' | 'text' | 'form' | 'multipart';
@@ -56,6 +58,8 @@ export interface RequestPanelProps {
   bodyMultipartRows: MultipartRow[];
   onBodyMultipartRowsChange: (rows: MultipartRow[]) => void;
   knownVariables?: string[];
+  variablesMap?: Record<string, VariableDetail>;
+  onOpenSecrets?: () => void;
 }
 
 export function RequestPanel({
@@ -86,6 +90,8 @@ export function RequestPanel({
   bodyMultipartRows,
   onBodyMultipartRowsChange,
   knownVariables,
+  variablesMap,
+  onOpenSecrets,
 }: RequestPanelProps): React.JSX.Element {
   const [activeSubTab, setActiveSubTab] = useState<
     'params' | 'headers' | 'auth' | 'body' | 'scripts'
@@ -95,6 +101,25 @@ export function RequestPanel({
 
   const activeParamsCount = params.filter(p => p.enabled && p.key.trim() !== '').length;
   const activeHeadersCount = headers.filter(h => h.enabled && h.key.trim() !== '').length;
+
+  // Check for hardcoded secrets
+  const hardcodedFindings = React.useMemo(() => {
+    return detectHardcodedSecrets({
+      version: 1,
+      name: 'check',
+      method: 'GET',
+      url: '',
+      headers: headers.filter(h => h.enabled).map(h => ({ name: h.key, value: h.value })),
+      auth:
+        authType === 'bearer'
+          ? { type: 'bearer', token: bearerToken }
+          : authType === 'basic'
+            ? { type: 'basic', username: basicUser, password: basicPass }
+            : authType === 'apiKey'
+              ? { type: 'apikey', key: apiKeyName, value: apiKeyValue, in: apiKeyIn }
+              : undefined,
+    });
+  }, [headers, authType, bearerToken, basicUser, basicPass, apiKeyName, apiKeyValue, apiKeyIn]);
 
   // Beautify JSON handler
   const handleBeautifyJson = () => {
@@ -131,6 +156,36 @@ export function RequestPanel({
 
       {/* Sub Tab Content */}
       <div className="flex-1 overflow-y-auto p-3">
+        {/* Hardcoded Secret Warning Banner (Phase 11) */}
+        {hardcodedFindings.length > 0 && (
+          <div
+            className="mb-3 px-3 py-2 rounded border flex items-center justify-between text-[12px] shrink-0"
+            style={{
+              backgroundColor: 'rgba(245, 158, 11, 0.1)',
+              borderColor: 'rgba(245, 158, 11, 0.4)',
+              color: 'var(--text-primary)',
+            }}
+          >
+            <div className="flex items-center gap-2 overflow-hidden mr-2">
+              <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
+              <div className="truncate">
+                <span className="font-semibold text-amber-400">Hardcoded Token Warning:</span>{' '}
+                <span className="text-[var(--text-secondary)]">
+                  {hardcodedFindings[0]?.reason || 'Sensitive credential detected in plain text.'}
+                </span>
+              </div>
+            </div>
+            {onOpenSecrets && (
+              <button
+                type="button"
+                onClick={onOpenSecrets}
+                className="px-2 py-0.5 rounded text-[11px] font-medium bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 shrink-0 transition-fast"
+              >
+                Move to Secrets
+              </button>
+            )}
+          </div>
+        )}
         {/* PARAMS TAB */}
         {activeSubTab === 'params' && (
           <KeyValueTable
@@ -140,6 +195,7 @@ export function RequestPanel({
             valuePlaceholder={strings.requestPanel.valuePlaceholder}
             descriptionPlaceholder={strings.requestPanel.descriptionPlaceholder}
             knownVariables={knownVariables}
+            variablesMap={variablesMap}
             showDescription
           />
         )}
@@ -155,6 +211,7 @@ export function RequestPanel({
             keySuggestions={COMMON_HEADER_NAMES}
             valueSuggestions={getHeaderValueSuggestions}
             knownVariables={knownVariables}
+            variablesMap={variablesMap}
             showDescription
           />
         )}
@@ -219,6 +276,7 @@ export function RequestPanel({
                   value={bearerToken}
                   onChange={onBearerTokenChange}
                   knownVariables={knownVariables}
+                  variablesMap={variablesMap}
                   placeholder={strings.requestPanel.tokenPlaceholder}
                 />
               </div>
@@ -238,6 +296,7 @@ export function RequestPanel({
                     value={basicUser}
                     onChange={onBasicUserChange}
                     knownVariables={knownVariables}
+                    variablesMap={variablesMap}
                     placeholder={strings.requestPanel.usernamePlaceholder}
                   />
                 </div>
@@ -252,6 +311,7 @@ export function RequestPanel({
                     value={basicPass}
                     onChange={onBasicPassChange}
                     knownVariables={knownVariables}
+                    variablesMap={variablesMap}
                     placeholder={strings.requestPanel.passwordPlaceholder}
                   />
                 </div>
@@ -272,6 +332,7 @@ export function RequestPanel({
                     value={apiKeyName}
                     onChange={onApiKeyNameChange}
                     knownVariables={knownVariables}
+                    variablesMap={variablesMap}
                     placeholder="X-API-Key"
                   />
                 </div>
@@ -286,6 +347,7 @@ export function RequestPanel({
                     value={apiKeyValue}
                     onChange={onApiKeyValueChange}
                     knownVariables={knownVariables}
+                    variablesMap={variablesMap}
                     placeholder={strings.requestPanel.valuePlaceholder}
                   />
                 </div>

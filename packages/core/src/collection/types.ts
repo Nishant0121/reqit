@@ -1,4 +1,11 @@
-import type { HttpMethod, RequestFile, FolderFile, CollectionFile } from '../format/types.js';
+import type {
+  HttpMethod,
+  RequestFile,
+  FolderFile,
+  CollectionFile,
+  EnvironmentFile,
+  SecretsFile,
+} from '../format/types.js';
 
 export interface CollectionTreeNode {
   id: string;
@@ -17,6 +24,8 @@ export interface CollectionTree {
   rootPath: string;
   collection: CollectionFile;
   tree: CollectionTreeNode[];
+  environments?: Record<string, EnvironmentFile>;
+  secrets?: SecretsFile | null;
 }
 
 export interface WatcherChangedFile {

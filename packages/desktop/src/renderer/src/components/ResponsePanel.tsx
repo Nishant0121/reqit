@@ -33,6 +33,7 @@ export interface ResponsePanelProps {
   loading: boolean;
   onSend: () => void;
   onCancel?: () => void;
+  onAddVariable?: (varName?: string) => void;
 }
 
 export type ViewFormat = 'pretty' | 'raw' | 'preview';
@@ -46,6 +47,7 @@ export function ResponsePanel({
   loading,
   onSend,
   onCancel,
+  onAddVariable,
 }: ResponsePanelProps): React.JSX.Element {
   // Navigation & view states
   const [activeTab, setActiveTab] = useState<'body' | 'headers' | 'timing'>('body');
@@ -356,6 +358,22 @@ export function ResponsePanel({
               </span>
               <span>{error.action || 'Verify that the server is reachable and running.'}</span>
             </div>
+
+            {error.message.includes('Undefined variable') && onAddVariable && (
+              <div className="pt-2">
+                <button
+                  type="button"
+                  id="add-undefined-variable-btn"
+                  onClick={() => {
+                    const match = error.message.match(/Undefined variable "\{\{([^}]+)\}\}"/);
+                    onAddVariable(match ? match[1] : undefined);
+                  }}
+                  className="px-3 py-1.5 rounded-[4px] text-[12px] font-medium bg-[var(--accent)] text-[var(--accent-fg)] hover:opacity-90 transition-fast"
+                >
+                  Add variable
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>

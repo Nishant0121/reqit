@@ -12,6 +12,7 @@ import { NewCollectionModal } from './components/NewCollectionModal';
 import { ConflictBanner } from './components/ConflictBanner';
 import { DeletedBanner } from './components/DeletedBanner';
 import { DiffModal } from './components/DiffModal';
+import { EnvironmentSecretsModal } from './components/EnvironmentSecretsModal';
 import { useAppStore } from './stores/appStore';
 import { useCollectionStore } from './stores/collectionStore';
 import { useRequestStore } from './stores/requestStore';
@@ -36,8 +37,6 @@ export default function App(): React.JSX.Element {
     setSidebarWidth,
     splitHeight,
     setSplitHeight,
-    environment,
-    setEnvironment,
     version,
     setVersion,
     toasts,
@@ -49,17 +48,34 @@ export default function App(): React.JSX.Element {
 
   const [newCollectionModalOpen, setNewCollectionModalOpen] = useState(false);
   const [diffModalOpen, setDiffModalOpen] = useState(false);
+  const [envModalOpen, setEnvModalOpen] = useState(false);
+  const [envModalTab, setEnvModalTab] = useState<'environments' | 'secrets'>('environments');
+  const [envModalVarName, setEnvModalVarName] = useState<string | undefined>(undefined);
 
   // 2. Collection store
   const {
     currentTree,
     activeCollection,
     recentCollections,
+    environments,
+    secrets,
+    activeEnvironment,
+    setActiveEnvironment,
     loadCollection,
     createCollection,
     saveRequest: storeSaveRequest,
     applyWatcherChange,
+    getResolvedVariables,
   } = useCollectionStore();
+
+  const handleOpenEnvModal = (
+    tab: 'environments' | 'secrets' = 'environments',
+    varName?: string,
+  ) => {
+    setEnvModalTab(tab);
+    setEnvModalVarName(varName);
+    setEnvModalOpen(true);
+  };
 
   // 3. Request store
   const {
@@ -106,6 +122,22 @@ export default function App(): React.JSX.Element {
     bodyMultipartRows: [],
     isDirty: false,
   };
+
+  const variablesMap = React.useMemo(() => {
+    return getResolvedVariables(activeDraft.filePath);
+  }, [
+    getResolvedVariables,
+    activeDraft.filePath,
+    activeEnvironment,
+    environments,
+    secrets,
+    currentTree,
+  ]);
+
+  const knownVariableNames = React.useMemo(() => {
+    const names = Object.keys(variablesMap);
+    return names.length > 0 ? names : KNOWN_VARIABLES;
+  }, [variablesMap]);
 
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -223,7 +255,13 @@ export default function App(): React.JSX.Element {
     setResult(null);
 
     const reqFile = draftToRequestFile(activeDraft);
-    const { requestId, promise } = window.reqitApi.sendRequest(reqFile);
+    if (activeDraft.filePath) {
+      (reqFile as { filePath?: string }).filePath = activeDraft.filePath;
+    }
+    const { requestId, promise } = window.reqitApi.sendRequest(reqFile, undefined, {
+      activeEnvironment,
+      collectionPath: currentTree?.rootPath,
+    });
 
     setActiveExecutionId(requestId);
 
@@ -236,7 +274,11 @@ export default function App(): React.JSX.Element {
       let cause = 'Connection refused or request aborted.';
       let action = 'Check that the destination server is running and accessible.';
 
-      if (errStr.includes('ECONNREFUSED')) {
+      if (errStr.includes('Undefined variable')) {
+        cause =
+          'The variable is not defined in any active scope (collection, folder, environment, or secrets).';
+        action = 'Click "Add variable" below to define it in the active environment or collection.';
+      } else if (errStr.includes('ECONNREFUSED')) {
         cause = 'Server refused the TCP connection on that port.';
         action = 'Ensure your local server is running on the specified port.';
       } else if (errStr.includes('ENOTFOUND')) {
@@ -256,7 +298,16 @@ export default function App(): React.JSX.Element {
       setLoading(false);
       setActiveExecutionId(null);
     }
-  }, [activeDraft, setLoading, setError, setResult, setActiveExecutionId, incrementHistoryCount]);
+  }, [
+    activeDraft,
+    activeEnvironment,
+    currentTree?.rootPath,
+    setLoading,
+    setError,
+    setResult,
+    setActiveExecutionId,
+    incrementHistoryCount,
+  ]);
 
   // Cancel request execution
   const handleCancel = useCallback(async () => {
@@ -412,8 +463,10 @@ export default function App(): React.JSX.Element {
       <TopBar
         sidebarOpen={sidebarOpen}
         onToggleSidebar={toggleSidebar}
-        activeEnvironment={environment}
-        onEnvironmentChange={setEnvironment}
+        activeEnvironment={activeEnvironment}
+        onEnvironmentChange={setActiveEnvironment}
+        environments={environments}
+        onManageEnvironments={() => handleOpenEnvModal('environments')}
         theme={theme}
         onToggleTheme={handleToggleTheme}
         collectionName={activeCollection.name}
@@ -479,7 +532,8 @@ export default function App(): React.JSX.Element {
             onSend={handleSend}
             onCancel={handleCancel}
             loading={loading}
-            knownVariables={KNOWN_VARIABLES}
+            knownVariables={knownVariableNames}
+            variablesMap={variablesMap}
           />
 
           {/* Split Panes: Request Panel (top) + Response Panel (bottom) */}
@@ -516,7 +570,9 @@ export default function App(): React.JSX.Element {
                 onBodyFormRowsChange={rows => updateActiveDraft({ bodyFormRows: rows })}
                 bodyMultipartRows={activeDraft.bodyMultipartRows || []}
                 onBodyMultipartRowsChange={rows => updateActiveDraft({ bodyMultipartRows: rows })}
-                knownVariables={KNOWN_VARIABLES}
+                knownVariables={knownVariableNames}
+                variablesMap={variablesMap}
+                onOpenSecrets={() => handleOpenEnvModal('secrets')}
               />
             </div>
 
@@ -545,6 +601,7 @@ export default function App(): React.JSX.Element {
                 loading={loading}
                 onSend={handleSend}
                 onCancel={handleCancel}
+                onAddVariable={varName => handleOpenEnvModal('environments', varName)}
               />
             </div>
           </div>
@@ -554,7 +611,7 @@ export default function App(): React.JSX.Element {
       {/* 3. Status Bar (24px) */}
       <StatusBar
         branch="master"
-        environmentName={environment === 'none' ? 'No environment' : environment}
+        environmentName={activeEnvironment === 'none' ? 'No environment' : activeEnvironment}
         historyCount={historyCount}
         version={version}
       />
@@ -568,6 +625,12 @@ export default function App(): React.JSX.Element {
         onCreate={async (name, targetDir) => {
           await createCollection(name, targetDir);
         }}
+      />
+      <EnvironmentSecretsModal
+        isOpen={envModalOpen}
+        onClose={() => setEnvModalOpen(false)}
+        initialTab={envModalTab}
+        initialVariableName={envModalVarName}
       />
       {activeDraft.conflict && (
         <DiffModal

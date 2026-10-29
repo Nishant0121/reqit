@@ -271,16 +271,16 @@ This plan breaks the whole project into small phases. Each phase is meant to tak
 
 **Goal:** switch between dev, staging, and prod safely.
 
-- [ ] Load `environments/*.yaml` and `.reqit/secrets.yaml`
-- [ ] Environment selector in the top bar, remembered per collection
-- [ ] Environment editor UI (table of variables, add/remove/rename environments)
-- [ ] Secrets editor UI, with masked values and a reveal toggle
-- [ ] On first run, add `.reqit/secrets.yaml` to the repo's `.gitignore` (create it if missing, with a notice)
-- [ ] Warn when a request file contains something that looks like a hardcoded token
-- [ ] Autocomplete `{{` in inputs with known variable names
-- [ ] Hover over a variable to see its resolved value and which scope it came from
-- [ ] Wire the Phase 2 resolver into the Send flow (all scopes)
-- [ ] Clear error in the UI when a variable is undefined, linking to "Add variable"
+- [x] Load `environments/*.yaml` and `.reqit/secrets.yaml`
+- [x] Environment selector in the top bar, remembered per collection
+- [x] Environment editor UI (table of variables, add/remove/rename environments)
+- [x] Secrets editor UI, with masked values and a reveal toggle
+- [x] On first run, add `.reqit/secrets.yaml` to the repo's `.gitignore` (create it if missing, with a notice)
+- [x] Warn when a request file contains something that looks like a hardcoded token
+- [x] Autocomplete `{{` in inputs with known variable names
+- [x] Hover over a variable to see its resolved value and which scope it came from
+- [x] Wire the Phase 2 resolver into the Send flow (all scopes)
+- [x] Clear error in the UI when a variable is undefined, linking to "Add variable"
 
 **Done when:** switching the environment changes where a request goes, and secrets never appear in a Git diff.
 

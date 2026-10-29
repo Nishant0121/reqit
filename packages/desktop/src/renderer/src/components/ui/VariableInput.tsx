@@ -1,5 +1,10 @@
 import React, { useState, useRef, useEffect, forwardRef } from 'react';
 
+export interface VariableDetail {
+  value: unknown;
+  scope: string;
+}
+
 export interface VariableInputProps extends Omit<
   React.InputHTMLAttributes<HTMLInputElement>,
   'onChange'
@@ -7,6 +12,7 @@ export interface VariableInputProps extends Omit<
   value: string;
   onChange: (value: string) => void;
   knownVariables?: string[];
+  variablesMap?: Record<string, VariableDetail>;
   inputSize?: 'default' | 'large';
   error?: string;
   leftIcon?: React.ReactNode;
@@ -21,6 +27,7 @@ export const VariableInput = forwardRef<HTMLInputElement, VariableInputProps>(
       value,
       onChange,
       knownVariables = DEFAULT_KNOWN_VARS,
+      variablesMap,
       inputSize = 'default',
       error,
       leftIcon,
@@ -36,13 +43,25 @@ export const VariableInput = forwardRef<HTMLInputElement, VariableInputProps>(
     const [autocompleteOpen, setAutocompleteOpen] = useState(false);
     const [autocompleteQuery, setAutocompleteQuery] = useState('');
     const [selectedIndex, setSelectedIndex] = useState(0);
+    const [hoveredVar, setHoveredVar] = useState<{
+      name: string;
+      value: string;
+      scope: string;
+      isDefined: boolean;
+      x: number;
+    } | null>(null);
+
     const internalInputRef = useRef<HTMLInputElement | null>(null);
     const overlayRef = useRef<HTMLDivElement | null>(null);
 
     const heightClass = inputSize === 'large' ? 'h-[32px]' : 'h-[28px]';
 
+    const effectiveKnownVars = variablesMap
+      ? Array.from(new Set([...Object.keys(variablesMap), ...knownVariables]))
+      : knownVariables;
+
     // Filter known variables for autocomplete
-    const matchingVars = knownVariables.filter(v =>
+    const matchingVars = effectiveKnownVars.filter(v =>
       v.toLowerCase().includes(autocompleteQuery.toLowerCase()),
     );
 
@@ -148,15 +167,55 @@ export const VariableInput = forwardRef<HTMLInputElement, VariableInputProps>(
           );
         }
 
-        const isKnown = knownVariables.includes(varName);
+        const detail = variablesMap?.[varName];
+        const isDefined = Boolean(detail);
+        const resolvedVal = detail?.value !== undefined ? String(detail.value) : '(undefined)';
+        const scopeLabel =
+          detail?.scope ?? 'undefined (not defined in active environment or collection)';
+
+        const tooltip = isDefined
+          ? `${varName} = ${typeof detail?.value === 'object' ? JSON.stringify(detail?.value) : resolvedVal}\n(scope: ${scopeLabel})`
+          : `${varName}\n(undefined variable - not defined in active environment or collection)`;
+
         segments.push(
           <span
             key={`var-${start}`}
-            className="rounded-[2px] font-mono select-none"
+            title={tooltip}
+            onMouseEnter={e => {
+              const rect = e.currentTarget.getBoundingClientRect();
+              const containerRect = overlayRef.current?.getBoundingClientRect();
+              setHoveredVar({
+                name: varName,
+                value: resolvedVal,
+                scope: scopeLabel,
+                isDefined,
+                x: Math.max(0, rect.left - (containerRect?.left || 0)),
+              });
+            }}
+            onMouseLeave={() => setHoveredVar(null)}
+            onMouseDown={e => {
+              e.preventDefault();
+              const input = internalInputRef.current;
+              if (!input) return;
+              input.focus();
+              const rect = e.currentTarget.getBoundingClientRect();
+              const clickX = e.clientX - rect.left;
+              const ratio = clickX / rect.width;
+              const targetPos = ratio < 0.5 ? start : match!.index + match![0].length;
+              input.setSelectionRange(targetPos, targetPos);
+            }}
+            onDoubleClick={e => {
+              e.preventDefault();
+              const input = internalInputRef.current;
+              if (!input) return;
+              input.focus();
+              input.setSelectionRange(start, match!.index + match![0].length);
+            }}
+            className="rounded-[2px] font-mono pointer-events-auto cursor-help select-none"
             style={{
-              color: isKnown ? 'var(--var-known)' : 'var(--danger)',
-              backgroundColor: isKnown ? 'var(--accent-subtle)' : 'var(--danger-subtle)',
-              boxShadow: isKnown ? '0 0 0 1px var(--accent)' : '0 0 0 1px var(--danger)',
+              color: isDefined ? 'var(--var-known)' : 'var(--danger)',
+              backgroundColor: isDefined ? 'var(--accent-subtle)' : 'var(--danger-subtle)',
+              boxShadow: isDefined ? '0 0 0 1px var(--accent)' : '0 0 0 1px var(--danger)',
             }}
           >
             {`{{${varName}}}`}
@@ -196,13 +255,12 @@ export const VariableInput = forwardRef<HTMLInputElement, VariableInputProps>(
             </div>
           )}
 
-          {/* Variables visual highlight layer */}
+          {/* Variables visual highlight layer (z-20 so variable pills can receive hover/clicks) */}
           <div
             ref={overlayRef}
-            className={`absolute inset-0 px-2.5 flex items-center text-[13px] font-mono pointer-events-none overflow-hidden whitespace-pre ${
+            className={`absolute inset-0 px-2.5 flex items-center text-[13px] font-mono pointer-events-none overflow-hidden whitespace-pre z-20 ${
               leftIcon ? 'pl-8' : ''
             } ${rightElement ? 'pr-8' : ''}`}
-            aria-hidden="true"
           >
             {renderVariableHighlights()}
           </div>
@@ -237,6 +295,50 @@ export const VariableInput = forwardRef<HTMLInputElement, VariableInputProps>(
           {rightElement && (
             <div className="absolute right-1 flex items-center z-20">{rightElement}</div>
           )}
+
+          {/* Hover Popover showing resolved value and scope */}
+          {!autocompleteOpen && hoveredVar && (
+            <div
+              className="absolute top-full mt-1.5 z-50 px-2.5 py-1.5 text-[11px] rounded-[6px] shadow-elevation font-mono border pointer-events-none whitespace-normal transition-fast"
+              style={{
+                backgroundColor: 'var(--bg-elevated)',
+                borderColor: hoveredVar.isDefined ? 'var(--border)' : 'var(--danger)',
+                color: 'var(--text-primary)',
+                left: `${Math.max(4, Math.min(hoveredVar.x, 260))}px`,
+                maxWidth: '320px',
+                minWidth: '180px',
+              }}
+            >
+              <div className="flex items-center gap-1.5 font-bold mb-0.5">
+                <span style={{ color: hoveredVar.isDefined ? 'var(--accent)' : 'var(--danger)' }}>
+                  {`{{${hoveredVar.name}}}`}
+                </span>
+                {!hoveredVar.isDefined && (
+                  <span className="text-[10px] px-1 py-0.2 rounded font-sans bg-red-950/40 text-red-400">
+                    undefined
+                  </span>
+                )}
+              </div>
+              <div className="text-[var(--text-secondary)] truncate">
+                value:{' '}
+                <span
+                  className={
+                    hoveredVar.isDefined
+                      ? 'text-[var(--text-primary)] font-semibold'
+                      : 'text-red-400 font-semibold italic'
+                  }
+                >
+                  {hoveredVar.value}
+                </span>
+              </div>
+              <div className="text-[10px] text-[var(--text-muted)] mt-0.5 flex items-center gap-1">
+                <span>scope:</span>
+                <span className="px-1 py-0.2 rounded bg-[var(--bg-surface)] text-[var(--text-secondary)] font-medium">
+                  {hoveredVar.scope}
+                </span>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Variable Autocomplete Popup */}
@@ -256,6 +358,7 @@ export const VariableInput = forwardRef<HTMLInputElement, VariableInputProps>(
             </div>
             {matchingVars.map((v, idx) => {
               const isSelected = idx === selectedIndex;
+              const scopeLabel = variablesMap?.[v]?.scope || 'variable';
               return (
                 <div
                   key={v}
@@ -267,8 +370,11 @@ export const VariableInput = forwardRef<HTMLInputElement, VariableInputProps>(
                   }}
                 >
                   <span style={{ color: 'var(--var-known)' }}>{`{{${v}}}`}</span>
-                  <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
-                    Variable
+                  <span
+                    className="text-[10px] px-1 py-0.2 rounded font-sans"
+                    style={{ backgroundColor: 'var(--bg-surface)', color: 'var(--text-muted)' }}
+                  >
+                    {scopeLabel}
                   </span>
                 </div>
               );
