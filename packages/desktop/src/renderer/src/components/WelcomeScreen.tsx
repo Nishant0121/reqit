@@ -9,6 +9,7 @@ import {
   ArrowRight,
   Zap,
   X,
+  Layers,
 } from 'lucide-react';
 
 export interface WelcomeScreenProps {
@@ -16,6 +17,7 @@ export interface WelcomeScreenProps {
   onNewCollection: () => void;
   onOpenExample: () => void;
   onImportCurl: () => void;
+  onImportPostman?: () => void;
   onDismissToEditor?: () => void;
   recentCollections: string[];
   onSelectRecent: (path: string) => void;
@@ -26,6 +28,7 @@ export function WelcomeScreen({
   onNewCollection,
   onOpenExample,
   onImportCurl,
+  onImportPostman,
   onDismissToEditor,
   recentCollections,
   onSelectRecent,
@@ -157,6 +160,17 @@ export function WelcomeScreen({
             <Terminal className="h-4 w-4" />
             Import cURL command
           </button>
+
+          {onImportPostman && (
+            <button
+              type="button"
+              onClick={onImportPostman}
+              className="flex items-center gap-2 rounded px-3 py-1.5 font-medium text-(--text-secondary) transition-colors hover:bg-(--bg-hover) hover:text-(--text-primary)"
+            >
+              <Layers className="h-4 w-4" />
+              Import Postman Collection
+            </button>
+          )}
 
           {onDismissToEditor && (
             <button

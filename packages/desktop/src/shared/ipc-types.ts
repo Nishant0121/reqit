@@ -8,6 +8,7 @@ import type {
   EnvironmentFile,
   SecretsFile,
   HttpMethod,
+  PostmanImportReport,
 } from '@reqit/core';
 import type { AppSettings } from './settings-types.js';
 
@@ -144,6 +145,34 @@ export interface EnsureSecretsGitignoredResult {
   secretsCreated: boolean;
 }
 
+export interface PostmanParsePayload {
+  collectionJson: string;
+  environmentJson?: string;
+}
+
+export interface PostmanParseResult {
+  collectionName: string;
+  totalRequests: number;
+  totalFolders: number;
+  environmentName?: string;
+  totalEnvVars?: number;
+  totalSecretVars?: number;
+  warnings: string[];
+}
+
+export interface PostmanImportPayload {
+  collectionJson: string;
+  environmentJson?: string;
+  targetDir: string;
+  collectionNameOverride?: string;
+}
+
+export interface OpenJsonFileResult {
+  filePath: string;
+  fileName: string;
+  content: string;
+}
+
 export interface IpcChannels {
   'app:getVersion': () => Promise<string>;
   'app:getTestUrl': () => Promise<string>;
@@ -182,6 +211,10 @@ export interface IpcChannels {
   'collection:openExample': () => Promise<CollectionTree | null>;
   'settings:get': () => Promise<AppSettings>;
   'settings:update': (settings: Partial<AppSettings>) => Promise<AppSettings>;
+  'dialog:openJsonFile': (title?: string) => Promise<OpenJsonFileResult | null>;
+  'dialog:selectDirectory': (title?: string) => Promise<string | null>;
+  'postman:parse': (payload: PostmanParsePayload) => Promise<PostmanParseResult>;
+  'postman:import': (payload: PostmanImportPayload) => Promise<PostmanImportReport>;
 }
 
 export type IpcChannelName = keyof IpcChannels;
@@ -261,6 +294,14 @@ export interface ReqitApi {
   getSettings: () => Promise<AppSettings>;
   /** Updates application settings */
   updateSettings: (settings: Partial<AppSettings>) => Promise<AppSettings>;
+  /** Opens native open file dialog for JSON and returns file details or null */
+  openJsonFileDialog: (title?: string) => Promise<OpenJsonFileResult | null>;
+  /** Opens native open directory dialog and returns directory path or null */
+  selectDirectoryDialog: (title?: string) => Promise<string | null>;
+  /** Parses Postman JSON collection and optional environment without saving to disk */
+  parsePostman: (payload: PostmanParsePayload) => Promise<PostmanParseResult>;
+  /** Imports Postman JSON collection and optional environment into target directory */
+  importPostman: (payload: PostmanImportPayload) => Promise<PostmanImportReport>;
   /** Subscribes to native menu actions */
   onMenuAction: (callback: (action: string) => void) => () => void;
 }

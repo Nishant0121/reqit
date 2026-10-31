@@ -187,6 +187,7 @@ function serializeTestAssertion(test: TestAssertion): YAML.YAMLMap {
 function serializeCollectionDefaults(defaults: CollectionDefaults): YAML.YAMLMap {
   const map = new YAML.YAMLMap();
   const keys = sortKeys(Object.keys(defaults), [
+    'variables',
     'timeoutMs',
     'followRedirects',
     'validateSsl',
@@ -209,6 +210,10 @@ function serializeCollectionDefaults(defaults: CollectionDefaults): YAML.YAMLMap
       valNode = seq;
     } else if (key === 'auth' && typeof val === 'object' && val !== null) {
       valNode = serializeAuth(val as Auth);
+    } else if (key === 'variables' && typeof val === 'object' && val !== null) {
+      valNode = serializeGenericValue(val, key);
+    } else if (typeof val === 'object' && val !== null) {
+      valNode = serializeGenericValue(val, key);
     } else {
       valNode = createScalarNode(val, key);
     }
