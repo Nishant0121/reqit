@@ -51,3 +51,7 @@ desktop.ini
 *.njsproj
 *.sln
 *.sw?
+
+# Other files
+
+docs/
