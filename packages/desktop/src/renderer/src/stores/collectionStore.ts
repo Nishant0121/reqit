@@ -23,10 +23,15 @@ export interface CollectionState {
   environments: Record<string, EnvironmentFile>;
   secrets: SecretsFile | null;
   activeEnvironment: string;
+  isWorkspaceTrusted: boolean;
+  runtimeVariables: Record<string, unknown>;
 
   setActiveCollection: (collection: CollectionItem) => void;
   setRecentCollections: (recents: string[]) => void;
   setActiveEnvironment: (env: string) => void;
+  setWorkspaceTrusted: (trusted: boolean) => Promise<void>;
+  setRuntimeVariables: (vars: Record<string, unknown>) => void;
+  clearRuntimeVariables: () => void;
   loadCollection: (folderPath?: string) => Promise<CollectionTree | null>;
   createCollection: (name: string, targetDir?: string) => Promise<CollectionTree | null>;
   refreshTree: () => Promise<void>;
@@ -57,6 +62,8 @@ export const useCollectionStore = create<CollectionState>((set, get) => ({
   environments: {},
   secrets: null,
   activeEnvironment: 'none',
+  isWorkspaceTrusted: true,
+  runtimeVariables: {},
 
   setActiveCollection: (collection: CollectionItem) => {
     set({ activeCollection: collection });
@@ -78,12 +85,36 @@ export const useCollectionStore = create<CollectionState>((set, get) => ({
     set({ activeEnvironment: env });
   },
 
+  setWorkspaceTrusted: async (trusted: boolean): Promise<void> => {
+    const { currentTree } = get();
+    if (currentTree?.rootPath && window.reqitApi?.setWorkspaceTrusted) {
+      await window.reqitApi.setWorkspaceTrusted(currentTree.rootPath, trusted);
+      set({ isWorkspaceTrusted: trusted });
+    } else {
+      set({ isWorkspaceTrusted: trusted });
+    }
+  },
+
+  setRuntimeVariables: (vars: Record<string, unknown>) => {
+    set(state => ({
+      runtimeVariables: { ...state.runtimeVariables, ...vars },
+    }));
+  },
+
+  clearRuntimeVariables: () => {
+    set({ runtimeVariables: {} });
+  },
+
   loadCollection: async (folderPath?: string): Promise<CollectionTree | null> => {
     if (!window.reqitApi?.openCollection) return null;
     set({ isLoading: true, error: null });
     try {
       const tree = await window.reqitApi.openCollection(folderPath);
       if (tree) {
+        let isTrusted = false;
+        if (window.reqitApi?.isWorkspaceTrusted) {
+          isTrusted = await window.reqitApi.isWorkspaceTrusted(tree.rootPath);
+        }
         const storedEnv = localStorage.getItem(`reqit:active-env:${tree.rootPath}`);
         const savedEnv =
           storedEnv !== null
@@ -94,6 +125,7 @@ export const useCollectionStore = create<CollectionState>((set, get) => ({
           environments: tree.environments || {},
           secrets: tree.secrets || null,
           activeEnvironment: savedEnv,
+          isWorkspaceTrusted: isTrusted,
           activeCollection: {
             id: tree.rootPath,
             name: tree.collection.name,
@@ -119,11 +151,15 @@ export const useCollectionStore = create<CollectionState>((set, get) => ({
     try {
       const tree = await window.reqitApi.createCollection({ name, targetDir });
       if (tree) {
+        if (window.reqitApi?.setWorkspaceTrusted) {
+          await window.reqitApi.setWorkspaceTrusted(tree.rootPath, true);
+        }
         set({
           currentTree: tree,
           environments: tree.environments || {},
           secrets: tree.secrets || null,
           activeEnvironment: 'none',
+          isWorkspaceTrusted: true,
           activeCollection: {
             id: tree.rootPath,
             name: tree.collection.name,
@@ -423,6 +459,12 @@ export const useCollectionStore = create<CollectionState>((set, get) => ({
           result[k] = { value: v, scope: `secrets (${activeEnvironment})` };
         }
       }
+    }
+
+    // 5. Runtime variables (Phase 16 - highest priority scope)
+    const { runtimeVariables } = get();
+    for (const [k, v] of Object.entries(runtimeVariables)) {
+      result[k] = { value: v, scope: 'runtime' };
     }
 
     return result;

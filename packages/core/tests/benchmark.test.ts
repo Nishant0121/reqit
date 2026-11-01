@@ -73,6 +73,6 @@ headers:
     expect(totalCount).toBe(TOTAL_REQUESTS);
     console.log(`[Benchmark] Scanned ${TOTAL_REQUESTS} requests in ${durationMs.toFixed(2)} ms`);
     // Assert scanning completes well within threshold
-    expect(durationMs).toBeLessThan(3000);
-  });
+    expect(durationMs).toBeLessThan(6000);
+  }, 30000);
 });

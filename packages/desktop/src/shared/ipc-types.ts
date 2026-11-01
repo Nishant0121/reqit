@@ -215,11 +215,20 @@ export interface IpcChannels {
   'dialog:selectDirectory': (title?: string) => Promise<string | null>;
   'postman:parse': (payload: PostmanParsePayload) => Promise<PostmanParseResult>;
   'postman:import': (payload: PostmanImportPayload) => Promise<PostmanImportReport>;
+  'workspace:isTrusted': (collectionPath: string) => Promise<boolean>;
+  'workspace:setTrusted': (payload: {
+    collectionPath: string;
+    trusted: boolean;
+  }) => Promise<boolean>;
 }
 
 export type IpcChannelName = keyof IpcChannels;
 
 export interface ReqitApi {
+  /** Checks if a collection workspace is marked as trusted */
+  isWorkspaceTrusted: (collectionPath: string) => Promise<boolean>;
+  /** Updates the trust status for a collection workspace */
+  setWorkspaceTrusted: (collectionPath: string, trusted: boolean) => Promise<boolean>;
   /** Returns the current application version */
   getVersion: () => Promise<string>;
   /** Returns default target test URL (configured by environment in tests) */

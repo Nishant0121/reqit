@@ -68,4 +68,10 @@ export interface ResponseResult {
   getHeader: (name: string) => string | undefined;
   /** Helper to parse JSON body */
   json: <T = unknown>() => T;
+  /** Runtime variables updated during pre/post script execution */
+  runtimeVariables?: Record<string, unknown>;
+  /** Console and reqit logs produced during script execution */
+  scriptLogs?: import('../scripts/types.js').ScriptLogEntry[];
+  /** Any uncaught script error */
+  scriptError?: import('../scripts/types.js').ScriptError | null;
 }

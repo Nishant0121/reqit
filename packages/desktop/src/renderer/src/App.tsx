@@ -11,6 +11,7 @@ import { ShortcutsDialog } from './components/ShortcutsDialog';
 import { NewCollectionModal } from './components/NewCollectionModal';
 import { ConflictBanner } from './components/ConflictBanner';
 import { DeletedBanner } from './components/DeletedBanner';
+import { TrustBanner } from './components/TrustBanner';
 import { DiffModal } from './components/DiffModal';
 import { EnvironmentSecretsModal } from './components/EnvironmentSecretsModal';
 import { HistoryDetailModal } from './components/HistoryDetailModal';
@@ -60,7 +61,9 @@ export default function App(): React.JSX.Element {
   const [newCollectionModalOpen, setNewCollectionModalOpen] = useState(false);
   const [diffModalOpen, setDiffModalOpen] = useState(false);
   const [envModalOpen, setEnvModalOpen] = useState(false);
-  const [envModalTab, setEnvModalTab] = useState<'environments' | 'secrets'>('environments');
+  const [envModalTab, setEnvModalTab] = useState<'environments' | 'secrets' | 'runtime'>(
+    'environments',
+  );
   const [envModalVarName, setEnvModalVarName] = useState<string | undefined>(undefined);
   const [importCurlModalOpen, setImportCurlModalOpen] = useState(false);
   const [importPostmanModalOpen, setImportPostmanModalOpen] = useState(false);
@@ -76,6 +79,10 @@ export default function App(): React.JSX.Element {
     environments,
     secrets,
     activeEnvironment,
+    isWorkspaceTrusted,
+    setWorkspaceTrusted,
+    runtimeVariables,
+    setRuntimeVariables,
     setActiveEnvironment,
     loadCollection,
     createCollection,
@@ -85,7 +92,7 @@ export default function App(): React.JSX.Element {
   } = useCollectionStore();
 
   const handleOpenEnvModal = (
-    tab: 'environments' | 'secrets' = 'environments',
+    tab: 'environments' | 'secrets' | 'runtime' = 'environments',
     varName?: string,
   ) => {
     setEnvModalTab(tab);
@@ -100,6 +107,11 @@ export default function App(): React.JSX.Element {
     activeRequestId,
     result,
     error,
+    scriptLogs,
+    scriptError,
+    setScriptLogs,
+    setScriptError,
+    clearScriptLogs,
     loading,
     activeExecutionId,
     historyCount,
@@ -299,6 +311,7 @@ export default function App(): React.JSX.Element {
     const { requestId, promise } = window.reqitApi.sendRequest(reqFile, undefined, {
       activeEnvironment,
       collectionPath: currentTree?.rootPath,
+      runtimeVariables,
     });
 
     setActiveExecutionId(requestId);
@@ -306,6 +319,15 @@ export default function App(): React.JSX.Element {
     try {
       const res = await promise;
       setResult(res);
+      if (res.runtimeVariables) {
+        setRuntimeVariables(res.runtimeVariables);
+      }
+      if (res.scriptLogs) {
+        setScriptLogs(res.scriptLogs);
+      }
+      if (res.scriptError !== undefined) {
+        setScriptError(res.scriptError);
+      }
       incrementHistoryCount();
       loadHistoryEntries();
     } catch (err: unknown) {
@@ -754,6 +776,11 @@ export default function App(): React.JSX.Element {
                 />
               )}
 
+              {/* Workspace Trust Banner (Phase 16) */}
+              {currentTree?.rootPath && !isWorkspaceTrusted && (
+                <TrustBanner onTrust={() => setWorkspaceTrusted(true)} />
+              )}
+
               {/* URL Bar (32px) */}
               <UrlBar
                 method={activeDraft.method}
@@ -809,6 +836,12 @@ export default function App(): React.JSX.Element {
                     onBodyMultipartRowsChange={rows =>
                       updateActiveDraft({ bodyMultipartRows: rows })
                     }
+                    preScript={activeDraft.preScript}
+                    onPreScriptChange={s => updateActiveDraft({ preScript: s })}
+                    postScript={activeDraft.postScript}
+                    onPostScriptChange={s => updateActiveDraft({ postScript: s })}
+                    isWorkspaceTrusted={isWorkspaceTrusted}
+                    onTrustWorkspace={() => setWorkspaceTrusted(true)}
                     knownVariables={knownVariableNames}
                     variablesMap={variablesMap}
                     onOpenSecrets={() => handleOpenEnvModal('secrets')}
@@ -841,6 +874,9 @@ export default function App(): React.JSX.Element {
                     onSend={handleSend}
                     onCancel={handleCancel}
                     onAddVariable={varName => handleOpenEnvModal('environments', varName)}
+                    scriptLogs={scriptLogs}
+                    scriptError={scriptError}
+                    onClearScriptLogs={clearScriptLogs}
                   />
                 </div>
               </div>

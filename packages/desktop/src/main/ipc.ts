@@ -12,9 +12,14 @@ import {
   parsePostmanCollection,
   parsePostmanEnvironment,
   importPostmanCollectionToDirectory,
+  executePreRequestScript,
+  executePostResponseScript,
+  getMergedVariables,
   type VariableScopes,
   type RequestFile,
   type PostmanImportReport,
+  type ScriptLogEntry,
+  type ScriptError,
 } from '@reqit/core';
 import { fileService } from './services/file-service.js';
 import { historyService } from './services/history-service.js';
@@ -199,14 +204,103 @@ export function registerIpcHandlers(): void {
       }
 
       // Scope 5: Runtime variables
-      if (payload.runtimeVariables) {
-        scopes.runtime = payload.runtimeVariables;
+      let currentRuntimeVars = { ...(payload.runtimeVariables || {}) };
+      scopes.runtime = currentRuntimeVars;
+
+      // Workspace trust check (Phase 16)
+      const appSettings = settingsService.getSettings();
+      const isTrusted = payload.collectionPath
+        ? (appSettings.trustedCollections || [])
+            .map(p => path.resolve(p))
+            .includes(path.resolve(payload.collectionPath))
+        : true;
+
+      const scriptLogs: ScriptLogEntry[] = [];
+      let scriptError: ScriptError | null = null;
+
+      // Build merged variables map for reqit.getVar
+      const mergedVars = getMergedVariables(scopes, {
+        activeEnvironment:
+          payload.activeEnvironment !== 'none' ? payload.activeEnvironment : undefined,
+      });
+      const varMap: Record<string, unknown> = {};
+      for (const [k, v] of mergedVars.entries()) {
+        varMap[k] = v.value;
+      }
+
+      let requestToExecute: RequestFile = { ...request };
+
+      // Pre-request script execution
+      if (!isTrusted && (request.scripts?.pre || request.scripts?.post)) {
+        scriptLogs.push({
+          level: 'warn',
+          args: [
+            'Workspace is not trusted. Script execution skipped. Click "Trust Collection" to enable scripts.',
+          ],
+          timestamp: Date.now(),
+        });
+      } else if (isTrusted && request.scripts?.pre && request.scripts.pre.trim()) {
+        const preResult = await executePreRequestScript({
+          script: request.scripts.pre,
+          request: {
+            url: request.url,
+            method: request.method,
+            headers: request.headers,
+            body: request.body,
+          },
+          variables: varMap,
+          runtimeVariables: currentRuntimeVars,
+          timeoutMs: 3000,
+        });
+
+        if (preResult.logs) {
+          scriptLogs.push(...preResult.logs);
+        }
+        currentRuntimeVars = { ...currentRuntimeVars, ...preResult.runtimeVariables };
+        scopes.runtime = currentRuntimeVars;
+
+        if (!preResult.success && preResult.error) {
+          scriptError = preResult.error;
+          const durationMs = Date.now() - startTime;
+          return {
+            status: 0,
+            statusText: 'Pre-request Script Error',
+            headers: [],
+            body: `Pre-request script failed: ${preResult.error.message}`,
+            sizeBytes: 0,
+            totalMs: durationMs,
+            timing: {
+              dnsMs: 0,
+              tcpMs: 0,
+              tlsMs: 0,
+              ttfbMs: 0,
+              downloadMs: 0,
+              totalMs: durationMs,
+            },
+            runtimeVariables: currentRuntimeVars,
+            scriptLogs,
+            scriptError,
+          };
+        }
+
+        if (preResult.modifiedRequest) {
+          requestToExecute = {
+            ...requestToExecute,
+            url: preResult.modifiedRequest.url,
+            method: preResult.modifiedRequest.method as import('@reqit/core').HttpMethod,
+            headers: preResult.modifiedRequest.headers,
+            body:
+              preResult.modifiedRequest.body !== undefined
+                ? { type: 'text', content: preResult.modifiedRequest.body }
+                : requestToExecute.body,
+          };
+        }
       }
 
       // 2. Resolve request variables
-      let resolvedRequest: RequestFile = request;
+      let resolvedRequest: RequestFile = requestToExecute;
       try {
-        resolvedRequest = resolveRequest(request, scopes, {
+        resolvedRequest = resolveRequest(requestToExecute, scopes, {
           activeEnvironment:
             payload.activeEnvironment !== 'none' ? payload.activeEnvironment : undefined,
         });
@@ -220,7 +314,6 @@ export function registerIpcHandlers(): void {
       }
 
       // Merge application settings defaults with request options
-      const appSettings = settingsService.getSettings();
       const sendOptions = {
         ...options,
         timeoutMs: options?.timeoutMs ?? appSettings.requestTimeoutMs,
@@ -266,6 +359,38 @@ export function registerIpcHandlers(): void {
         throw err;
       }
 
+      // Post-response script execution (Phase 16)
+      if (isTrusted && request.scripts?.post && request.scripts.post.trim()) {
+        const postResult = await executePostResponseScript({
+          script: request.scripts.post,
+          request: {
+            url: resolvedRequest.url,
+            method: resolvedRequest.method,
+            headers: resolvedRequest.headers,
+            body: resolvedRequest.body,
+          },
+          response: {
+            status: result.status,
+            statusText: result.statusText,
+            headers: result.headers,
+            body: result.body,
+            totalMs: result.totalMs,
+          },
+          variables: varMap,
+          runtimeVariables: currentRuntimeVars,
+          timeoutMs: 3000,
+        });
+
+        if (postResult.logs) {
+          scriptLogs.push(...postResult.logs);
+        }
+        currentRuntimeVars = { ...currentRuntimeVars, ...postResult.runtimeVariables };
+
+        if (!postResult.success && postResult.error) {
+          scriptError = postResult.error;
+        }
+      }
+
       const durationMs = Date.now() - startTime;
       try {
         historyService.addEntry({
@@ -293,6 +418,9 @@ export function registerIpcHandlers(): void {
         timing: result.timing,
         redirectHops: result.redirectHops,
         redirects: result.redirects,
+        runtimeVariables: currentRuntimeVars,
+        scriptLogs,
+        scriptError,
       };
     } finally {
       activeRequests.delete(requestId);
@@ -536,6 +664,37 @@ export function registerIpcHandlers(): void {
       await fileService.openCollection(report.targetDirectory || targetDir.trim());
 
       return report;
+    },
+  );
+
+  // 36. workspace:isTrusted
+  ipcMain.handle(
+    'workspace:isTrusted',
+    async (_event, collectionPath: string): Promise<boolean> => {
+      if (!collectionPath) return true;
+      const settings = settingsService.getSettings();
+      const normalized = path.resolve(collectionPath);
+      return (settings.trustedCollections || []).map(p => path.resolve(p)).includes(normalized);
+    },
+  );
+
+  // 37. workspace:setTrusted
+  ipcMain.handle(
+    'workspace:setTrusted',
+    async (_event, payload: { collectionPath: string; trusted: boolean }): Promise<boolean> => {
+      if (!payload.collectionPath) return true;
+      const settings = settingsService.getSettings();
+      const normalized = path.resolve(payload.collectionPath);
+      let list = (settings.trustedCollections || []).map(p => path.resolve(p));
+      if (payload.trusted) {
+        if (!list.includes(normalized)) {
+          list.push(normalized);
+        }
+      } else {
+        list = list.filter(p => p !== normalized);
+      }
+      settingsService.updateSettings({ trustedCollections: list });
+      return payload.trusted;
     },
   );
 }

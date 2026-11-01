@@ -23,6 +23,10 @@
     "./postman": {
       "types": "./src/postman/index.ts",
       "import": "./src/postman/index.ts"
+    },
+    "./scripts": {
+      "types": "./src/scripts/index.ts",
+      "import": "./src/scripts/index.ts"
     }
   },
   "scripts": {
