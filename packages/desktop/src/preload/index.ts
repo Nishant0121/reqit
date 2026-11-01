@@ -1,5 +1,11 @@
 import { contextBridge, ipcRenderer } from 'electron';
-import type { RequestFile, ResponseResult, SendOptions, WatcherChangeEvent } from '@reqit/core';
+import type {
+  RequestFile,
+  ResponseResult,
+  SendOptions,
+  WatcherChangeEvent,
+  PostmanImportReport,
+} from '@reqit/core';
 import type {
   ReqitApi,
   SendRequestPayload,
@@ -16,6 +22,9 @@ import type {
   EnsureSecretsGitignoredResult,
   HistoryListFilter,
   HistorySettings,
+  PostmanParsePayload,
+  PostmanImportPayload,
+  OpenJsonFileResult,
 } from '../shared/ipc-types.js';
 
 const api: ReqitApi = {
@@ -162,6 +171,18 @@ const api: ReqitApi = {
   },
   updateSettings: (settings: Partial<import('../shared/settings-types.js').AppSettings>) => {
     return ipcRenderer.invoke('settings:update', settings);
+  },
+  openJsonFileDialog: (title?: string): Promise<OpenJsonFileResult | null> => {
+    return ipcRenderer.invoke('dialog:openJsonFile', title);
+  },
+  selectDirectoryDialog: (title?: string): Promise<string | null> => {
+    return ipcRenderer.invoke('dialog:selectDirectory', title);
+  },
+  parsePostman: (payload: PostmanParsePayload) => {
+    return ipcRenderer.invoke('postman:parse', payload);
+  },
+  importPostman: (payload: PostmanImportPayload): Promise<PostmanImportReport> => {
+    return ipcRenderer.invoke('postman:import', payload);
   },
   onMenuAction: (callback: (action: string) => void) => {
     const handler = (_event: Electron.IpcRendererEvent, action: string) => {

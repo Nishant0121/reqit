@@ -68,6 +68,10 @@ export function setupApplicationMenu(mainWindow: BrowserWindow): void {
           accelerator: 'CmdOrCtrl+I',
           click: () => sendAction('import-curl'),
         },
+        {
+          label: 'Import Postman Collection...',
+          click: () => sendAction('import-postman'),
+        },
         { type: 'separator' as const },
         {
           label: 'Save Request',

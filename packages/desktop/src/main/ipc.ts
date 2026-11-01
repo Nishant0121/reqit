@@ -9,8 +9,12 @@ import {
   loadSecrets,
   parseCollection,
   parseFolder,
+  parsePostmanCollection,
+  parsePostmanEnvironment,
+  importPostmanCollectionToDirectory,
   type VariableScopes,
   type RequestFile,
+  type PostmanImportReport,
 } from '@reqit/core';
 import { fileService } from './services/file-service.js';
 import { historyService } from './services/history-service.js';
@@ -34,6 +38,10 @@ import type {
   SaveSecretsPayload,
   HistoryListFilter,
   HistorySettings,
+  PostmanParsePayload,
+  PostmanParseResult,
+  PostmanImportPayload,
+  OpenJsonFileResult,
 } from '../shared/ipc-types.js';
 
 const activeRequests = new Map<string, AbortController>();
@@ -425,4 +433,109 @@ export function registerIpcHandlers(): void {
     }
     return updated;
   });
+
+  // 32. dialog:openJsonFile
+  ipcMain.handle(
+    'dialog:openJsonFile',
+    async (_event, title?: string): Promise<OpenJsonFileResult | null> => {
+      const res = await dialog.showOpenDialog({
+        title: title || 'Select Postman JSON File',
+        properties: ['openFile'],
+        filters: [
+          { name: 'JSON Files', extensions: ['json'] },
+          { name: 'All Files', extensions: ['*'] },
+        ],
+      });
+      if (res.canceled || res.filePaths.length === 0 || !res.filePaths[0]) {
+        return null;
+      }
+      const filePath = res.filePaths[0];
+      const content = await fs.promises.readFile(filePath, 'utf-8');
+      const fileName = path.basename(filePath);
+      return { filePath, fileName, content };
+    },
+  );
+
+  // 33. dialog:selectDirectory
+  ipcMain.handle(
+    'dialog:selectDirectory',
+    async (_event, title?: string): Promise<string | null> => {
+      const res = await dialog.showOpenDialog({
+        title: title || 'Select Folder for Collection',
+        properties: ['openDirectory', 'createDirectory'],
+      });
+      if (res.canceled || res.filePaths.length === 0 || !res.filePaths[0]) {
+        return null;
+      }
+      return res.filePaths[0];
+    },
+  );
+
+  // 34. postman:parse
+  ipcMain.handle(
+    'postman:parse',
+    async (_event, payload: PostmanParsePayload): Promise<PostmanParseResult> => {
+      const { collectionJson, environmentJson } = payload;
+      const parsedCol = parsePostmanCollection(collectionJson);
+      let environmentName: string | undefined;
+      let totalEnvVars: number | undefined;
+      let totalSecretVars: number | undefined;
+
+      const warnings = [...parsedCol.report.warnings];
+
+      // If an embedded environment was found inside the collection JSON (multi-JSON or dump)
+      if (parsedCol.environments.length > 0 && parsedCol.environments[0]) {
+        const embedded = parsedCol.environments[0];
+        environmentName = embedded.name;
+        totalEnvVars = Object.keys(embedded.environment.variables).length;
+        totalSecretVars = embedded.secretCount;
+      }
+
+      if (environmentJson && environmentJson.trim()) {
+        try {
+          const parsedEnv = parsePostmanEnvironment(environmentJson);
+          environmentName = parsedEnv.environment.name;
+          totalEnvVars = parsedEnv.reportNotes.variableCount;
+          totalSecretVars = parsedEnv.reportNotes.secretCount;
+          warnings.push(...parsedEnv.reportNotes.warnings);
+        } catch (err: unknown) {
+          warnings.push(
+            `Failed to parse environment: ${err instanceof Error ? err.message : String(err)}`,
+          );
+        }
+      }
+
+      return {
+        collectionName: parsedCol.report.collectionName,
+        totalRequests: parsedCol.report.totalRequests,
+        totalFolders: parsedCol.report.totalFolders,
+        environmentName,
+        totalEnvVars,
+        totalSecretVars,
+        warnings,
+      };
+    },
+  );
+
+  // 35. postman:import
+  ipcMain.handle(
+    'postman:import',
+    async (_event, payload: PostmanImportPayload): Promise<PostmanImportReport> => {
+      const { collectionJson, environmentJson, targetDir, collectionNameOverride } = payload;
+      if (!targetDir || !targetDir.trim()) {
+        throw new Error('Target directory is required for Postman import.');
+      }
+      const report = await importPostmanCollectionToDirectory({
+        collectionJson,
+        environmentJson,
+        targetDir: targetDir.trim(),
+        collectionNameOverride: collectionNameOverride?.trim() || undefined,
+      });
+
+      // Automatically open the imported collection and refresh watcher/recents
+      await fileService.openCollection(report.targetDirectory || targetDir.trim());
+
+      return report;
+    },
+  );
 }

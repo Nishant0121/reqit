@@ -17,6 +17,7 @@ import { HistoryDetailModal } from './components/HistoryDetailModal';
 import { HistorySettingsModal } from './components/HistorySettingsModal';
 import { ClearHistoryConfirmModal } from './components/ClearHistoryConfirmModal';
 import { ImportCurlModal } from './components/ImportCurlModal';
+import { ImportPostmanModal } from './components/ImportPostmanModal';
 import { SettingsModal } from './components/SettingsModal';
 import { WelcomeScreen } from './components/WelcomeScreen';
 import { useAppStore } from './stores/appStore';
@@ -62,6 +63,7 @@ export default function App(): React.JSX.Element {
   const [envModalTab, setEnvModalTab] = useState<'environments' | 'secrets'>('environments');
   const [envModalVarName, setEnvModalVarName] = useState<string | undefined>(undefined);
   const [importCurlModalOpen, setImportCurlModalOpen] = useState(false);
+  const [importPostmanModalOpen, setImportPostmanModalOpen] = useState(false);
   const [showWelcomeScreen, setShowWelcomeScreen] = useState(false);
 
   const { openSettings, loadSettings } = useSettingsStore();
@@ -487,6 +489,10 @@ export default function App(): React.JSX.Element {
         case 'edit:import-curl':
           setImportCurlModalOpen(true);
           break;
+        case 'import-postman':
+        case 'file:import-postman':
+          setImportPostmanModalOpen(true);
+          break;
         case 'open-shortcuts':
         case 'help:shortcuts':
           setShortcutsModalOpen(true);
@@ -674,6 +680,7 @@ export default function App(): React.JSX.Element {
         collectionPath={activeCollection.path}
         onOpenShortcuts={() => setShortcutsModalOpen(true)}
         onOpenImportCurl={() => setImportCurlModalOpen(true)}
+        onOpenImportPostman={() => setImportPostmanModalOpen(true)}
         onOpenCollection={() => loadCollection()}
         onNewCollection={() => setNewCollectionModalOpen(true)}
         onOpenSettings={openSettings}
@@ -710,6 +717,7 @@ export default function App(): React.JSX.Element {
               onNewCollection={() => setNewCollectionModalOpen(true)}
               onOpenExample={handleOpenExample}
               onImportCurl={() => setImportCurlModalOpen(true)}
+              onImportPostman={() => setImportPostmanModalOpen(true)}
               onDismissToEditor={() => setShowWelcomeScreen(false)}
               recentCollections={recentCollections}
               onSelectRecent={async p => {
@@ -883,6 +891,11 @@ export default function App(): React.JSX.Element {
       <HistorySettingsModal />
       <ClearHistoryConfirmModal />
       <ImportCurlModal isOpen={importCurlModalOpen} onClose={() => setImportCurlModalOpen(false)} />
+      <ImportPostmanModal
+        isOpen={importPostmanModalOpen}
+        onClose={() => setImportPostmanModalOpen(false)}
+        onSuccess={() => setShowWelcomeScreen(false)}
+      />
     </div>
   );
 }

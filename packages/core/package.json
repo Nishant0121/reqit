@@ -19,6 +19,10 @@
     "./curl": {
       "types": "./src/curl/index.ts",
       "import": "./src/curl/index.ts"
+    },
+    "./postman": {
+      "types": "./src/postman/index.ts",
+      "import": "./src/postman/index.ts"
     }
   },
   "scripts": {

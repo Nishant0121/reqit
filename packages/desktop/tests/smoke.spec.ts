@@ -444,38 +444,40 @@ test.describe('Desktop App Shell Smoke Test (Phase 5)', () => {
   });
 
   test('verifies live method badge update in sidebar', async () => {
-    // If no request is in the sidebar, create one
-    const sidebarItem = page.locator('aside [role="treeitem"]');
-    if ((await sidebarItem.count()) === 0) {
-      const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'reqit-badge-col-'));
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'reqit-badge-col-'));
+    try {
       await page.evaluate(async dir => {
         await window.reqitApi.createCollection({ name: 'Badge Collection', targetDir: dir });
         await window.reqitApi.createRequest({ parentDir: dir, name: 'Badge Test' });
       }, tmpDir);
-      await expect(sidebarItem.first()).toBeVisible({ timeout: 5000 });
-      await sidebarItem.first().click();
+
+      const requestItem = page.locator('aside [role="treeitem"]:has-text("Badge Test")');
+      await expect(requestItem).toBeVisible({ timeout: 5000 });
+      await requestItem.click();
+
+      const methodSelect = page.locator('#method-select');
+      await expect(methodSelect).toBeVisible();
+
+      // Change method to POST
+      await methodSelect.selectOption('POST');
+
+      // Sidebar should reflect POST immediately
+      const sidebar = page.locator('aside');
+      const postBadge = sidebar.locator('span:has-text("POST")').first();
+      await expect(postBadge).toBeVisible();
+
+      // Change method to DELETE
+      await methodSelect.selectOption('DELETE');
+      const deleteBadge = sidebar.locator('span:has-text("DEL")').first();
+      await expect(deleteBadge).toBeVisible();
+
+      // Revert back to GET
+      await methodSelect.selectOption('GET');
+      const getBadge = sidebar.locator('span:has-text("GET")').first();
+      await expect(getBadge).toBeVisible();
+    } finally {
+      fs.rmSync(tmpDir, { recursive: true, force: true });
     }
-
-    const methodSelect = page.locator('#method-select');
-    await expect(methodSelect).toBeVisible();
-
-    // Change method to POST
-    await methodSelect.selectOption('POST');
-
-    // Sidebar should reflect POST immediately
-    const sidebar = page.locator('aside');
-    const postBadge = sidebar.locator('span:has-text("POST")').first();
-    await expect(postBadge).toBeVisible();
-
-    // Change method to DELETE
-    await methodSelect.selectOption('DELETE');
-    const deleteBadge = sidebar.locator('span:has-text("DEL")').first();
-    await expect(deleteBadge).toBeVisible();
-
-    // Revert back to GET
-    await methodSelect.selectOption('GET');
-    const getBadge = sidebar.locator('span:has-text("GET")').first();
-    await expect(getBadge).toBeVisible();
   });
 
   test('verifies typing full collection name in New Collection modal without losing focus or characters', async () => {
@@ -908,5 +910,119 @@ test.describe('Desktop App Shell Smoke Test (Phase 5)', () => {
     // Verify Welcome screen is dismissed and editor is back
     await expect(page.locator('text=Welcome to Reqit')).not.toBeVisible();
     await expect(page.locator('#url-input')).toBeVisible();
+  });
+
+  test('verifies Phase 15: Postman collection & environment import and disk structure', async () => {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'reqit-postman-smoke-'));
+
+    const samplePostmanCollection = JSON.stringify({
+      info: {
+        name: 'Smoke Postman Collection',
+        schema: 'https://schema.getpostman.com/json/collection/v2.1.0/collection.json',
+      },
+      item: [
+        {
+          name: 'Smoke Folder',
+          item: [
+            {
+              name: 'Smoke Request',
+              request: {
+                method: 'GET',
+                url: {
+                  raw: 'https://httpbin.org/get?test=smoke',
+                  query: [{ key: 'test', value: 'smoke' }],
+                },
+                header: [{ key: 'X-Smoke-Header', value: 'active' }],
+              },
+            },
+          ],
+        },
+      ],
+    });
+
+    const samplePostmanEnv = JSON.stringify({
+      name: 'SmokeEnv',
+      values: [
+        { key: 'baseUrl', value: 'https://smoke.api.local', enabled: true },
+        { key: 'apiToken', value: 'super-secret-token', enabled: true },
+      ],
+    });
+
+    try {
+      // 1. Live Parse API verification
+      const parseRes = await page.evaluate(
+        async ({ col, env }) => {
+          return window.reqitApi.parsePostman({ collectionJson: col, environmentJson: env });
+        },
+        { col: samplePostmanCollection, env: samplePostmanEnv },
+      );
+
+      expect(parseRes.collectionName).toBe('Smoke Postman Collection');
+      expect(parseRes.totalRequests).toBe(1);
+      expect(parseRes.totalFolders).toBe(1);
+      expect(parseRes.totalSecretVars).toBe(1); // apiToken isolated
+      expect(parseRes.totalEnvVars).toBe(1); // baseUrl
+
+      // 2. Open Welcome screen and launch Import Postman Modal
+      const welcomeBtn = page
+        .locator('button[aria-label="Open Welcome Screen"]')
+        .or(page.locator('button[aria-label="Welcome screen"]'));
+      await welcomeBtn.first().click();
+      await expect(page.locator('text=Welcome to Reqit')).toBeVisible();
+
+      const importPostmanBtn = page.locator('button:has-text("Import Postman Collection")');
+      await expect(importPostmanBtn).toBeVisible();
+      await importPostmanBtn.click();
+
+      // Verify modal is open
+      const modalTitle = page.locator('#modal-title:has-text("Import Postman Collection")');
+      await expect(modalTitle).toBeVisible();
+
+      // 3. Switch to Paste JSON mode and fill collection JSON
+      const pasteJsonTab = page.locator('button:has-text("Paste JSON")').first();
+      await pasteJsonTab.click();
+      const textarea = page.locator('textarea[placeholder*="Paste raw Postman Collection"]');
+      await textarea.fill(samplePostmanCollection);
+
+      // Fill destination directory
+      const targetDirInput = page.locator('input[placeholder*="my-api"]');
+      await targetDirInput.fill(tmpDir);
+
+      // Verify live preview card appears
+      await expect(page.locator('text=Ready to import: Smoke Postman Collection')).toBeVisible();
+      await expect(page.locator('text=v2.1 Schema')).toBeVisible();
+
+      // 4. Click Import Collection button
+      const executeBtn = page.locator('button:has-text("Import Collection")');
+      await expect(executeBtn).toBeEnabled();
+      await executeBtn.click();
+
+      // Verify Report view appears
+      await expect(page.locator('#modal-title:has-text("Postman Import Report")')).toBeVisible();
+      await expect(page.locator('text=Import Complete: Smoke Postman Collection')).toBeVisible();
+      await expect(page.locator('text=Requests Created')).toBeVisible();
+
+      // 5. Click "Open Collection in Reqit"
+      const openInReqitBtn = page.locator('button:has-text("Open Collection in Reqit")');
+      await expect(openInReqitBtn).toBeVisible();
+      await openInReqitBtn.click();
+
+      // Modal closes and welcome screen is dismissed
+      await expect(modalTitle).not.toBeVisible();
+      await expect(page.locator('text=Welcome to Reqit')).not.toBeVisible();
+
+      // 6. Ensure Collections tab is active in sidebar and verify updated to the imported collection
+      await page.locator('aside button:has-text("Collections")').click();
+      const smokeFolderItem = page.locator('aside [role="treeitem"]:has-text("Smoke Folder")');
+      await expect(smokeFolderItem).toBeVisible({ timeout: 5000 });
+
+      // 7. Verify disk structure created
+      expect(fs.existsSync(path.join(tmpDir, 'reqit.yaml'))).toBe(true);
+      expect(fs.existsSync(path.join(tmpDir, 'Smoke Folder', 'folder.yaml'))).toBe(true);
+      expect(fs.existsSync(path.join(tmpDir, 'Smoke Folder', 'Smoke Request.yaml'))).toBe(true);
+      expect(fs.existsSync(path.join(tmpDir, '.gitignore'))).toBe(true);
+    } finally {
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    }
   });
 });

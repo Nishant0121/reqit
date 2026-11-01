@@ -15,6 +15,7 @@ import {
   Terminal,
   Zap,
   Sparkles,
+  Layers,
 } from 'lucide-react';
 import { Button } from './ui/Button';
 import { strings } from '../lib/strings';
@@ -34,6 +35,7 @@ export interface TopBarProps {
   collectionPath?: string;
   onOpenShortcuts?: () => void;
   onOpenImportCurl?: () => void;
+  onOpenImportPostman?: () => void;
   onOpenCollection?: () => void;
   onNewCollection?: () => void;
   onOpenSettings?: () => void;
@@ -56,6 +58,7 @@ export function TopBar({
   collectionPath,
   onOpenShortcuts,
   onOpenImportCurl,
+  onOpenImportPostman,
   onOpenCollection,
   onNewCollection,
   onOpenSettings,
@@ -234,6 +237,19 @@ export function TopBar({
                 <Terminal className="h-5 w-5 text-(--accent)" strokeWidth={1.75} />
                 <span className="flex-1 font-medium">Import cURL...</span>
                 <span className="font-mono text-[10px] text-(--text-muted)">Ctrl+I</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuOpen(false);
+                  onOpenImportPostman?.();
+                }}
+                className="transition-fast flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-(--bg-hover)"
+                style={{ color: 'var(--text-primary)' }}
+              >
+                <Layers className="h-5 w-5 text-(--accent)" strokeWidth={1.75} />
+                <span className="flex-1 font-medium">Import Postman Collection...</span>
               </button>
 
               {recentCollections.length > 0 && (
