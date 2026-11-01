@@ -13,6 +13,7 @@ export default tseslint.config(
       '**/coverage/**',
       '.husky/**',
       '.github/**',
+      '.agents/**',
     ],
   },
   js.configs.recommended,

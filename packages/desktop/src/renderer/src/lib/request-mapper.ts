@@ -110,6 +110,8 @@ export function requestFileToDraft(
     bodyContent,
     bodyFormRows,
     bodyMultipartRows,
+    preScript: file.scripts?.pre || '',
+    postScript: file.scripts?.post || '',
     isDirty: false,
     rawRequest: file,
   };
@@ -181,6 +183,15 @@ export function draftToRequestFile(draft: RequestDraft): RequestFile {
     }
   }
 
+  // Scripts (Phase 16)
+  const scripts =
+    draft.preScript?.trim() || draft.postScript?.trim()
+      ? {
+          pre: draft.preScript?.trim() ? draft.preScript : undefined,
+          post: draft.postScript?.trim() ? draft.postScript : undefined,
+        }
+      : undefined;
+
   return {
     version: 1,
     name: draft.name,
@@ -190,5 +201,6 @@ export function draftToRequestFile(draft: RequestDraft): RequestFile {
     params: params.length > 0 ? params : undefined,
     auth,
     body,
+    scripts,
   };
 }

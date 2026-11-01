@@ -184,6 +184,12 @@ const api: ReqitApi = {
   importPostman: (payload: PostmanImportPayload): Promise<PostmanImportReport> => {
     return ipcRenderer.invoke('postman:import', payload);
   },
+  isWorkspaceTrusted: (collectionPath: string): Promise<boolean> => {
+    return ipcRenderer.invoke('workspace:isTrusted', collectionPath);
+  },
+  setWorkspaceTrusted: (collectionPath: string, trusted: boolean): Promise<boolean> => {
+    return ipcRenderer.invoke('workspace:setTrusted', { collectionPath, trusted });
+  },
   onMenuAction: (callback: (action: string) => void) => {
     const handler = (_event: Electron.IpcRendererEvent, action: string) => {
       callback(action);

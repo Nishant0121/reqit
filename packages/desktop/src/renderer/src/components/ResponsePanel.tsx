@@ -34,6 +34,9 @@ export interface ResponsePanelProps {
   onSend: () => void;
   onCancel?: () => void;
   onAddVariable?: (varName?: string) => void;
+  scriptLogs?: import('@reqit/core').ScriptLogEntry[];
+  scriptError?: import('@reqit/core').ScriptError | null;
+  onClearScriptLogs?: () => void;
 }
 
 export type ViewFormat = 'pretty' | 'raw' | 'preview';
@@ -48,9 +51,16 @@ export function ResponsePanel({
   onSend,
   onCancel,
   onAddVariable,
+  scriptLogs = [],
+  scriptError = null,
+  onClearScriptLogs,
 }: ResponsePanelProps): React.JSX.Element {
   // Navigation & view states
-  const [activeTab, setActiveTab] = useState<'body' | 'headers' | 'timing'>('body');
+  const [activeTab, setActiveTab] = useState<'body' | 'headers' | 'timing' | 'console'>('body');
+  const [consoleFilter, setConsoleFilter] = useState<'all' | 'log' | 'info' | 'warn' | 'error'>(
+    'all',
+  );
+  const [consoleSearch, setConsoleSearch] = useState<string>('');
   const [viewFormat, setViewFormat] = useState<ViewFormat>('pretty');
   const [prettyMode, setPrettyMode] = useState<EditorMode>('json');
   const [copied, setCopied] = useState<boolean>(false);
@@ -111,6 +121,12 @@ export function ResponsePanel({
   const contentInfo = useMemo(() => {
     return detectContentType(contentTypeHeader, result?.bodyBase64 || result?.body);
   }, [contentTypeHeader, result?.bodyBase64, result?.body]);
+
+  const allLogs = useMemo(() => {
+    return scriptLogs && scriptLogs.length > 0 ? scriptLogs : result?.scriptLogs || [];
+  }, [scriptLogs, result?.scriptLogs]);
+
+  const currentScriptError = scriptError ?? result?.scriptError ?? null;
 
   // Auto-detect pretty mode and default view when result arrives
   useEffect(() => {
@@ -548,6 +564,11 @@ export function ResponsePanel({
             { id: 'body', label: strings.responsePanel.bodyTab },
             { id: 'headers', label: strings.responsePanel.headersTab, count: headersList.length },
             { id: 'timing', label: strings.responsePanel.timingTab },
+            {
+              id: 'console',
+              label: 'Console',
+              count: allLogs.length > 0 ? allLogs.length : undefined,
+            },
           ]}
           activeId={activeTab}
           onChange={id => setActiveTab(id as typeof activeTab)}
@@ -951,6 +972,153 @@ export function ResponsePanel({
                 No timing breakdown available for this request.
               </div>
             )}
+          </div>
+        )}
+
+        {/* CONSOLE TAB VIEW (Phase 16) */}
+        {activeTab === 'console' && (
+          <div className="flex flex-col gap-3 font-mono text-[12px]">
+            {/* Console Toolbar */}
+            <div
+              className="flex flex-wrap items-center justify-between gap-2 border-b pb-2"
+              style={{ borderColor: 'var(--border)' }}
+            >
+              <div className="flex items-center gap-1">
+                {(['all', 'log', 'info', 'warn', 'error'] as const).map(f => {
+                  const count =
+                    f === 'all' ? allLogs.length : allLogs.filter(l => l.level === f).length;
+                  return (
+                    <button
+                      key={f}
+                      type="button"
+                      onClick={() => setConsoleFilter(f)}
+                      className={`rounded px-2 py-0.5 font-sans text-[11px] font-medium transition-colors ${
+                        consoleFilter === f
+                          ? 'bg-(--accent) text-(--accent-fg)'
+                          : 'text-(--text-secondary) hover:text-(--text-primary)'
+                      }`}
+                    >
+                      {f.toUpperCase()} ({count})
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  placeholder="Filter console logs..."
+                  value={consoleSearch}
+                  onChange={e => setConsoleSearch(e.target.value)}
+                  className="h-6 rounded border bg-transparent px-2 font-sans text-[11px] outline-none focus:border-(--accent)"
+                  style={{ borderColor: 'var(--border)', color: 'var(--text-primary)' }}
+                />
+                {onClearScriptLogs && (
+                  <button
+                    type="button"
+                    onClick={onClearScriptLogs}
+                    className="rounded border px-2 py-0.5 font-sans text-[11px] hover:bg-(--bg-hover)"
+                    style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)' }}
+                  >
+                    Clear Console
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Script Execution Error Banner */}
+            {currentScriptError && (
+              <div
+                className="rounded border p-3 text-[12px]"
+                style={{
+                  backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                  borderColor: 'rgba(239, 68, 68, 0.3)',
+                  color: 'var(--text-primary)',
+                }}
+              >
+                <div className="flex items-center gap-2 font-semibold text-red-500">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
+                  <span>
+                    Script Error
+                    {currentScriptError.line
+                      ? ` (line ${currentScriptError.line}${currentScriptError.column ? `, col ${currentScriptError.column}` : ''})`
+                      : ''}
+                    :
+                  </span>
+                </div>
+                <div className="mt-1 font-mono text-red-400">{currentScriptError.message}</div>
+                {currentScriptError.stack && (
+                  <details className="mt-2 cursor-pointer text-[11px] opacity-80">
+                    <summary>Stack Trace</summary>
+                    <pre className="mt-1 max-h-32 overflow-auto rounded bg-black/20 p-2 font-mono whitespace-pre-wrap">
+                      {currentScriptError.stack}
+                    </pre>
+                  </details>
+                )}
+              </div>
+            )}
+
+            {/* Log Entries */}
+            {(() => {
+              const filtered = allLogs
+                .filter(l => consoleFilter === 'all' || l.level === consoleFilter)
+                .filter(
+                  l =>
+                    !consoleSearch.trim() ||
+                    l.args.some(a => a.toLowerCase().includes(consoleSearch.toLowerCase())),
+                );
+
+              if (filtered.length === 0 && !currentScriptError) {
+                return (
+                  <div
+                    className="py-8 text-center font-sans text-[12px]"
+                    style={{ color: 'var(--text-muted)' }}
+                  >
+                    No console output. Use <code className="text-sky-400">console.log(...)</code> or{' '}
+                    <code className="text-emerald-400">reqit.log(...)</code> in pre or post scripts.
+                  </div>
+                );
+              }
+
+              return (
+                <div
+                  className="flex flex-col gap-1 overflow-x-auto rounded border p-2"
+                  style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border)' }}
+                >
+                  {filtered.map((log, idx) => {
+                    const timeStr = new Date(log.timestamp).toLocaleTimeString();
+                    const badgeColor =
+                      log.level === 'error'
+                        ? 'text-red-400 bg-red-950/30 border-red-800/40'
+                        : log.level === 'warn'
+                          ? 'text-amber-400 bg-amber-950/30 border-amber-800/40'
+                          : log.level === 'info'
+                            ? 'text-sky-400 bg-sky-950/30 border-sky-800/40'
+                            : 'text-slate-400 bg-slate-900/30 border-slate-800/40';
+
+                    return (
+                      <div
+                        key={idx}
+                        className="flex items-start gap-2 border-b border-dashed py-1 last:border-b-0"
+                        style={{ borderColor: 'var(--border)' }}
+                      >
+                        <span className="shrink-0 text-[10px] text-(--text-muted) select-none">
+                          {timeStr}
+                        </span>
+                        <span
+                          className={`shrink-0 rounded border px-1 font-sans text-[9px] font-semibold uppercase ${badgeColor}`}
+                        >
+                          {log.level}
+                        </span>
+                        <div className="flex-1 font-mono break-all whitespace-pre-wrap text-(--text-primary)">
+                          {log.args.join(' ')}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
           </div>
         )}
       </div>

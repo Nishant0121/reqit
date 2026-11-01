@@ -94,4 +94,28 @@ describe('request-mapper', () => {
     expect(draftApi.apiKeyValue).toBe('key-val');
     expect(draftApi.apiKeyIn).toBe('header');
   });
+
+  it('maps pre and post scripts correctly', () => {
+    const fileWithScripts: RequestFile = {
+      version: 1,
+      name: 'Scripted Request',
+      method: 'POST',
+      url: 'https://example.com/login',
+      scripts: {
+        pre: "req.headers.set('X-Start', 'true');",
+        post: "reqit.setVar('token', res.json().token);",
+      },
+    };
+
+    const draft = requestFileToDraft(fileWithScripts);
+    expect(draft.preScript).toBe("req.headers.set('X-Start', 'true');");
+    expect(draft.postScript).toBe("reqit.setVar('token', res.json().token);");
+
+    draft.preScript = "req.headers.set('X-Modified', '123');";
+    draft.isDirty = true;
+
+    const converted = draftToRequestFile(draft);
+    expect(converted.scripts?.pre).toBe("req.headers.set('X-Modified', '123');");
+    expect(converted.scripts?.post).toBe("reqit.setVar('token', res.json().token);");
+  });
 });

@@ -57,6 +57,12 @@ export interface RequestPanelProps {
   onBodyFormRowsChange: (rows: KeyValueRow[]) => void;
   bodyMultipartRows: MultipartRow[];
   onBodyMultipartRowsChange: (rows: MultipartRow[]) => void;
+  preScript?: string;
+  onPreScriptChange?: (script: string) => void;
+  postScript?: string;
+  onPostScriptChange?: (script: string) => void;
+  isWorkspaceTrusted?: boolean;
+  onTrustWorkspace?: () => void;
   knownVariables?: string[];
   variablesMap?: Record<string, VariableDetail>;
   onOpenSecrets?: () => void;
@@ -89,6 +95,12 @@ export function RequestPanel({
   onBodyFormRowsChange,
   bodyMultipartRows,
   onBodyMultipartRowsChange,
+  preScript = '',
+  onPreScriptChange,
+  postScript = '',
+  onPostScriptChange,
+  isWorkspaceTrusted = true,
+  onTrustWorkspace,
   knownVariables,
   variablesMap,
   onOpenSecrets,
@@ -96,6 +108,7 @@ export function RequestPanel({
   const [activeSubTab, setActiveSubTab] = useState<
     'params' | 'headers' | 'auth' | 'body' | 'scripts'
   >('params');
+  const [scriptSubTab, setScriptSubTab] = useState<'pre' | 'post'>('pre');
 
   const [jsonFormatError, setJsonFormatError] = useState<string | null>(null);
 
@@ -147,7 +160,11 @@ export function RequestPanel({
           { id: 'headers', label: strings.requestPanel.headers, count: activeHeadersCount },
           { id: 'auth', label: strings.requestPanel.auth },
           { id: 'body', label: strings.requestPanel.body },
-          { id: 'scripts', label: strings.requestPanel.scripts },
+          {
+            id: 'scripts',
+            label: strings.requestPanel.scripts,
+            count: (preScript.trim() ? 1 : 0) + (postScript.trim() ? 1 : 0) || undefined,
+          },
         ]}
         activeId={activeSubTab}
         onChange={id => setActiveSubTab(id as typeof activeSubTab)}
@@ -563,10 +580,240 @@ export function RequestPanel({
           </div>
         )}
 
-        {/* SCRIPTS TAB */}
+        {/* SCRIPTS TAB (Phase 16) */}
         {activeSubTab === 'scripts' && (
-          <div className="p-4 text-center text-[12px]" style={{ color: 'var(--text-muted)' }}>
-            Pre-request and post-response scripts can be configured here.
+          <div className="flex flex-col gap-3">
+            {/* Workspace trust notice if untrusted */}
+            {!isWorkspaceTrusted && (
+              <div
+                className="flex items-center justify-between rounded border px-3 py-2 text-[12px]"
+                style={{
+                  backgroundColor: 'rgba(234, 179, 8, 0.1)',
+                  borderColor: 'rgba(234, 179, 8, 0.3)',
+                  color: 'var(--text-primary)',
+                }}
+              >
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="h-4 w-4 shrink-0 text-amber-500" />
+                  <span>
+                    Workspace is untrusted. Scripts are disabled until you trust this collection.
+                  </span>
+                </div>
+                {onTrustWorkspace && (
+                  <button
+                    type="button"
+                    onClick={onTrustWorkspace}
+                    className="rounded-xs px-2 py-1 text-[11px] font-medium"
+                    style={{
+                      backgroundColor: 'var(--accent)',
+                      color: 'var(--accent-fg)',
+                    }}
+                  >
+                    Trust Workspace
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* Script Sub-tab switch (Pre vs Post) */}
+            <div
+              className="flex items-center justify-between border-b pb-2 select-none"
+              style={{ borderColor: 'var(--border)' }}
+            >
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => setScriptSubTab('pre')}
+                  className={`rounded px-2.5 py-1 text-[12px] font-medium transition-colors ${
+                    scriptSubTab === 'pre'
+                      ? 'bg-(--accent) text-(--accent-fg)'
+                      : 'text-(--text-secondary) hover:text-(--text-primary)'
+                  }`}
+                >
+                  Pre-request {preScript.trim() ? '•' : ''}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setScriptSubTab('post')}
+                  className={`rounded px-2.5 py-1 text-[12px] font-medium transition-colors ${
+                    scriptSubTab === 'post'
+                      ? 'bg-(--accent) text-(--accent-fg)'
+                      : 'text-(--text-secondary) hover:text-(--text-primary)'
+                  }`}
+                >
+                  Post-response {postScript.trim() ? '•' : ''}
+                </button>
+              </div>
+
+              <div className="text-[11px]" style={{ color: 'var(--text-muted)' }}>
+                {scriptSubTab === 'pre'
+                  ? 'Runs in a sandbox before the request is sent'
+                  : 'Runs in a sandbox after the response is received'}
+              </div>
+            </div>
+
+            {/* Snippet Helper Buttons */}
+            <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
+              <span style={{ color: 'var(--text-muted)' }}>Quick Snippets:</span>
+              {scriptSubTab === 'pre' ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const snippet = `req.headers.set('X-Custom-Header', 'custom-value');\n`;
+                      onPreScriptChange?.(preScript ? preScript + '\n' + snippet : snippet);
+                    }}
+                    className="rounded border px-2 py-0.5 hover:bg-(--bg-hover)"
+                    style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)' }}
+                  >
+                    + Set Header
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const snippet = `reqit.setVar('myVariable', 'sampleValue');\n`;
+                      onPreScriptChange?.(preScript ? preScript + '\n' + snippet : snippet);
+                    }}
+                    className="rounded border px-2 py-0.5 hover:bg-(--bg-hover)"
+                    style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)' }}
+                  >
+                    + Set Variable
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const snippet = `const val = reqit.getVar('myVariable');\nconsole.log('Value is:', val);\n`;
+                      onPreScriptChange?.(preScript ? preScript + '\n' + snippet : snippet);
+                    }}
+                    className="rounded border px-2 py-0.5 hover:bg-(--bg-hover)"
+                    style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)' }}
+                  >
+                    + Get Variable
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const snippet = `console.log('Preparing to send to:', req.url);\n`;
+                      onPreScriptChange?.(preScript ? preScript + '\n' + snippet : snippet);
+                    }}
+                    className="rounded border px-2 py-0.5 hover:bg-(--bg-hover)"
+                    style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)' }}
+                  >
+                    + Log
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const snippet = `const data = res.json();\nreqit.setVar('authToken', data.token);\nreqit.log('Saved token:', data.token);\n`;
+                      onPostScriptChange?.(postScript ? postScript + '\n' + snippet : snippet);
+                    }}
+                    className="rounded border px-2 py-0.5 hover:bg-(--bg-hover)"
+                    style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)' }}
+                  >
+                    + Save JSON Token
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const snippet = `if (res.status !== 200) {\n  reqit.error('Expected status 200 but received ' + res.status);\n} else {\n  reqit.log('Request succeeded with 200 OK');\n}\n`;
+                      onPostScriptChange?.(postScript ? postScript + '\n' + snippet : snippet);
+                    }}
+                    className="rounded border px-2 py-0.5 hover:bg-(--bg-hover)"
+                    style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)' }}
+                  >
+                    + Assert Status
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const snippet = `const contentType = res.headers.get('content-type');\nreqit.log('Content-Type header:', contentType);\n`;
+                      onPostScriptChange?.(postScript ? postScript + '\n' + snippet : snippet);
+                    }}
+                    className="rounded border px-2 py-0.5 hover:bg-(--bg-hover)"
+                    style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)' }}
+                  >
+                    + Check Header
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const snippet = `console.log('Response body:', res.body);\n`;
+                      onPostScriptChange?.(postScript ? postScript + '\n' + snippet : snippet);
+                    }}
+                    className="rounded border px-2 py-0.5 hover:bg-(--bg-hover)"
+                    style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)' }}
+                  >
+                    + Log Body
+                  </button>
+                </>
+              )}
+            </div>
+
+            {/* Code Editor */}
+            <div
+              className="min-h-52 flex-1 overflow-hidden rounded border"
+              style={{ borderColor: 'var(--border)' }}
+            >
+              <CodeEditor
+                key={scriptSubTab}
+                value={scriptSubTab === 'pre' ? preScript : postScript}
+                onChange={val => {
+                  if (scriptSubTab === 'pre') {
+                    onPreScriptChange?.(val);
+                  } else {
+                    onPostScriptChange?.(val);
+                  }
+                }}
+                mode="javascript"
+                background="base"
+                minHeight="220px"
+                maxHeight="380px"
+              />
+            </div>
+
+            {/* API Reference hints */}
+            <div
+              className="rounded p-2.5 font-mono text-[11px] leading-relaxed"
+              style={{
+                backgroundColor: 'var(--bg-surface)',
+                color: 'var(--text-secondary)',
+                border: '1px solid var(--border)',
+              }}
+            >
+              {scriptSubTab === 'pre' ? (
+                <div>
+                  <span className="font-semibold text-(--text-primary)">
+                    Pre-request Script API:
+                  </span>{' '}
+                  <code className="text-sky-400">req.url</code>,{' '}
+                  <code className="text-sky-400">req.method</code>,{' '}
+                  <code className="text-sky-400">req.headers.get/set/has/remove()</code>,{' '}
+                  <code className="text-sky-400">req.body</code>,{' '}
+                  <code className="text-amber-400">reqit.setVar(name, val)</code>,{' '}
+                  <code className="text-amber-400">reqit.getVar(name)</code>,{' '}
+                  <code className="text-emerald-400">console.log(...)</code> /{' '}
+                  <code className="text-emerald-400">reqit.log(...)</code>
+                </div>
+              ) : (
+                <div>
+                  <span className="font-semibold text-(--text-primary)">
+                    Post-response Script API:
+                  </span>{' '}
+                  <code className="text-sky-400">res.status</code>,{' '}
+                  <code className="text-sky-400">res.headers.get/has()</code>,{' '}
+                  <code className="text-sky-400">res.body</code>,{' '}
+                  <code className="text-sky-400">res.json()</code>,{' '}
+                  <code className="text-sky-400">res.timeMs</code>,{' '}
+                  <code className="text-amber-400">reqit.setVar(name, val)</code>,{' '}
+                  <code className="text-amber-400">reqit.getVar(name)</code>,{' '}
+                  <code className="text-emerald-400">console.log(...)</code> /{' '}
+                  <code className="text-emerald-400">reqit.log(...)</code>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>
