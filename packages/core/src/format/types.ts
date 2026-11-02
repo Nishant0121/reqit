@@ -61,7 +61,16 @@ export interface Scripts {
 export interface TestAssertion {
   name: string;
   assert: string;
+  enabled?: boolean;
   [key: string]: unknown;
+}
+
+export interface TestAssertionResult {
+  name: string;
+  assert: string;
+  passed: boolean;
+  message?: string;
+  durationMs?: number;
 }
 
 export interface RequestFile {

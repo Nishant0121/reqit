@@ -7,7 +7,10 @@ import type {
   PreRequestOutput,
   ScriptError,
   ScriptLogEntry,
+  TestAssertionInput,
+  TestAssertionOutput,
 } from './types.js';
+import type { TestAssertionResult } from '../format/types.js';
 
 export const DEFAULT_SCRIPT_TIMEOUT_MS = 3000;
 export const DEFAULT_SCRIPT_MEMORY_MB = 64;
@@ -28,18 +31,32 @@ interface WorkerMessagePayload {
     headers?: Array<{ name: string; value: string; enabled?: boolean }>;
     body?: string;
   };
+  testResults?: TestAssertionResult[];
   logs?: ScriptLogEntry[];
   error?: ScriptError;
 }
 
-function runScriptInProcess<T extends PreRequestOutput | PostResponseOutput>(
-  type: 'pre' | 'post',
+function runScriptInProcess<T extends PreRequestOutput | PostResponseOutput | TestAssertionOutput>(
+  type: 'pre' | 'post' | 'tests',
   payload: Record<string, unknown>,
   timeoutMs: number = DEFAULT_SCRIPT_TIMEOUT_MS,
   memoryLimitMb: number = DEFAULT_SCRIPT_MEMORY_MB,
   initialRuntime: Record<string, unknown> = {},
 ): Promise<T> {
   const startTime = Date.now();
+
+  const createFallbackTestResults = (errMsg: string, duration = 0): TestAssertionResult[] => {
+    if (Array.isArray(payload.tests)) {
+      return (payload.tests as Array<{ name?: string; assert?: string }>).map(t => ({
+        name: t.name || 'Assertion',
+        assert: t.assert || '',
+        passed: false,
+        message: errMsg,
+        durationMs: duration,
+      }));
+    }
+    return [];
+  };
 
   return new Promise<T>(resolve => {
     let completed = false;
@@ -80,6 +97,7 @@ function runScriptInProcess<T extends PreRequestOutput | PostResponseOutput>(
         success: false,
         error: timeoutError,
         runtimeVariables: initialRuntime,
+        results: createFallbackTestResults(`Execution timed out after ${timeoutMs}ms`, durationMs),
         logs: [
           {
             level: 'error',
@@ -107,6 +125,7 @@ function runScriptInProcess<T extends PreRequestOutput | PostResponseOutput>(
         success: responseMsg.success,
         runtimeVariables: responseMsg.runtimeVariables || initialRuntime,
         modifiedRequest: responseMsg.modifiedRequest,
+        results: responseMsg.testResults || [],
         logs,
         error: responseMsg.error,
         durationMs,
@@ -127,6 +146,7 @@ function runScriptInProcess<T extends PreRequestOutput | PostResponseOutput>(
         success: false,
         error: err,
         runtimeVariables: initialRuntime,
+        results: createFallbackTestResults(msg, durationMs),
         logs: [
           {
             level: 'error',
@@ -146,6 +166,7 @@ function runScriptInProcess<T extends PreRequestOutput | PostResponseOutput>(
         success: false,
         error: scriptErr,
         runtimeVariables: initialRuntime,
+        results: createFallbackTestResults(err.message, durationMs),
         logs: [
           {
             level: 'error',
@@ -246,6 +267,41 @@ export function executePostResponseScript(input: PostResponseInput): Promise<Pos
     'post',
     {
       script,
+      request,
+      response,
+      variables,
+      runtimeVariables,
+    },
+    timeoutMs,
+    memoryLimitMb,
+    runtimeVariables,
+  );
+}
+
+export function executeTestAssertions(input: TestAssertionInput): Promise<TestAssertionOutput> {
+  const {
+    tests,
+    request,
+    response,
+    variables = {},
+    runtimeVariables = {},
+    timeoutMs = DEFAULT_SCRIPT_TIMEOUT_MS,
+    memoryLimitMb = DEFAULT_SCRIPT_MEMORY_MB,
+  } = input;
+
+  if (!tests || tests.length === 0) {
+    return Promise.resolve({
+      success: true,
+      results: [],
+      logs: [],
+      durationMs: 0,
+    });
+  }
+
+  return runScriptInProcess<TestAssertionOutput>(
+    'tests',
+    {
+      tests,
       request,
       response,
       variables,

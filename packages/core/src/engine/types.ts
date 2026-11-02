@@ -74,4 +74,6 @@ export interface ResponseResult {
   scriptLogs?: import('../scripts/types.js').ScriptLogEntry[];
   /** Any uncaught script error */
   scriptError?: import('../scripts/types.js').ScriptError | null;
+  /** Test assertion results executed on this response */
+  testResults?: import('../format/types.js').TestAssertionResult[];
 }

@@ -151,6 +151,9 @@ export default function App(): React.JSX.Element {
     bodyContent: '',
     bodyFormRows: [],
     bodyMultipartRows: [],
+    preScript: '',
+    postScript: '',
+    tests: [],
     isDirty: false,
   };
 
@@ -840,6 +843,8 @@ export default function App(): React.JSX.Element {
                     onPreScriptChange={s => updateActiveDraft({ preScript: s })}
                     postScript={activeDraft.postScript}
                     onPostScriptChange={s => updateActiveDraft({ postScript: s })}
+                    tests={activeDraft.tests || []}
+                    onTestsChange={t => updateActiveDraft({ tests: t })}
                     isWorkspaceTrusted={isWorkspaceTrusted}
                     onTrustWorkspace={() => setWorkspaceTrusted(true)}
                     knownVariables={knownVariableNames}

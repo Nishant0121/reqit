@@ -15,6 +15,9 @@ import {
   RefreshCw,
   Clock,
   Layers,
+  CheckCircle2,
+  XCircle,
+  FlaskConical,
 } from 'lucide-react';
 import type { ResponseResult } from '@reqit/core';
 import { StatusBadge } from './ui/Badge';
@@ -56,7 +59,11 @@ export function ResponsePanel({
   onClearScriptLogs,
 }: ResponsePanelProps): React.JSX.Element {
   // Navigation & view states
-  const [activeTab, setActiveTab] = useState<'body' | 'headers' | 'timing' | 'console'>('body');
+  const [activeTab, setActiveTab] = useState<'body' | 'headers' | 'timing' | 'tests' | 'console'>(
+    'body',
+  );
+  const [testFilter, setTestFilter] = useState<'all' | 'passed' | 'failed'>('all');
+  const [testSearch, setTestSearch] = useState<string>('');
   const [consoleFilter, setConsoleFilter] = useState<'all' | 'log' | 'info' | 'warn' | 'error'>(
     'all',
   );
@@ -127,6 +134,18 @@ export function ResponsePanel({
   }, [scriptLogs, result?.scriptLogs]);
 
   const currentScriptError = scriptError ?? result?.scriptError ?? null;
+
+  const testResults = useMemo(() => {
+    return result?.testResults || [];
+  }, [result?.testResults]);
+
+  const testStats = useMemo(() => {
+    const total = testResults.length;
+    const passed = testResults.filter(t => t.passed).length;
+    const failed = total - passed;
+    const allPassed = total > 0 && passed === total;
+    return { total, passed, failed, allPassed };
+  }, [testResults]);
 
   // Auto-detect pretty mode and default view when result arrives
   useEffect(() => {
@@ -511,6 +530,32 @@ export function ResponsePanel({
             <Layers className="h-3.5 w-3.5 text-(--text-muted)" strokeWidth={1.75} />
             {formatBytes(result.sizeBytes)}
           </span>
+
+          {/* Pass/fail summary badge in the response header (Phase 17) */}
+          {testStats.total > 0 && (
+            <button
+              type="button"
+              onClick={() => setActiveTab('tests')}
+              className="transition-fast flex cursor-pointer items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-medium hover:opacity-85"
+              style={{
+                backgroundColor: testStats.allPassed
+                  ? 'rgba(16, 185, 129, 0.15)'
+                  : 'rgba(239, 68, 68, 0.15)',
+                color: testStats.allPassed ? 'rgb(16, 185, 129)' : 'rgb(239, 68, 68)',
+                border: `1px solid ${testStats.allPassed ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
+              }}
+              title="Click to view test results"
+            >
+              {testStats.allPassed ? (
+                <CheckCircle2 className="h-3.5 w-3.5" strokeWidth={2.2} />
+              ) : (
+                <XCircle className="h-3.5 w-3.5" strokeWidth={2.2} />
+              )}
+              <span>
+                {testStats.passed}/{testStats.total} passed
+              </span>
+            </button>
+          )}
         </div>
 
         {/* Action buttons (Search, Copy, Save) */}
@@ -564,6 +609,11 @@ export function ResponsePanel({
             { id: 'body', label: strings.responsePanel.bodyTab },
             { id: 'headers', label: strings.responsePanel.headersTab, count: headersList.length },
             { id: 'timing', label: strings.responsePanel.timingTab },
+            {
+              id: 'tests',
+              label: strings.responsePanel.testsTab,
+              count: testStats.total > 0 ? testStats.total : undefined,
+            },
             {
               id: 'console',
               label: 'Console',
@@ -972,6 +1022,216 @@ export function ResponsePanel({
                 No timing breakdown available for this request.
               </div>
             )}
+          </div>
+        )}
+
+        {/* TESTS RESULTS TAB VIEW (Phase 17) */}
+        {activeTab === 'tests' && (
+          <div className="flex flex-col gap-3 text-[12px]">
+            {/* Tests Toolbar */}
+            <div
+              className="flex flex-wrap items-center justify-between gap-2 border-b pb-2 select-none"
+              style={{ borderColor: 'var(--border)' }}
+            >
+              <div className="flex items-center gap-1">
+                {(['all', 'passed', 'failed'] as const).map(f => {
+                  const count =
+                    f === 'all'
+                      ? testStats.total
+                      : f === 'passed'
+                        ? testStats.passed
+                        : testStats.failed;
+                  return (
+                    <button
+                      key={f}
+                      type="button"
+                      onClick={() => setTestFilter(f)}
+                      className={`rounded px-2.5 py-0.5 text-[11px] font-medium transition-colors ${
+                        testFilter === f
+                          ? 'bg-(--accent) text-(--accent-fg)'
+                          : 'text-(--text-secondary) hover:text-(--text-primary)'
+                      }`}
+                    >
+                      {f.toUpperCase()} ({count})
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  placeholder="Filter test results..."
+                  value={testSearch}
+                  onChange={e => setTestSearch(e.target.value)}
+                  className="h-6 w-44 rounded border px-2 text-[11px] outline-none"
+                  style={{
+                    backgroundColor: 'var(--bg-input)',
+                    borderColor: 'var(--border)',
+                    color: 'var(--text-primary)',
+                  }}
+                />
+                {testSearch && (
+                  <button
+                    type="button"
+                    onClick={() => setTestSearch('')}
+                    className="text-(--text-muted) hover:text-(--text-primary)"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Test Results Summary Banner */}
+            {testStats.total > 0 && (
+              <div
+                className="flex items-center justify-between rounded border px-3 py-2"
+                style={{
+                  backgroundColor: testStats.allPassed
+                    ? 'rgba(16, 185, 129, 0.1)'
+                    : 'rgba(239, 68, 68, 0.1)',
+                  borderColor: testStats.allPassed
+                    ? 'rgba(16, 185, 129, 0.3)'
+                    : 'rgba(239, 68, 68, 0.3)',
+                }}
+              >
+                <div className="flex items-center gap-2">
+                  {testStats.allPassed ? (
+                    <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-400" />
+                  ) : (
+                    <XCircle className="h-4 w-4 shrink-0 text-rose-400" />
+                  )}
+                  <span
+                    className="text-[12px] font-medium"
+                    style={{
+                      color: testStats.allPassed ? 'rgb(16, 185, 129)' : 'rgb(239, 68, 68)',
+                    }}
+                  >
+                    {testStats.allPassed
+                      ? `All ${testStats.total} test assertions passed`
+                      : `${testStats.failed} of ${testStats.total} test assertions failed`}
+                  </span>
+                </div>
+                <div className="font-mono text-[11px] text-(--text-secondary)">
+                  {testStats.passed} passed, {testStats.failed} failed
+                </div>
+              </div>
+            )}
+
+            {/* Test Results List */}
+            {(() => {
+              if (testStats.total === 0) {
+                return (
+                  <div
+                    className="flex flex-col items-center justify-center py-12 text-center"
+                    style={{ color: 'var(--text-muted)' }}
+                  >
+                    <FlaskConical className="mb-2 h-10 w-10 text-(--accent) opacity-40" />
+                    <p className="text-[13px] font-medium text-(--text-primary)">
+                      No tests executed
+                    </p>
+                    <p className="mt-1 max-w-sm text-[12px] text-(--text-secondary)">
+                      Define test assertions in the Request builder's "Tests" tab to automatically
+                      validate responses.
+                    </p>
+                  </div>
+                );
+              }
+
+              const filtered = testResults
+                .filter(t => {
+                  if (testFilter === 'passed') return t.passed;
+                  if (testFilter === 'failed') return !t.passed;
+                  return true;
+                })
+                .filter(t => {
+                  if (!testSearch.trim()) return true;
+                  const q = testSearch.toLowerCase();
+                  return t.name.toLowerCase().includes(q) || t.assert.toLowerCase().includes(q);
+                });
+
+              if (filtered.length === 0) {
+                return (
+                  <div
+                    className="py-8 text-center text-[12px]"
+                    style={{ color: 'var(--text-muted)' }}
+                  >
+                    No test assertions match "{testSearch}".
+                  </div>
+                );
+              }
+
+              return (
+                <div className="flex flex-col gap-2">
+                  {filtered.map((t, idx) => (
+                    <div
+                      key={idx}
+                      className="transition-fast flex flex-col gap-2 rounded border p-2.5"
+                      style={{
+                        backgroundColor: 'var(--bg-surface)',
+                        borderColor: t.passed ? 'var(--border)' : 'rgba(239, 68, 68, 0.4)',
+                      }}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          {t.passed ? (
+                            <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-400" />
+                          ) : (
+                            <XCircle className="h-4 w-4 shrink-0 text-rose-400" />
+                          )}
+                          <span className="text-[12px] font-medium text-(--text-primary)">
+                            {t.name}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {t.durationMs !== undefined && (
+                            <span className="font-mono text-[10px] text-(--text-muted)">
+                              {t.durationMs}ms
+                            </span>
+                          )}
+                          <span
+                            className={`py-0.2 rounded border px-1.5 text-[9px] font-bold tracking-wider uppercase ${
+                              t.passed
+                                ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
+                                : 'border-rose-500/30 bg-rose-500/10 text-rose-400'
+                            }`}
+                          >
+                            {t.passed ? 'PASS' : 'FAIL'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Assertion expression */}
+                      {t.assert && (
+                        <div
+                          className="overflow-x-auto rounded border px-2 py-1 font-mono text-[11px] whitespace-pre text-(--text-secondary)"
+                          style={{
+                            backgroundColor: 'var(--bg-base)',
+                            borderColor: 'var(--border)',
+                          }}
+                        >
+                          {t.assert}
+                        </div>
+                      )}
+
+                      {/* Failure message */}
+                      {!t.passed && t.message && (
+                        <div
+                          className="rounded border px-2.5 py-1.5 font-mono text-[11px] break-words text-rose-300"
+                          style={{
+                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                            borderColor: 'rgba(239, 68, 68, 0.25)',
+                          }}
+                        >
+                          {t.message}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
           </div>
         )}
 

@@ -93,6 +93,7 @@ export const testAssertionSchema = z
     assert: z.string({
       message: 'Test assertion field "assert" is required',
     }),
+    enabled: z.boolean().optional(),
   })
   .passthrough();
 

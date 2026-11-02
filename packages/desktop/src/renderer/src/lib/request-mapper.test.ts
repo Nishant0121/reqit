@@ -118,4 +118,36 @@ describe('request-mapper', () => {
     expect(converted.scripts?.pre).toBe("req.headers.set('X-Modified', '123');");
     expect(converted.scripts?.post).toBe("reqit.setVar('token', res.json().token);");
   });
+
+  it('maps test assertions correctly (Phase 17)', () => {
+    const fileWithTests: RequestFile = {
+      version: 1,
+      name: 'Tested Request',
+      method: 'GET',
+      url: 'https://example.com/status',
+      tests: [
+        { name: 'Status is 200', assert: 'res.status === 200' },
+        { name: 'Body contains ok', assert: 'res.body.includes("ok")' },
+      ],
+    };
+
+    const draft = requestFileToDraft(fileWithTests);
+    expect(draft.tests).toHaveLength(2);
+    expect(draft.tests![0]!.name).toBe('Status is 200');
+    expect(draft.tests![0]!.assert).toBe('res.status === 200');
+    expect(draft.tests![0]!.enabled).toBe(true);
+
+    draft.tests?.push({
+      id: 'test-new-1',
+      name: 'Time under 500ms',
+      assert: 'res.timeMs < 500',
+      enabled: true,
+    });
+    draft.isDirty = true;
+
+    const converted = draftToRequestFile(draft);
+    expect(converted.tests).toHaveLength(3);
+    expect(converted.tests![2]!.name).toBe('Time under 500ms');
+    expect(converted.tests![2]!.assert).toBe('res.timeMs < 500');
+  });
 });

@@ -1,6 +1,6 @@
 import type { Body, KeyValue } from '../format/types.js';
 
-export type ScriptType = 'pre' | 'post';
+export type ScriptType = 'pre' | 'post' | 'tests';
 
 export interface ScriptLogEntry {
   level: 'log' | 'info' | 'warn' | 'error';
@@ -66,6 +66,24 @@ export interface PostResponseInput {
 export interface PostResponseOutput {
   success: boolean;
   runtimeVariables: Record<string, unknown>;
+  logs: ScriptLogEntry[];
+  error?: ScriptError;
+  durationMs: number;
+}
+
+export interface TestAssertionInput {
+  tests: Array<{ name: string; assert: string; enabled?: boolean; [key: string]: unknown }>;
+  request: ScriptRequestData;
+  response: ScriptResponseData;
+  variables?: Record<string, unknown>;
+  runtimeVariables?: Record<string, unknown>;
+  timeoutMs?: number;
+  memoryLimitMb?: number;
+}
+
+export interface TestAssertionOutput {
+  success: boolean;
+  results: import('../format/types.js').TestAssertionResult[];
   logs: ScriptLogEntry[];
   error?: ScriptError;
   durationMs: number;

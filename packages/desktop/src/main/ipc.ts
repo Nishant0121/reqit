@@ -14,12 +14,14 @@ import {
   importPostmanCollectionToDirectory,
   executePreRequestScript,
   executePostResponseScript,
+  executeTestAssertions,
   getMergedVariables,
   type VariableScopes,
   type RequestFile,
   type PostmanImportReport,
   type ScriptLogEntry,
   type ScriptError,
+  type TestAssertionResult,
 } from '@reqit/core';
 import { fileService } from './services/file-service.js';
 import { historyService } from './services/history-service.js';
@@ -231,11 +233,16 @@ export function registerIpcHandlers(): void {
       let requestToExecute: RequestFile = { ...request };
 
       // Pre-request script execution
-      if (!isTrusted && (request.scripts?.pre || request.scripts?.post)) {
+      if (
+        !isTrusted &&
+        (request.scripts?.pre ||
+          request.scripts?.post ||
+          (request.tests && request.tests.length > 0))
+      ) {
         scriptLogs.push({
           level: 'warn',
           args: [
-            'Workspace is not trusted. Script execution skipped. Click "Trust Collection" to enable scripts.',
+            'Workspace is not trusted. Script and test execution skipped. Click "Trust Collection" to enable.',
           ],
           timestamp: Date.now(),
         });
@@ -391,6 +398,51 @@ export function registerIpcHandlers(): void {
         }
       }
 
+      // Test assertions execution (Phase 17)
+      let testResults: TestAssertionResult[] = [];
+      if (request.tests && request.tests.length > 0) {
+        if (!isTrusted) {
+          testResults = request.tests
+            .filter(t => t.enabled !== false)
+            .map(t => ({
+              name: t.name,
+              assert: t.assert,
+              passed: false,
+              message:
+                'Workspace is not trusted. Test assertions skipped. Click "Trust Collection" to run tests.',
+            }));
+        } else {
+          try {
+            const testOutput = await executeTestAssertions({
+              tests: request.tests,
+              request: {
+                url: resolvedRequest.url,
+                method: resolvedRequest.method,
+                headers: resolvedRequest.headers,
+                body: resolvedRequest.body,
+              },
+              response: {
+                status: result.status,
+                statusText: result.statusText,
+                headers: result.headers,
+                body: result.body,
+                totalMs: result.totalMs,
+              },
+              variables: varMap,
+              runtimeVariables: currentRuntimeVars,
+              timeoutMs: 3000,
+            });
+
+            if (testOutput.logs) {
+              scriptLogs.push(...testOutput.logs);
+            }
+            testResults = testOutput.results;
+          } catch (testErr) {
+            console.error('Failed to execute test assertions:', testErr);
+          }
+        }
+      }
+
       const durationMs = Date.now() - startTime;
       try {
         historyService.addEntry({
@@ -421,6 +473,7 @@ export function registerIpcHandlers(): void {
         runtimeVariables: currentRuntimeVars,
         scriptLogs,
         scriptError,
+        testResults,
       };
     } finally {
       activeRequests.delete(requestId);

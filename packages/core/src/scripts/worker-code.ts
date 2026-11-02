@@ -165,7 +165,7 @@ process.on('message', (msg) => {
   };
 
   let resObj = undefined;
-  if (type === 'post' && response) {
+  if ((type === 'post' || type === 'tests') && response) {
     const resHeaders = normalizeHeaders(response.headers);
     resObj = {
       status: Number(response.status) || 0,
@@ -211,10 +211,79 @@ process.on('message', (msg) => {
     };
   }
 
+  const assertFn = function(condition, message) {
+    if (!condition) {
+      throw new Error(message || 'Assertion failed');
+    }
+  };
+  assertFn.ok = assertFn;
+  assertFn.equal = (a, b, msg) => {
+    if (a != b) throw new Error(msg || ('Expected ' + JSON.stringify(a) + ' == ' + JSON.stringify(b)));
+  };
+  assertFn.strictEqual = (a, b, msg) => {
+    if (a !== b) throw new Error(msg || ('Expected ' + JSON.stringify(a) + ' === ' + JSON.stringify(b)));
+  };
+  assertFn.notEqual = (a, b, msg) => {
+    if (a == b) throw new Error(msg || ('Expected ' + JSON.stringify(a) + ' != ' + JSON.stringify(b)));
+  };
+  assertFn.notStrictEqual = (a, b, msg) => {
+    if (a === b) throw new Error(msg || ('Expected ' + JSON.stringify(a) + ' !== ' + JSON.stringify(b)));
+  };
+  assertFn.include = (haystack, needle, msg) => {
+    if (typeof haystack === 'string' || Array.isArray(haystack)) {
+      if (!haystack.includes(needle)) {
+        throw new Error(msg || ('Expected ' + JSON.stringify(haystack) + ' to include ' + JSON.stringify(needle)));
+      }
+    } else {
+      throw new Error('assert.include target must be string or array');
+    }
+  };
+  assertFn.fail = (msg) => { throw new Error(msg || 'Assertion failed'); };
+
+  const expectFn = function(actual) {
+    return {
+      toBe(expected) {
+        if (actual !== expected) {
+          throw new Error('Expected ' + JSON.stringify(expected) + ', got ' + JSON.stringify(actual));
+        }
+      },
+      toEqual(expected) {
+        if (JSON.stringify(actual) !== JSON.stringify(expected)) {
+          throw new Error('Expected ' + JSON.stringify(expected) + ', got ' + JSON.stringify(actual));
+        }
+      },
+      toBeTruthy() {
+        if (!actual) throw new Error('Expected truthy, got ' + JSON.stringify(actual));
+      },
+      toBeFalsy() {
+        if (actual) throw new Error('Expected falsy, got ' + JSON.stringify(actual));
+      },
+      toContain(needle) {
+        if (!actual || typeof actual.includes !== 'function' || !actual.includes(needle)) {
+          throw new Error('Expected ' + JSON.stringify(actual) + ' to contain ' + JSON.stringify(needle));
+        }
+      },
+      toBeGreaterThan(n) {
+        if (!(actual > n)) throw new Error('Expected ' + actual + ' > ' + n);
+      },
+      toBeLessThan(n) {
+        if (!(actual < n)) throw new Error('Expected ' + actual + ' < ' + n);
+      },
+      toBeDefined() {
+        if (actual === undefined) throw new Error('Expected defined, got undefined');
+      },
+      toBeNull() {
+        if (actual !== null) throw new Error('Expected null, got ' + JSON.stringify(actual));
+      },
+    };
+  };
+
   const sandbox = {
     req: reqObj,
     res: resObj,
     reqit: reqitObj,
+    assert: assertFn,
+    expect: expectFn,
     console: {
       log: (...args) => addLog('log', args),
       info: (...args) => addLog('info', args),
@@ -250,6 +319,77 @@ process.on('message', (msg) => {
   const context = vm.createContext(sandbox, {
     codeGeneration: { strings: false, wasm: false },
   });
+
+  if (type === 'tests') {
+    const testsList = Array.isArray(msg.tests) ? msg.tests : [];
+    const testResults = [];
+
+    for (let i = 0; i < testsList.length; i++) {
+      const t = testsList[i];
+      if (t.enabled === false) continue;
+
+      const name = String(t.name || ('Assertion ' + (i + 1)));
+      const assertCode = String(t.assert || '').trim();
+      const testStart = Date.now();
+      let passed = false;
+      let errMsg = undefined;
+
+      if (!assertCode) {
+        testResults.push({
+          name,
+          assert: assertCode,
+          passed: false,
+          message: 'Empty assertion expression',
+          durationMs: 0,
+        });
+        continue;
+      }
+
+      try {
+        const compiled = new vm.Script(assertCode, {
+          filename: 'test_' + (i + 1) + '.js',
+          displayErrors: true,
+        });
+
+        const val = compiled.runInContext(context, {
+          timeout: timeoutMs,
+          displayErrors: true,
+        });
+
+        if (val === false) {
+          passed = false;
+          errMsg = 'Assertion evaluated to false';
+        } else if (val === null) {
+          passed = false;
+          errMsg = 'Assertion evaluated to null';
+        } else if (typeof val === 'number' && isNaN(val)) {
+          passed = false;
+          errMsg = 'Assertion evaluated to NaN';
+        } else {
+          passed = true;
+        }
+      } catch (err) {
+        passed = false;
+        errMsg = err ? err.message : String(err);
+      }
+
+      testResults.push({
+        name,
+        assert: assertCode,
+        passed,
+        message: errMsg,
+        durationMs: Math.max(0, Date.now() - testStart),
+      });
+    }
+
+    const allPassed = testResults.length > 0 ? testResults.every(r => r.passed) : true;
+    process.send({
+      success: allPassed,
+      testResults,
+      logs,
+    });
+    return;
+  }
 
   try {
     const compiled = new vm.Script(script, {

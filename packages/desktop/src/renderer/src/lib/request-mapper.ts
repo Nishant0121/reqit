@@ -112,6 +112,12 @@ export function requestFileToDraft(
     bodyMultipartRows,
     preScript: file.scripts?.pre || '',
     postScript: file.scripts?.post || '',
+    tests: (file.tests || []).map((t, i) => ({
+      id: `test-${i}-${Date.now()}`,
+      name: t.name || '',
+      assert: t.assert || '',
+      enabled: t.enabled !== false,
+    })),
     isDirty: false,
     rawRequest: file,
   };
@@ -192,6 +198,15 @@ export function draftToRequestFile(draft: RequestDraft): RequestFile {
         }
       : undefined;
 
+  // Tests (Phase 17)
+  const tests = (draft.tests || [])
+    .filter(t => t.name.trim() !== '' || t.assert.trim() !== '')
+    .map(t => ({
+      name: t.name.trim() || 'Assertion',
+      assert: t.assert.trim(),
+      enabled: t.enabled !== false ? undefined : false,
+    }));
+
   return {
     version: 1,
     name: draft.name,
@@ -202,5 +217,6 @@ export function draftToRequestFile(draft: RequestDraft): RequestFile {
     auth,
     body,
     scripts,
+    tests: tests.length > 0 ? tests : undefined,
   };
 }

@@ -68,7 +68,7 @@ function createScalarNode(val: unknown, keyName = ''): YAML.Scalar {
     if (keyName === 'url') {
       s.type = 'QUOTE_SINGLE';
     } else if (
-      ['content', 'pre', 'post', 'docs'].includes(keyName) &&
+      ['content', 'pre', 'post', 'docs', 'assert'].includes(keyName) &&
       (isMultiLineBlock(val) || val.endsWith('\n'))
     ) {
       s.type = 'BLOCK_LITERAL';
@@ -170,14 +170,19 @@ function serializeScripts(scripts: Scripts): YAML.YAMLMap {
 
 function serializeTestAssertion(test: TestAssertion): YAML.YAMLMap {
   const map = new YAML.YAMLMap();
-  const keys = sortKeys(Object.keys(test), ['name', 'assert']);
+  const keys = sortKeys(Object.keys(test), ['name', 'assert', 'enabled']);
 
   for (const key of keys) {
     const val = (test as Record<string, unknown>)[key];
     if (val === undefined) continue;
 
     const keyScalar = new YAML.Scalar(key);
-    const valNode = createScalarNode(val, key);
+    let valNode: YAML.Node;
+    if (key === 'enabled') {
+      valNode = new YAML.Scalar(Boolean(val));
+    } else {
+      valNode = createScalarNode(val, key);
+    }
     map.items.push(new YAML.Pair(keyScalar, valNode));
   }
 

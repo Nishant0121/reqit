@@ -8,6 +8,9 @@ import {
   FileText,
   ListFilter,
   Paperclip,
+  Plus,
+  Trash2,
+  FlaskConical,
 } from 'lucide-react';
 import { Tabs } from './ui/Tabs';
 import { KeyValueTable, type KeyValueRow } from './ui/KeyValueTable';
@@ -16,7 +19,7 @@ import { CodeEditor } from './editor/CodeEditor';
 import { MultipartTable } from './MultipartTable';
 import { COMMON_HEADER_NAMES, getHeaderValueSuggestions } from '../lib/http-constants';
 import { strings } from '../lib/strings';
-import type { MultipartRow } from '../stores/requestStore';
+import type { MultipartRow, TestAssertionItem } from '../stores/requestStore';
 import { detectHardcodedSecrets } from '@reqit/core/format';
 
 export type AuthType = 'none' | 'bearer' | 'basic' | 'apiKey';
@@ -61,6 +64,8 @@ export interface RequestPanelProps {
   onPreScriptChange?: (script: string) => void;
   postScript?: string;
   onPostScriptChange?: (script: string) => void;
+  tests?: TestAssertionItem[];
+  onTestsChange?: (tests: TestAssertionItem[]) => void;
   isWorkspaceTrusted?: boolean;
   onTrustWorkspace?: () => void;
   knownVariables?: string[];
@@ -99,6 +104,8 @@ export function RequestPanel({
   onPreScriptChange,
   postScript = '',
   onPostScriptChange,
+  tests = [],
+  onTestsChange,
   isWorkspaceTrusted = true,
   onTrustWorkspace,
   knownVariables,
@@ -106,7 +113,7 @@ export function RequestPanel({
   onOpenSecrets,
 }: RequestPanelProps): React.JSX.Element {
   const [activeSubTab, setActiveSubTab] = useState<
-    'params' | 'headers' | 'auth' | 'body' | 'scripts'
+    'params' | 'headers' | 'auth' | 'body' | 'scripts' | 'tests'
   >('params');
   const [scriptSubTab, setScriptSubTab] = useState<'pre' | 'post'>('pre');
 
@@ -114,6 +121,29 @@ export function RequestPanel({
 
   const activeParamsCount = params.filter(p => p.enabled && p.key.trim() !== '').length;
   const activeHeadersCount = headers.filter(h => h.enabled && h.key.trim() !== '').length;
+  const activeTestsCount = (tests || []).filter(
+    t => t.enabled !== false && (t.name.trim() !== '' || t.assert.trim() !== ''),
+  ).length;
+
+  const handleAddTest = (initialName = '', initialAssert = '') => {
+    const newTest: TestAssertionItem = {
+      id: `test-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+      name: initialName,
+      assert: initialAssert,
+      enabled: true,
+    };
+    onTestsChange?.([...(tests || []), newTest]);
+  };
+
+  const handleUpdateTest = (id: string, updates: Partial<TestAssertionItem>) => {
+    const updated = (tests || []).map(t => (t.id === id ? { ...t, ...updates } : t));
+    onTestsChange?.(updated);
+  };
+
+  const handleDeleteTest = (id: string) => {
+    const updated = (tests || []).filter(t => t.id !== id);
+    onTestsChange?.(updated);
+  };
 
   // Check for hardcoded secrets
   const hardcodedFindings = React.useMemo(() => {
@@ -164,6 +194,11 @@ export function RequestPanel({
             id: 'scripts',
             label: strings.requestPanel.scripts,
             count: (preScript.trim() ? 1 : 0) + (postScript.trim() ? 1 : 0) || undefined,
+          },
+          {
+            id: 'tests',
+            label: strings.requestPanel.tests,
+            count: activeTestsCount || undefined,
           },
         ]}
         activeId={activeSubTab}
@@ -813,6 +848,211 @@ export function RequestPanel({
                   <code className="text-emerald-400">reqit.log(...)</code>
                 </div>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* Tests & Assertions Tab (Phase 17) */}
+        {activeSubTab === 'tests' && (
+          <div className="flex flex-col space-y-3">
+            {/* Workspace trust notice */}
+            {!isWorkspaceTrusted && (
+              <div
+                className="flex items-center justify-between rounded border px-3 py-2 text-[12px]"
+                style={{
+                  backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                  borderColor: 'rgba(239, 68, 68, 0.3)',
+                  color: 'var(--text-primary)',
+                }}
+              >
+                <div className="flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 shrink-0 text-rose-400" />
+                  <span>
+                    Workspace is untrusted. Test assertions are disabled until you trust this
+                    collection.
+                  </span>
+                </div>
+                {onTrustWorkspace && (
+                  <button
+                    type="button"
+                    onClick={onTrustWorkspace}
+                    className="transition-fast shrink-0 rounded bg-rose-500/20 px-2 py-0.5 text-[11px] font-medium text-rose-300 hover:bg-rose-500/30"
+                  >
+                    Trust Collection
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* Quick-Add Helpers Bar */}
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
+                <span className="mr-1 font-medium text-(--text-secondary)">Quick Add:</span>
+                <button
+                  type="button"
+                  onClick={() => handleAddTest('Status is 200', 'res.status === 200')}
+                  className="transition-fast rounded border px-2 py-0.5 hover:bg-(--bg-hover)"
+                  style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)' }}
+                >
+                  + Status is 200
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    handleAddTest('Body contains string', 'res.body.includes("success")')
+                  }
+                  className="transition-fast rounded border px-2 py-0.5 hover:bg-(--bg-hover)"
+                  style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)' }}
+                >
+                  + Body contains
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleAddTest('JSON path equals', 'res.json().status === "ok"')}
+                  className="transition-fast rounded border px-2 py-0.5 hover:bg-(--bg-hover)"
+                  style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)' }}
+                >
+                  + JSON path equals
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleAddTest('Response time under 500ms', 'res.timeMs < 500')}
+                  className="transition-fast rounded border px-2 py-0.5 hover:bg-(--bg-hover)"
+                  style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)' }}
+                >
+                  + Response time under N ms
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    handleAddTest('Header Content-Type exists', 'res.headers.has("content-type")')
+                  }
+                  className="transition-fast rounded border px-2 py-0.5 hover:bg-(--bg-hover)"
+                  style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)' }}
+                >
+                  + Header exists
+                </button>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => handleAddTest('', '')}
+                className="transition-fast flex items-center gap-1 rounded bg-(--accent) px-2.5 py-1 text-[11px] font-medium text-white hover:opacity-90"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                Add Assertion
+              </button>
+            </div>
+
+            {/* Test Assertions List */}
+            {!tests || tests.length === 0 ? (
+              <div
+                className="flex flex-col items-center justify-center rounded border border-dashed px-4 py-8 text-center"
+                style={{ borderColor: 'var(--border)', color: 'var(--text-muted)' }}
+              >
+                <FlaskConical className="mb-2 h-8 w-8 text-(--accent) opacity-50" />
+                <p className="text-[13px] font-medium text-(--text-primary)">
+                  No test assertions added
+                </p>
+                <p className="mt-1 max-w-sm text-[12px] text-(--text-secondary)">
+                  Add assertions to automatically verify response status, headers, body content, and
+                  latency after every run.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => handleAddTest('Status is 200', 'res.status === 200')}
+                  className="mt-3 rounded border px-3 py-1 text-[11px] font-medium text-(--accent) hover:bg-(--bg-hover)"
+                  style={{ borderColor: 'var(--border)' }}
+                >
+                  Add "Status is 200" Test
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {tests.map((test, index) => (
+                  <div
+                    key={test.id}
+                    className="transition-fast flex flex-col gap-2 rounded border p-2.5"
+                    style={{
+                      backgroundColor: 'var(--bg-surface)',
+                      borderColor: 'var(--border)',
+                      opacity: test.enabled === false ? 0.6 : 1,
+                    }}
+                  >
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={test.enabled !== false}
+                        onChange={e => handleUpdateTest(test.id, { enabled: e.target.checked })}
+                        className="h-3.5 w-3.5 cursor-pointer rounded accent-(--accent)"
+                        title="Enable / disable test assertion"
+                      />
+                      <input
+                        type="text"
+                        value={test.name}
+                        placeholder={`Assertion #${index + 1} Name (e.g. Status is 200)`}
+                        onChange={e => handleUpdateTest(test.id, { name: e.target.value })}
+                        className="h-7 flex-1 rounded border px-2 text-[12px] font-medium outline-none"
+                        style={{
+                          backgroundColor: 'var(--bg-input)',
+                          borderColor: 'var(--border)',
+                          color: 'var(--text-primary)',
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteTest(test.id)}
+                        className="transition-fast flex h-7 w-7 items-center justify-center rounded text-(--text-muted) hover:bg-rose-500/20 hover:text-rose-400"
+                        title="Delete assertion"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <div className="w-full">
+                        <input
+                          type="text"
+                          value={test.assert}
+                          placeholder="Assertion expression, e.g. res.status === 200 or expect(res.status).toBe(200)"
+                          onChange={e => handleUpdateTest(test.id, { assert: e.target.value })}
+                          className="h-7 w-full rounded border px-2 font-mono text-[12px] outline-none"
+                          style={{
+                            backgroundColor: 'var(--bg-input)',
+                            borderColor: 'var(--border)',
+                            color: 'var(--accent)',
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Assertion Reference hints */}
+            <div
+              className="rounded p-2.5 font-mono text-[11px] leading-relaxed"
+              style={{
+                backgroundColor: 'var(--bg-surface)',
+                color: 'var(--text-secondary)',
+                border: '1px solid var(--border)',
+              }}
+            >
+              <div>
+                <span className="font-semibold text-(--text-primary)">Test Assertion API:</span>{' '}
+                <code className="text-sky-400">res.status</code>,{' '}
+                <code className="text-sky-400">res.statusText</code>,{' '}
+                <code className="text-sky-400">res.body</code>,{' '}
+                <code className="text-sky-400">res.json()</code>,{' '}
+                <code className="text-sky-400">res.timeMs</code>,{' '}
+                <code className="text-sky-400">res.headers.get('name')</code>,{' '}
+                <code className="text-sky-400">res.headers.has('name')</code>,{' '}
+                <code className="text-amber-400">assert(condition, message)</code>,{' '}
+                <code className="text-amber-400">assert.equal(a, b)</code>,{' '}
+                <code className="text-emerald-400">expect(val).toBe(expected)</code>,{' '}
+                <code className="text-emerald-400">expect(val).toContain(item)</code>
+              </div>
             </div>
           </div>
         )}

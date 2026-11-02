@@ -22,6 +22,13 @@ export interface RequestConflict {
   diskRequest: RequestFile;
 }
 
+export interface TestAssertionItem {
+  id: string;
+  name: string;
+  assert: string;
+  enabled?: boolean;
+}
+
 export interface RequestDraft {
   id: string;
   filePath?: string;
@@ -43,6 +50,7 @@ export interface RequestDraft {
   bodyMultipartRows: MultipartRow[];
   preScript?: string;
   postScript?: string;
+  tests?: TestAssertionItem[];
   isDirty?: boolean;
   parseError?: string;
   rawRequest?: RequestFile;
@@ -109,6 +117,7 @@ const DEFAULT_INITIAL_DRAFT: RequestDraft = {
   bodyMultipartRows: [],
   preScript: '',
   postScript: '',
+  tests: [],
   isDirty: false,
 };
 
