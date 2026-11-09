@@ -94,4 +94,103 @@ describe('request-mapper', () => {
     expect(draftApi.apiKeyValue).toBe('key-val');
     expect(draftApi.apiKeyIn).toBe('header');
   });
+
+  it('maps pre and post scripts correctly', () => {
+    const fileWithScripts: RequestFile = {
+      version: 1,
+      name: 'Scripted Request',
+      method: 'POST',
+      url: 'https://example.com/login',
+      scripts: {
+        pre: "req.headers.set('X-Start', 'true');",
+        post: "reqit.setVar('token', res.json().token);",
+      },
+    };
+
+    const draft = requestFileToDraft(fileWithScripts);
+    expect(draft.preScript).toBe("req.headers.set('X-Start', 'true');");
+    expect(draft.postScript).toBe("reqit.setVar('token', res.json().token);");
+
+    draft.preScript = "req.headers.set('X-Modified', '123');";
+    draft.isDirty = true;
+
+    const converted = draftToRequestFile(draft);
+    expect(converted.scripts?.pre).toBe("req.headers.set('X-Modified', '123');");
+    expect(converted.scripts?.post).toBe("reqit.setVar('token', res.json().token);");
+  });
+
+  it('maps test assertions correctly (Phase 17)', () => {
+    const fileWithTests: RequestFile = {
+      version: 1,
+      name: 'Tested Request',
+      method: 'GET',
+      url: 'https://example.com/status',
+      tests: [
+        { name: 'Status is 200', assert: 'res.status === 200' },
+        { name: 'Body contains ok', assert: 'res.body.includes("ok")' },
+      ],
+    };
+
+    const draft = requestFileToDraft(fileWithTests);
+    expect(draft.tests).toHaveLength(2);
+    expect(draft.tests![0]!.name).toBe('Status is 200');
+    expect(draft.tests![0]!.assert).toBe('res.status === 200');
+    expect(draft.tests![0]!.enabled).toBe(true);
+
+    draft.tests?.push({
+      id: 'test-new-1',
+      name: 'Time under 500ms',
+      assert: 'res.timeMs < 500',
+      enabled: true,
+    });
+    draft.isDirty = true;
+
+    const converted = draftToRequestFile(draft);
+    expect(converted.tests).toHaveLength(3);
+    expect(converted.tests![2]!.name).toBe('Time under 500ms');
+    expect(converted.tests![2]!.assert).toBe('res.timeMs < 500');
+  });
+
+  it('maps OAuth 2.0, Digest, AWS SigV4, and disableCookieJar (Phase 18)', () => {
+    const oauthReq: RequestFile = {
+      version: 1,
+      name: 'OAuth Request',
+      method: 'GET',
+      url: 'https://api.example.com/data',
+      disableCookieJar: true,
+      auth: {
+        type: 'oauth2',
+        grantType: 'authorization_code',
+        authUrl: 'https://auth.example.com/oauth/authorize',
+        tokenUrl: 'https://auth.example.com/oauth/token',
+        clientId: 'my-client-id',
+        usePkce: true,
+        accessToken: 'access-12345',
+      },
+    };
+
+    const draft = requestFileToDraft(oauthReq);
+    expect(draft.disableCookieJar).toBe(true);
+    expect(draft.authType).toBe('oauth2');
+    expect(draft.oauthGrantType).toBe('authorization_code');
+    expect(draft.oauthAuthUrl).toBe('https://auth.example.com/oauth/authorize');
+    expect(draft.oauthAccessToken).toBe('access-12345');
+
+    // Test conversion back to RequestFile
+    draft.isDirty = true;
+    draft.disableCookieJar = false;
+    draft.authType = 'digest';
+    draft.digestUser = 'admin';
+    draft.digestPass = 'secret123';
+    draft.digestRealm = 'Secured Area';
+
+    const converted = draftToRequestFile(draft);
+    expect(converted.disableCookieJar).toBeUndefined();
+    expect(converted.auth?.type).toBe('digest');
+    if (converted.auth?.type === 'digest') {
+      expect(converted.auth.username).toBe('admin');
+      expect(converted.auth.password).toBe('secret123');
+      expect(converted.auth.realm).toBe('Secured Area');
+    }
+  });
 });

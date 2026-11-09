@@ -37,6 +37,26 @@ export function requestFileToDraft(
   let apiKeyName = '';
   let apiKeyValue = '';
   let apiKeyIn: 'header' | 'query' = 'header';
+  let oauthGrantType: 'authorization_code' | 'client_credentials' | undefined = undefined;
+  let oauthAuthUrl = '';
+  let oauthTokenUrl = '';
+  let oauthClientId = '';
+  let oauthClientSecret = '';
+  let oauthScope = '';
+  let oauthRedirectUri = '';
+  let oauthUsePkce = true;
+  let oauthAccessToken = '';
+  let oauthRefreshToken = '';
+  let oauthTokenType = '';
+  let oauthTokenName = '';
+  let digestUser = '';
+  let digestPass = '';
+  let digestRealm = '';
+  let awsAccessKeyId = '';
+  let awsSecretAccessKey = '';
+  let awsRegion = '';
+  let awsService = '';
+  let awsSessionToken = '';
 
   if (file.auth) {
     const a = file.auth as Record<string, unknown>;
@@ -52,6 +72,33 @@ export function requestFileToDraft(
       apiKeyName = typeof a.key === 'string' ? a.key : '';
       apiKeyValue = typeof a.value === 'string' ? a.value : '';
       apiKeyIn = a.in === 'query' ? 'query' : 'header';
+    } else if (a.type === 'oauth2') {
+      authType = 'oauth2';
+      oauthGrantType =
+        a.grantType === 'client_credentials' ? 'client_credentials' : 'authorization_code';
+      oauthAuthUrl = typeof a.authUrl === 'string' ? a.authUrl : '';
+      oauthTokenUrl = typeof a.tokenUrl === 'string' ? a.tokenUrl : '';
+      oauthClientId = typeof a.clientId === 'string' ? a.clientId : '';
+      oauthClientSecret = typeof a.clientSecret === 'string' ? a.clientSecret : '';
+      oauthScope = typeof a.scope === 'string' ? a.scope : '';
+      oauthRedirectUri = typeof a.redirectUri === 'string' ? a.redirectUri : '';
+      oauthUsePkce = a.usePkce !== false;
+      oauthAccessToken = typeof a.accessToken === 'string' ? a.accessToken : '';
+      oauthRefreshToken = typeof a.refreshToken === 'string' ? a.refreshToken : '';
+      oauthTokenType = typeof a.tokenType === 'string' ? a.tokenType : '';
+      oauthTokenName = typeof a.tokenName === 'string' ? a.tokenName : '';
+    } else if (a.type === 'digest') {
+      authType = 'digest';
+      digestUser = typeof a.username === 'string' ? a.username : '';
+      digestPass = typeof a.password === 'string' ? a.password : '';
+      digestRealm = typeof a.realm === 'string' ? a.realm : '';
+    } else if (a.type === 'awsv4') {
+      authType = 'awsv4';
+      awsAccessKeyId = typeof a.accessKeyId === 'string' ? a.accessKeyId : '';
+      awsSecretAccessKey = typeof a.secretAccessKey === 'string' ? a.secretAccessKey : '';
+      awsRegion = typeof a.region === 'string' ? a.region : '';
+      awsService = typeof a.service === 'string' ? a.service : '';
+      awsSessionToken = typeof a.sessionToken === 'string' ? a.sessionToken : '';
     }
   }
 
@@ -106,10 +153,39 @@ export function requestFileToDraft(
     apiKeyName,
     apiKeyValue,
     apiKeyIn,
+    oauthGrantType,
+    oauthAuthUrl,
+    oauthTokenUrl,
+    oauthClientId,
+    oauthClientSecret,
+    oauthScope,
+    oauthRedirectUri,
+    oauthUsePkce,
+    oauthAccessToken,
+    oauthRefreshToken,
+    oauthTokenType,
+    oauthTokenName,
+    digestUser,
+    digestPass,
+    digestRealm,
+    awsAccessKeyId,
+    awsSecretAccessKey,
+    awsRegion,
+    awsService,
+    awsSessionToken,
+    disableCookieJar: file.disableCookieJar ?? false,
     bodyType,
     bodyContent,
     bodyFormRows,
     bodyMultipartRows,
+    preScript: file.scripts?.pre || '',
+    postScript: file.scripts?.post || '',
+    tests: (file.tests || []).map((t, i) => ({
+      id: `test-${i}-${Date.now()}`,
+      name: t.name || '',
+      assert: t.assert || '',
+      enabled: t.enabled !== false,
+    })),
     isDirty: false,
     rawRequest: file,
   };
@@ -151,6 +227,38 @@ export function draftToRequestFile(draft: RequestDraft): RequestFile {
       value: draft.apiKeyValue,
       in: draft.apiKeyIn || ('header' as const),
     };
+  } else if (draft.authType === 'oauth2') {
+    auth = {
+      type: 'oauth2' as const,
+      grantType: draft.oauthGrantType || 'authorization_code',
+      authUrl: draft.oauthAuthUrl,
+      tokenUrl: draft.oauthTokenUrl || '',
+      clientId: draft.oauthClientId || '',
+      clientSecret: draft.oauthClientSecret,
+      scope: draft.oauthScope,
+      redirectUri: draft.oauthRedirectUri,
+      usePkce: draft.oauthUsePkce,
+      accessToken: draft.oauthAccessToken,
+      refreshToken: draft.oauthRefreshToken,
+      tokenType: draft.oauthTokenType,
+      tokenName: draft.oauthTokenName,
+    };
+  } else if (draft.authType === 'digest' && (draft.digestUser || draft.digestPass)) {
+    auth = {
+      type: 'digest' as const,
+      username: draft.digestUser || '',
+      password: draft.digestPass || '',
+      realm: draft.digestRealm,
+    };
+  } else if (draft.authType === 'awsv4' && (draft.awsAccessKeyId || draft.awsSecretAccessKey)) {
+    auth = {
+      type: 'awsv4' as const,
+      accessKeyId: draft.awsAccessKeyId || '',
+      secretAccessKey: draft.awsSecretAccessKey || '',
+      region: draft.awsRegion || 'us-east-1',
+      service: draft.awsService || '',
+      sessionToken: draft.awsSessionToken,
+    };
   }
 
   // Body
@@ -181,6 +289,24 @@ export function draftToRequestFile(draft: RequestDraft): RequestFile {
     }
   }
 
+  // Scripts (Phase 16)
+  const scripts =
+    draft.preScript?.trim() || draft.postScript?.trim()
+      ? {
+          pre: draft.preScript?.trim() ? draft.preScript : undefined,
+          post: draft.postScript?.trim() ? draft.postScript : undefined,
+        }
+      : undefined;
+
+  // Tests (Phase 17)
+  const tests = (draft.tests || [])
+    .filter(t => t.name.trim() !== '' || t.assert.trim() !== '')
+    .map(t => ({
+      name: t.name.trim() || 'Assertion',
+      assert: t.assert.trim(),
+      enabled: t.enabled !== false ? undefined : false,
+    }));
+
   return {
     version: 1,
     name: draft.name,
@@ -189,6 +315,9 @@ export function draftToRequestFile(draft: RequestDraft): RequestFile {
     headers: headers.length > 0 ? headers : undefined,
     params: params.length > 0 ? params : undefined,
     auth,
+    disableCookieJar: draft.disableCookieJar ? true : undefined,
     body,
+    scripts,
+    tests: tests.length > 0 ? tests : undefined,
   };
 }

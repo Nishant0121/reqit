@@ -12,7 +12,8 @@ export interface KeyValue {
   [key: string]: unknown;
 }
 
-export type AuthType = 'none' | 'bearer' | 'basic' | 'apikey' | 'oauth2' | string;
+export type AuthType =
+  'none' | 'bearer' | 'basic' | 'apikey' | 'oauth2' | 'digest' | 'awsv4' | string;
 
 export interface AuthNone {
   type: 'none';
@@ -40,8 +41,69 @@ export interface AuthApiKey {
   [key: string]: unknown;
 }
 
+export interface AuthOAuth2 {
+  type: 'oauth2';
+  grantType: 'authorization_code' | 'client_credentials';
+  authUrl?: string;
+  tokenUrl?: string;
+  clientId?: string;
+  clientSecret?: string;
+  scope?: string;
+  redirectUri?: string;
+  usePkce?: boolean;
+  codeVerifier?: string;
+  accessToken?: string;
+  refreshToken?: string;
+  expiresAt?: number;
+  tokenType?: string;
+  [key: string]: unknown;
+}
+
+export interface AuthDigest {
+  type: 'digest';
+  username?: string;
+  password?: string;
+  realm?: string;
+  nonce?: string;
+  algorithm?: 'MD5' | 'SHA-256' | string;
+  qop?: 'auth' | 'auth-int' | string;
+  opaque?: string;
+  [key: string]: unknown;
+}
+
+export interface AuthAwsV4 {
+  type: 'awsv4';
+  accessKeyId: string;
+  secretAccessKey: string;
+  region: string;
+  service: string;
+  sessionToken?: string;
+  [key: string]: unknown;
+}
+
 export type Auth =
-  AuthNone | AuthBearer | AuthBasic | AuthApiKey | ({ type: string } & Record<string, unknown>);
+  | AuthNone
+  | AuthBearer
+  | AuthBasic
+  | AuthApiKey
+  | AuthOAuth2
+  | AuthDigest
+  | AuthAwsV4
+  | ({ type: string } & Record<string, unknown>);
+
+export interface Cookie {
+  name: string;
+  value: string;
+  domain: string;
+  path: string;
+  expires?: string;
+  maxAge?: number;
+  secure?: boolean;
+  httpOnly?: boolean;
+  sameSite?: 'Strict' | 'Lax' | 'None' | string;
+  hostOnly?: boolean;
+  creationDate?: number;
+}
 
 export type BodyType = 'none' | 'json' | 'text' | 'form' | 'multipart' | 'graphql' | string;
 
@@ -61,7 +123,16 @@ export interface Scripts {
 export interface TestAssertion {
   name: string;
   assert: string;
+  enabled?: boolean;
   [key: string]: unknown;
+}
+
+export interface TestAssertionResult {
+  name: string;
+  assert: string;
+  passed: boolean;
+  message?: string;
+  durationMs?: number;
 }
 
 export interface RequestFile {
@@ -75,6 +146,7 @@ export interface RequestFile {
   body?: Body;
   scripts?: Scripts;
   tests?: TestAssertion[];
+  disableCookieJar?: boolean;
   docs?: string;
   [key: string]: unknown;
 }

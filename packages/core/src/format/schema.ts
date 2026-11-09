@@ -93,6 +93,7 @@ export const testAssertionSchema = z
     assert: z.string({
       message: 'Test assertion field "assert" is required',
     }),
+    enabled: z.boolean().optional(),
   })
   .passthrough();
 
@@ -116,6 +117,7 @@ export const requestFileSchema = z
     body: bodySchema.optional(),
     scripts: scriptsSchema.optional(),
     tests: z.array(testAssertionSchema).optional(),
+    disableCookieJar: z.boolean().optional(),
     docs: z.string().optional(),
   })
   .passthrough();

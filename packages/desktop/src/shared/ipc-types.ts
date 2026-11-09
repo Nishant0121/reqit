@@ -173,6 +173,29 @@ export interface OpenJsonFileResult {
   content: string;
 }
 
+export interface OAuthAuthCodeConfig {
+  authUrl: string;
+  tokenUrl: string;
+  clientId: string;
+  clientSecret?: string;
+  scope?: string;
+  redirectUri?: string;
+  usePkce?: boolean;
+  collectionPath?: string;
+  activeEnvironment?: string;
+  tokenName?: string;
+}
+
+export interface OAuthClientCredentialsConfig {
+  tokenUrl: string;
+  clientId: string;
+  clientSecret: string;
+  scope?: string;
+  collectionPath?: string;
+  activeEnvironment?: string;
+  tokenName?: string;
+}
+
 export interface IpcChannels {
   'app:getVersion': () => Promise<string>;
   'app:getTestUrl': () => Promise<string>;
@@ -215,11 +238,38 @@ export interface IpcChannels {
   'dialog:selectDirectory': (title?: string) => Promise<string | null>;
   'postman:parse': (payload: PostmanParsePayload) => Promise<PostmanParseResult>;
   'postman:import': (payload: PostmanImportPayload) => Promise<PostmanImportReport>;
+  'workspace:isTrusted': (collectionPath: string) => Promise<boolean>;
+  'workspace:setTrusted': (payload: {
+    collectionPath: string;
+    trusted: boolean;
+  }) => Promise<boolean>;
+  'cookies:getForCollection': (collectionPath?: string) => Promise<import('@reqit/core').Cookie[]>;
+  'cookies:updateCookie': (payload: {
+    collectionPath?: string;
+    cookie: import('@reqit/core').Cookie;
+  }) => Promise<boolean>;
+  'cookies:deleteCookie': (payload: {
+    collectionPath?: string;
+    domain: string;
+    path: string;
+    name: string;
+  }) => Promise<boolean>;
+  'cookies:clear': (collectionPath?: string) => Promise<boolean>;
+  'oauth:startAuthCodeFlow': (
+    config: OAuthAuthCodeConfig,
+  ) => Promise<import('@reqit/core').OAuthTokenResult>;
+  'oauth:fetchClientCredentials': (
+    config: OAuthClientCredentialsConfig,
+  ) => Promise<import('@reqit/core').OAuthTokenResult>;
 }
 
 export type IpcChannelName = keyof IpcChannels;
 
 export interface ReqitApi {
+  /** Checks if a collection workspace is marked as trusted */
+  isWorkspaceTrusted: (collectionPath: string) => Promise<boolean>;
+  /** Updates the trust status for a collection workspace */
+  setWorkspaceTrusted: (collectionPath: string, trusted: boolean) => Promise<boolean>;
   /** Returns the current application version */
   getVersion: () => Promise<string>;
   /** Returns default target test URL (configured by environment in tests) */
@@ -302,6 +352,30 @@ export interface ReqitApi {
   parsePostman: (payload: PostmanParsePayload) => Promise<PostmanParseResult>;
   /** Imports Postman JSON collection and optional environment into target directory */
   importPostman: (payload: PostmanImportPayload) => Promise<PostmanImportReport>;
+  /** Gets all cookies for collection */
+  getCookies: (collectionPath?: string) => Promise<import('@reqit/core').Cookie[]>;
+  /** Adds or updates a cookie in the collection jar */
+  updateCookie: (
+    collectionPath: string | undefined,
+    cookie: import('@reqit/core').Cookie,
+  ) => Promise<boolean>;
+  /** Deletes a cookie by domain, path, and name */
+  deleteCookie: (payload: {
+    collectionPath?: string;
+    domain: string;
+    path: string;
+    name: string;
+  }) => Promise<boolean>;
+  /** Clears all cookies for a collection */
+  clearCookies: (collectionPath?: string) => Promise<boolean>;
+  /** Starts OAuth 2.0 Authorization Code Flow */
+  startOAuthAuthCodeFlow: (
+    config: OAuthAuthCodeConfig,
+  ) => Promise<import('@reqit/core').OAuthTokenResult>;
+  /** Fetches OAuth 2.0 Client Credentials token */
+  fetchOAuthClientCredentials: (
+    config: OAuthClientCredentialsConfig,
+  ) => Promise<import('@reqit/core').OAuthTokenResult>;
   /** Subscribes to native menu actions */
   onMenuAction: (callback: (action: string) => void) => () => void;
 }

@@ -12,13 +12,27 @@ import {
   parsePostmanCollection,
   parsePostmanEnvironment,
   importPostmanCollectionToDirectory,
+  executePreRequestScript,
+  executePostResponseScript,
+  executeTestAssertions,
+  getMergedVariables,
   type VariableScopes,
   type RequestFile,
   type PostmanImportReport,
+  type ScriptLogEntry,
+  type ScriptError,
+  type TestAssertionResult,
+  type Cookie,
 } from '@reqit/core';
 import { fileService } from './services/file-service.js';
 import { historyService } from './services/history-service.js';
 import { settingsService } from './services/settings-service.js';
+import { cookieService } from './services/cookie-service.js';
+import {
+  oauthService,
+  type OAuthAuthCodeConfig,
+  type OAuthClientCredentialsConfig,
+} from './services/oauth-service.js';
 import { openBundledExampleCollection } from './services/example-collection.js';
 import type { AppSettings } from '../shared/settings-types.js';
 import type {
@@ -199,14 +213,108 @@ export function registerIpcHandlers(): void {
       }
 
       // Scope 5: Runtime variables
-      if (payload.runtimeVariables) {
-        scopes.runtime = payload.runtimeVariables;
+      let currentRuntimeVars = { ...(payload.runtimeVariables || {}) };
+      scopes.runtime = currentRuntimeVars;
+
+      // Workspace trust check (Phase 16)
+      const appSettings = settingsService.getSettings();
+      const isTrusted = payload.collectionPath
+        ? (appSettings.trustedCollections || [])
+            .map(p => path.resolve(p))
+            .includes(path.resolve(payload.collectionPath))
+        : true;
+
+      const scriptLogs: ScriptLogEntry[] = [];
+      let scriptError: ScriptError | null = null;
+
+      // Build merged variables map for reqit.getVar
+      const mergedVars = getMergedVariables(scopes, {
+        activeEnvironment:
+          payload.activeEnvironment !== 'none' ? payload.activeEnvironment : undefined,
+      });
+      const varMap: Record<string, unknown> = {};
+      for (const [k, v] of mergedVars.entries()) {
+        varMap[k] = v.value;
+      }
+
+      let requestToExecute: RequestFile = { ...request };
+
+      // Pre-request script execution
+      if (
+        !isTrusted &&
+        (request.scripts?.pre ||
+          request.scripts?.post ||
+          (request.tests && request.tests.length > 0))
+      ) {
+        scriptLogs.push({
+          level: 'warn',
+          args: [
+            'Workspace is not trusted. Script and test execution skipped. Click "Trust Collection" to enable.',
+          ],
+          timestamp: Date.now(),
+        });
+      } else if (isTrusted && request.scripts?.pre && request.scripts.pre.trim()) {
+        const preResult = await executePreRequestScript({
+          script: request.scripts.pre,
+          request: {
+            url: request.url,
+            method: request.method,
+            headers: request.headers,
+            body: request.body,
+          },
+          variables: varMap,
+          runtimeVariables: currentRuntimeVars,
+          timeoutMs: 3000,
+        });
+
+        if (preResult.logs) {
+          scriptLogs.push(...preResult.logs);
+        }
+        currentRuntimeVars = { ...currentRuntimeVars, ...preResult.runtimeVariables };
+        scopes.runtime = currentRuntimeVars;
+
+        if (!preResult.success && preResult.error) {
+          scriptError = preResult.error;
+          const durationMs = Date.now() - startTime;
+          return {
+            status: 0,
+            statusText: 'Pre-request Script Error',
+            headers: [],
+            body: `Pre-request script failed: ${preResult.error.message}`,
+            sizeBytes: 0,
+            totalMs: durationMs,
+            timing: {
+              dnsMs: 0,
+              tcpMs: 0,
+              tlsMs: 0,
+              ttfbMs: 0,
+              downloadMs: 0,
+              totalMs: durationMs,
+            },
+            runtimeVariables: currentRuntimeVars,
+            scriptLogs,
+            scriptError,
+          };
+        }
+
+        if (preResult.modifiedRequest) {
+          requestToExecute = {
+            ...requestToExecute,
+            url: preResult.modifiedRequest.url,
+            method: preResult.modifiedRequest.method as import('@reqit/core').HttpMethod,
+            headers: preResult.modifiedRequest.headers,
+            body:
+              preResult.modifiedRequest.body !== undefined
+                ? { type: 'text', content: preResult.modifiedRequest.body }
+                : requestToExecute.body,
+          };
+        }
       }
 
       // 2. Resolve request variables
-      let resolvedRequest: RequestFile = request;
+      let resolvedRequest: RequestFile = requestToExecute;
       try {
-        resolvedRequest = resolveRequest(request, scopes, {
+        resolvedRequest = resolveRequest(requestToExecute, scopes, {
           activeEnvironment:
             payload.activeEnvironment !== 'none' ? payload.activeEnvironment : undefined,
         });
@@ -220,9 +328,14 @@ export function registerIpcHandlers(): void {
       }
 
       // Merge application settings defaults with request options
-      const appSettings = settingsService.getSettings();
+      const cookieJar = payload.collectionPath
+        ? cookieService.getJar(payload.collectionPath)
+        : cookieService.getJar();
+
       const sendOptions = {
         ...options,
+        cookieJar,
+        disableCookieJar: options?.disableCookieJar ?? request.disableCookieJar,
         timeoutMs: options?.timeoutMs ?? appSettings.requestTimeoutMs,
         followRedirects: options?.followRedirects ?? appSettings.followRedirects,
         maxRedirects: options?.maxRedirects ?? appSettings.maxRedirects,
@@ -249,6 +362,13 @@ export function registerIpcHandlers(): void {
       let result;
       try {
         result = await sendRequest(resolvedRequest, sendOptions);
+        if (payload.collectionPath) {
+          try {
+            cookieService.saveCookies(payload.collectionPath);
+          } catch (cookieErr) {
+            console.error('Failed to save cookies for collection:', cookieErr);
+          }
+        }
       } catch (err: unknown) {
         const durationMs = Date.now() - startTime;
         try {
@@ -264,6 +384,83 @@ export function registerIpcHandlers(): void {
           console.error('Failed to record history entry on error:', histErr);
         }
         throw err;
+      }
+
+      // Post-response script execution (Phase 16)
+      if (isTrusted && request.scripts?.post && request.scripts.post.trim()) {
+        const postResult = await executePostResponseScript({
+          script: request.scripts.post,
+          request: {
+            url: resolvedRequest.url,
+            method: resolvedRequest.method,
+            headers: resolvedRequest.headers,
+            body: resolvedRequest.body,
+          },
+          response: {
+            status: result.status,
+            statusText: result.statusText,
+            headers: result.headers,
+            body: result.body,
+            totalMs: result.totalMs,
+          },
+          variables: varMap,
+          runtimeVariables: currentRuntimeVars,
+          timeoutMs: 3000,
+        });
+
+        if (postResult.logs) {
+          scriptLogs.push(...postResult.logs);
+        }
+        currentRuntimeVars = { ...currentRuntimeVars, ...postResult.runtimeVariables };
+
+        if (!postResult.success && postResult.error) {
+          scriptError = postResult.error;
+        }
+      }
+
+      // Test assertions execution (Phase 17)
+      let testResults: TestAssertionResult[] = [];
+      if (request.tests && request.tests.length > 0) {
+        if (!isTrusted) {
+          testResults = request.tests
+            .filter(t => t.enabled !== false)
+            .map(t => ({
+              name: t.name,
+              assert: t.assert,
+              passed: false,
+              message:
+                'Workspace is not trusted. Test assertions skipped. Click "Trust Collection" to run tests.',
+            }));
+        } else {
+          try {
+            const testOutput = await executeTestAssertions({
+              tests: request.tests,
+              request: {
+                url: resolvedRequest.url,
+                method: resolvedRequest.method,
+                headers: resolvedRequest.headers,
+                body: resolvedRequest.body,
+              },
+              response: {
+                status: result.status,
+                statusText: result.statusText,
+                headers: result.headers,
+                body: result.body,
+                totalMs: result.totalMs,
+              },
+              variables: varMap,
+              runtimeVariables: currentRuntimeVars,
+              timeoutMs: 3000,
+            });
+
+            if (testOutput.logs) {
+              scriptLogs.push(...testOutput.logs);
+            }
+            testResults = testOutput.results;
+          } catch (testErr) {
+            console.error('Failed to execute test assertions:', testErr);
+          }
+        }
       }
 
       const durationMs = Date.now() - startTime;
@@ -293,6 +490,11 @@ export function registerIpcHandlers(): void {
         timing: result.timing,
         redirectHops: result.redirectHops,
         redirects: result.redirects,
+        cookies: result.cookies,
+        runtimeVariables: currentRuntimeVars,
+        scriptLogs,
+        scriptError,
+        testResults,
       };
     } finally {
       activeRequests.delete(requestId);
@@ -536,6 +738,94 @@ export function registerIpcHandlers(): void {
       await fileService.openCollection(report.targetDirectory || targetDir.trim());
 
       return report;
+    },
+  );
+
+  // 36. workspace:isTrusted
+  ipcMain.handle(
+    'workspace:isTrusted',
+    async (_event, collectionPath: string): Promise<boolean> => {
+      if (!collectionPath) return true;
+      const settings = settingsService.getSettings();
+      const normalized = path.resolve(collectionPath);
+      return (settings.trustedCollections || []).map(p => path.resolve(p)).includes(normalized);
+    },
+  );
+
+  // 37. workspace:setTrusted
+  ipcMain.handle(
+    'workspace:setTrusted',
+    async (_event, payload: { collectionPath: string; trusted: boolean }): Promise<boolean> => {
+      if (!payload.collectionPath) return true;
+      const settings = settingsService.getSettings();
+      const normalized = path.resolve(payload.collectionPath);
+      let list = (settings.trustedCollections || []).map(p => path.resolve(p));
+      if (payload.trusted) {
+        if (!list.includes(normalized)) {
+          list.push(normalized);
+        }
+      } else {
+        list = list.filter(p => p !== normalized);
+      }
+      settingsService.updateSettings({ trustedCollections: list });
+      return payload.trusted;
+    },
+  );
+
+  // 38. cookies:getForCollection
+  ipcMain.handle(
+    'cookies:getForCollection',
+    async (_event, collectionPath?: string): Promise<Cookie[]> => {
+      return cookieService.getAll(collectionPath);
+    },
+  );
+
+  // 39. cookies:updateCookie
+  ipcMain.handle(
+    'cookies:updateCookie',
+    async (_event, payload: { collectionPath?: string; cookie: Cookie }): Promise<boolean> => {
+      cookieService.addOrUpdate(payload.collectionPath, payload.cookie);
+      return true;
+    },
+  );
+
+  // 40. cookies:deleteCookie
+  ipcMain.handle(
+    'cookies:deleteCookie',
+    async (
+      _event,
+      payload: {
+        collectionPath?: string;
+        domain: string;
+        path: string;
+        name: string;
+      },
+    ): Promise<boolean> => {
+      return cookieService.deleteCookie(
+        payload.collectionPath,
+        payload.domain,
+        payload.path,
+        payload.name,
+      );
+    },
+  );
+
+  // 41. cookies:clear
+  ipcMain.handle('cookies:clear', async (_event, collectionPath?: string): Promise<boolean> => {
+    cookieService.clear(collectionPath);
+    return true;
+  });
+
+  // 42. oauth:startAuthCodeFlow
+  ipcMain.handle('oauth:startAuthCodeFlow', async (_event, config: OAuthAuthCodeConfig) => {
+    return oauthService.startAuthCodeFlow(config);
+  });
+
+  // 43. oauth:fetchClientCredentials
+  ipcMain.handle(
+    'oauth:fetchClientCredentials',
+    async (_event, config: OAuthClientCredentialsConfig) => {
+      return oauthService.fetchClientCredentials(config);
     },
   );
 }

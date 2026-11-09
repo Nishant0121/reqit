@@ -25,8 +25,9 @@ import { tags } from '@lezer/highlight';
 import { json } from '@codemirror/lang-json';
 import { xml } from '@codemirror/lang-xml';
 import { html } from '@codemirror/lang-html';
+import { javascript } from '@codemirror/lang-javascript';
 
-export type EditorMode = 'json' | 'xml' | 'html' | 'text';
+export type EditorMode = 'json' | 'xml' | 'html' | 'javascript' | 'text';
 
 export interface CodeEditorProps {
   value: string;
@@ -72,6 +73,12 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(function
   const viewRef = useRef<EditorView | null>(null);
   const languageCompartment = useRef(new Compartment());
   const readOnlyCompartment = useRef(new Compartment());
+  const onChangeRef = useRef(onChange);
+  const isDispatchingRef = useRef(false);
+
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  });
 
   useImperativeHandle(ref, () => ({
     openSearch: () => {
@@ -90,6 +97,8 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(function
         return xml();
       case 'html':
         return html();
+      case 'javascript':
+        return javascript();
       default:
         return [];
     }
@@ -297,8 +306,8 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(function
     });
 
     const updateListener = EditorView.updateListener.of(update => {
-      if (update.docChanged && onChange) {
-        onChange(update.state.doc.toString());
+      if (update.docChanged && !isDispatchingRef.current && onChangeRef.current) {
+        onChangeRef.current(update.state.doc.toString());
       }
     });
 
@@ -356,9 +365,14 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(function
     if (!viewRef.current) return;
     const currentVal = viewRef.current.state.doc.toString();
     if (value !== currentVal) {
-      viewRef.current.dispatch({
-        changes: { from: 0, to: currentVal.length, insert: value },
-      });
+      isDispatchingRef.current = true;
+      try {
+        viewRef.current.dispatch({
+          changes: { from: 0, to: currentVal.length, insert: value },
+        });
+      } finally {
+        isDispatchingRef.current = false;
+      }
     }
   }, [value]);
 

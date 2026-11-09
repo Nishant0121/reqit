@@ -1,5 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { Globe, Lock, Plus, Trash2, Eye, EyeOff, Check, AlertTriangle, Edit2 } from 'lucide-react';
+import {
+  Globe,
+  Lock,
+  Plus,
+  Trash2,
+  Eye,
+  EyeOff,
+  Check,
+  AlertTriangle,
+  Edit2,
+  Zap,
+  Copy,
+} from 'lucide-react';
 import { Modal } from './ui/Modal';
 import { Button } from './ui/Button';
 import { useCollectionStore } from '../stores/collectionStore';
@@ -8,7 +20,7 @@ import type { EnvironmentFile, SecretsFile } from '@reqit/core/format';
 export interface EnvironmentSecretsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  initialTab?: 'environments' | 'secrets';
+  initialTab?: 'environments' | 'secrets' | 'runtime';
   initialVariableName?: string;
 }
 
@@ -28,13 +40,16 @@ export function EnvironmentSecretsModal({
     environments,
     secrets,
     activeEnvironment,
+    runtimeVariables,
+    setRuntimeVariables,
+    clearRuntimeVariables,
     setActiveEnvironment,
     saveEnvironment,
     deleteEnvironment,
     saveSecrets,
   } = useCollectionStore();
 
-  const [activeTab, setActiveTab] = useState<'environments' | 'secrets'>(initialTab);
+  const [activeTab, setActiveTab] = useState<'environments' | 'secrets' | 'runtime'>(initialTab);
   const [selectedEnv, setSelectedEnv] = useState<string>('dev');
   const [newEnvName, setNewEnvName] = useState<string>('');
   const [isAddingEnv, setIsAddingEnv] = useState<boolean>(false);
@@ -340,6 +355,22 @@ export function EnvironmentSecretsModal({
               <Lock className="h-4 w-4" />
               <span>Secrets</span>
             </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setActiveTab('runtime');
+                setStatusMessage(null);
+              }}
+              className="transition-fast flex items-center gap-1.5 rounded-sm px-3 py-1.5 font-medium"
+              style={{
+                backgroundColor: activeTab === 'runtime' ? 'var(--accent-subtle)' : 'transparent',
+                color: activeTab === 'runtime' ? 'var(--accent)' : 'var(--text-secondary)',
+              }}
+            >
+              <Zap className="h-4 w-4" />
+              <span>Runtime Variables ({Object.keys(runtimeVariables).length})</span>
+            </button>
           </div>
 
           {/* Active Status Message */}
@@ -361,349 +392,346 @@ export function EnvironmentSecretsModal({
           )}
         </div>
 
-        {/* Content Layout: Left sidebar (environment list) + Right table */}
-        <div className="flex min-h-0 flex-1 gap-4">
-          {/* Environments Sidebar */}
-          <div
-            className="flex w-48 shrink-0 flex-col overflow-y-auto border-r pr-3"
-            style={{ borderColor: 'var(--border)' }}
-          >
-            <div className="mb-2 flex items-center justify-between">
-              <span
-                className="text-[11px] font-semibold tracking-wider uppercase"
-                style={{ color: 'var(--text-muted)' }}
-              >
-                Environments
-              </span>
-              <button
-                type="button"
-                onClick={() => {
-                  setIsAddingEnv(true);
-                  setNewEnvName('');
-                }}
-                className="rounded p-1 text-(--text-secondary) hover:bg-(--bg-hover) hover:text-(--text-primary)"
-                title="Add Environment"
-              >
-                <Plus className="h-3.5 w-3.5" />
-              </button>
+        {/* Content Layout: Left sidebar (environment list) + Right table OR Runtime Variables View */}
+        {activeTab === 'runtime' ? (
+          <div className="flex flex-1 flex-col overflow-hidden">
+            <div className="mb-3 flex items-center justify-between">
+              <div>
+                <h3 className="text-[13px] font-semibold text-(--text-primary)">
+                  Active Runtime Variables
+                </h3>
+                <p className="text-[11px] text-(--text-muted)">
+                  In-memory variables set dynamically by pre-request and post-response scripts via{' '}
+                  <code className="text-amber-400">reqit.setVar(name, value)</code>. Highest
+                  resolution priority.
+                </p>
+              </div>
+              {Object.keys(runtimeVariables).length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    clearRuntimeVariables();
+                    setStatusMessage({ text: 'All runtime variables cleared.' });
+                  }}
+                  className="rounded border border-red-800/40 px-2.5 py-1 text-[11px] text-red-400 hover:bg-red-950/30"
+                >
+                  Clear All
+                </button>
+              )}
             </div>
 
-            {/* Inline Add Environment Form */}
-            {isAddingEnv && (
-              <div
-                className="mb-2 rounded border bg-(--bg-input) p-1.5"
-                style={{ borderColor: 'var(--border)' }}
-              >
-                <input
-                  type="text"
-                  placeholder="env-name (e.g. dev)"
-                  value={newEnvName}
-                  onChange={e => setNewEnvName(e.target.value)}
-                  onKeyDown={e => {
-                    if (e.key === 'Enter') handleAddEnv();
-                    if (e.key === 'Escape') setIsAddingEnv(false);
-                  }}
-                  autoFocus
-                  className="mb-1 w-full border-b bg-transparent px-1.5 py-1 font-mono text-[11px] text-(--text-primary) outline-none"
-                  style={{ borderColor: 'var(--accent)' }}
-                />
-                <div className="flex items-center justify-end gap-1">
-                  <button
-                    type="button"
-                    onClick={() => setIsAddingEnv(false)}
-                    className="px-1.5 py-0.5 text-[10px] text-(--text-muted) hover:text-(--text-primary)"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleAddEnv}
-                    className="rounded bg-(--accent) px-1.5 py-0.5 text-[10px] font-medium text-(--accent-fg)"
-                  >
-                    Create
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* List of Environments */}
-            <div className="flex flex-1 flex-col gap-1">
-              {envNames.length === 0 ? (
+            <div
+              className="flex-1 overflow-y-auto rounded border"
+              style={{ borderColor: 'var(--border)' }}
+            >
+              {Object.keys(runtimeVariables).length === 0 ? (
                 <div
-                  className="py-4 text-center text-[11px] italic"
+                  className="flex h-48 flex-col items-center justify-center gap-2 p-6 text-center text-[12px]"
                   style={{ color: 'var(--text-muted)' }}
                 >
-                  No environments yet.
+                  <Zap className="h-8 w-8 text-amber-500 opacity-40" />
+                  <div>No runtime variables are currently stored in memory.</div>
+                  <div className="text-[11px] opacity-75">
+                    Scripts can set variables with:{' '}
+                    <code className="font-mono text-(--text-primary)">
+                      reqit.setVar(&apos;token&apos;, &apos;value&apos;);
+                    </code>
+                  </div>
                 </div>
               ) : (
-                envNames.map(name => {
-                  const isSelected = selectedEnv === name;
-                  const isRenaming = renamingEnv === name;
+                <table className="w-full text-left text-[12px]">
+                  <thead>
+                    <tr
+                      className="border-b"
+                      style={{
+                        borderColor: 'var(--border)',
+                        backgroundColor: 'var(--bg-surface)',
+                      }}
+                    >
+                      <th className="w-1/4 p-2 px-3 font-semibold text-(--text-secondary)">Name</th>
+                      <th className="w-1/6 p-2 px-3 font-semibold text-(--text-secondary)">Type</th>
+                      <th className="p-2 px-3 font-semibold text-(--text-secondary)">Value</th>
+                      <th className="w-20 p-2 text-center text-(--text-secondary)">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {Object.entries(runtimeVariables).map(([key, val]) => {
+                      const valType = typeof val;
+                      const displayVal = valType === 'object' ? JSON.stringify(val) : String(val);
 
-                  if (isRenaming) {
+                      return (
+                        <tr
+                          key={key}
+                          className="border-b last:border-b-0 hover:bg-(--bg-hover)"
+                          style={{ borderColor: 'var(--border)' }}
+                        >
+                          <td className="p-2 px-3 font-mono font-medium text-amber-400">{key}</td>
+                          <td className="p-2 px-3 font-mono text-[11px] text-(--text-muted)">
+                            {valType}
+                          </td>
+                          <td
+                            className="max-w-xs truncate p-2 px-3 font-mono text-(--text-primary)"
+                            title={displayVal}
+                          >
+                            {displayVal}
+                          </td>
+                          <td className="p-2 text-center">
+                            <div className="flex items-center justify-center gap-1">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(displayVal);
+                                  setStatusMessage({ text: `Copied "${key}" to clipboard.` });
+                                }}
+                                className="rounded p-1 text-(--text-muted) hover:text-(--text-primary)"
+                                title="Copy value"
+                              >
+                                <Copy className="h-3.5 w-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const updated = { ...runtimeVariables };
+                                  delete updated[key];
+                                  clearRuntimeVariables();
+                                  setRuntimeVariables(updated);
+                                }}
+                                className="rounded p-1 text-(--text-muted) hover:text-red-400"
+                                title="Remove variable"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="flex min-h-0 flex-1 gap-4">
+            {/* Environments Sidebar */}
+            <div
+              className="flex w-48 shrink-0 flex-col overflow-y-auto border-r pr-3"
+              style={{ borderColor: 'var(--border)' }}
+            >
+              <div className="mb-2 flex items-center justify-between">
+                <span
+                  className="text-[11px] font-semibold tracking-wider uppercase"
+                  style={{ color: 'var(--text-muted)' }}
+                >
+                  Environments
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsAddingEnv(true);
+                    setNewEnvName('');
+                  }}
+                  className="rounded p-1 text-(--text-secondary) hover:bg-(--bg-hover) hover:text-(--text-primary)"
+                  title="Add Environment"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                </button>
+              </div>
+
+              {/* Inline Add Environment Form */}
+              {isAddingEnv && (
+                <div
+                  className="mb-2 rounded border bg-(--bg-input) p-1.5"
+                  style={{ borderColor: 'var(--border)' }}
+                >
+                  <input
+                    type="text"
+                    placeholder="env-name (e.g. dev)"
+                    value={newEnvName}
+                    onChange={e => setNewEnvName(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') handleAddEnv();
+                      if (e.key === 'Escape') setIsAddingEnv(false);
+                    }}
+                    autoFocus
+                    className="mb-1 w-full border-b bg-transparent px-1.5 py-1 font-mono text-[11px] text-(--text-primary) outline-none"
+                    style={{ borderColor: 'var(--accent)' }}
+                  />
+                  <div className="flex items-center justify-end gap-1">
+                    <button
+                      type="button"
+                      onClick={() => setIsAddingEnv(false)}
+                      className="px-1.5 py-0.5 text-[10px] text-(--text-muted) hover:text-(--text-primary)"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleAddEnv}
+                      className="rounded bg-(--accent) px-1.5 py-0.5 text-[10px] font-medium text-(--accent-fg)"
+                    >
+                      Create
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* List of Environments */}
+              <div className="flex flex-1 flex-col gap-1">
+                {envNames.length === 0 ? (
+                  <div
+                    className="py-4 text-center text-[11px] italic"
+                    style={{ color: 'var(--text-muted)' }}
+                  >
+                    No environments yet.
+                  </div>
+                ) : (
+                  envNames.map(name => {
+                    const isSelected = selectedEnv === name;
+                    const isRenaming = renamingEnv === name;
+
+                    if (isRenaming) {
+                      return (
+                        <div
+                          key={name}
+                          className="rounded border bg-(--bg-input) p-1"
+                          style={{ borderColor: 'var(--border)' }}
+                        >
+                          <input
+                            type="text"
+                            value={renameValue}
+                            onChange={e => setRenameValue(e.target.value)}
+                            onKeyDown={e => {
+                              if (e.key === 'Enter') handleRenameEnv(name);
+                              if (e.key === 'Escape') setRenamingEnv(null);
+                            }}
+                            autoFocus
+                            className="mb-1 w-full border-b bg-transparent px-1 py-0.5 font-mono text-[11px] outline-none"
+                            style={{ borderColor: 'var(--accent)' }}
+                          />
+                          <div className="flex items-center justify-end gap-1">
+                            <button
+                              type="button"
+                              onClick={() => setRenamingEnv(null)}
+                              className="px-1 text-[10px] text-(--text-muted)"
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleRenameEnv(name)}
+                              className="rounded bg-(--accent) px-1 text-[10px] text-(--accent-fg)"
+                            >
+                              Save
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    }
+
                     return (
                       <div
                         key={name}
-                        className="rounded border bg-(--bg-input) p-1"
-                        style={{ borderColor: 'var(--border)' }}
+                        onClick={() => setSelectedEnv(name)}
+                        className="group transition-fast flex cursor-pointer items-center justify-between rounded px-2.5 py-1.5"
+                        style={{
+                          backgroundColor: isSelected ? 'var(--accent-subtle)' : 'transparent',
+                          color: isSelected ? 'var(--accent)' : 'var(--text-primary)',
+                        }}
                       >
-                        <input
-                          type="text"
-                          value={renameValue}
-                          onChange={e => setRenameValue(e.target.value)}
-                          onKeyDown={e => {
-                            if (e.key === 'Enter') handleRenameEnv(name);
-                            if (e.key === 'Escape') setRenamingEnv(null);
-                          }}
-                          autoFocus
-                          className="mb-1 w-full border-b bg-transparent px-1 py-0.5 font-mono text-[11px] outline-none"
-                          style={{ borderColor: 'var(--accent)' }}
-                        />
-                        <div className="flex items-center justify-end gap-1">
+                        <span className="truncate font-mono text-[12px]">{name}</span>
+                        <div className="transition-fast flex items-center gap-1 opacity-0 group-hover:opacity-100">
                           <button
                             type="button"
-                            onClick={() => setRenamingEnv(null)}
-                            className="px-1 text-[10px] text-(--text-muted)"
+                            onClick={e => {
+                              e.stopPropagation();
+                              setRenamingEnv(name);
+                              setRenameValue(name);
+                            }}
+                            className="rounded p-0.5 text-(--text-muted) hover:bg-(--bg-hover) hover:text-(--text-primary)"
+                            title="Rename Environment"
                           >
-                            Cancel
+                            <Edit2 className="h-3 w-3" />
                           </button>
                           <button
                             type="button"
-                            onClick={() => handleRenameEnv(name)}
-                            className="rounded bg-(--accent) px-1 text-[10px] text-(--accent-fg)"
+                            onClick={e => {
+                              e.stopPropagation();
+                              handleDeleteEnv(name);
+                            }}
+                            className="rounded p-0.5 text-(--text-muted) hover:bg-red-950/40 hover:text-red-400"
+                            title="Delete Environment"
                           >
-                            Save
+                            <Trash2 className="h-3 w-3" />
                           </button>
                         </div>
                       </div>
                     );
-                  }
-
-                  return (
-                    <div
-                      key={name}
-                      onClick={() => setSelectedEnv(name)}
-                      className="group transition-fast flex cursor-pointer items-center justify-between rounded px-2.5 py-1.5"
-                      style={{
-                        backgroundColor: isSelected ? 'var(--accent-subtle)' : 'transparent',
-                        color: isSelected ? 'var(--accent)' : 'var(--text-primary)',
-                      }}
-                    >
-                      <span className="truncate font-mono text-[12px]">{name}</span>
-                      <div className="transition-fast flex items-center gap-1 opacity-0 group-hover:opacity-100">
-                        <button
-                          type="button"
-                          onClick={e => {
-                            e.stopPropagation();
-                            setRenamingEnv(name);
-                            setRenameValue(name);
-                          }}
-                          className="rounded p-0.5 text-(--text-muted) hover:bg-(--bg-hover) hover:text-(--text-primary)"
-                          title="Rename Environment"
-                        >
-                          <Edit2 className="h-3 w-3" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={e => {
-                            e.stopPropagation();
-                            handleDeleteEnv(name);
-                          }}
-                          className="rounded p-0.5 text-(--text-muted) hover:bg-red-950/40 hover:text-red-400"
-                          title="Delete Environment"
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })
-              )}
+                  })
+                )}
+              </div>
             </div>
-          </div>
 
-          {/* Right Main Editor Area */}
-          <div className="flex min-w-0 flex-1 flex-col">
-            {activeTab === 'environments' ? (
-              <>
-                {/* Environments Table Header */}
-                <div className="mb-2 flex items-center justify-between pb-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[13px] font-semibold text-(--text-primary)">
-                      Variables for:
-                    </span>
-                    <span className="rounded bg-(--accent-subtle) px-2 py-0.5 font-mono text-[11px] font-semibold text-(--accent)">
-                      {selectedEnv}
-                    </span>
-                  </div>
-                  <Button
-                    variant="secondary"
-                    size="compact"
-                    onClick={handleAddEnvVarRow}
-                    icon={<Plus className="h-3.5 w-3.5" />}
-                  >
-                    Add Variable
-                  </Button>
-                </div>
-
-                {/* Variables Table */}
-                <div
-                  className="flex-1 overflow-y-auto rounded border"
-                  style={{ borderColor: 'var(--border)', backgroundColor: 'var(--bg-input)' }}
-                >
-                  <table className="w-full border-collapse text-left font-mono text-[12px]">
-                    <thead
-                      className="sticky top-0 z-10 border-b select-none"
-                      style={{
-                        backgroundColor: 'var(--bg-surface)',
-                        borderColor: 'var(--border)',
-                      }}
+            {/* Right Main Editor Area */}
+            <div className="flex min-w-0 flex-1 flex-col">
+              {activeTab === 'environments' ? (
+                <>
+                  {/* Environments Table Header */}
+                  <div className="mb-2 flex items-center justify-between pb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[13px] font-semibold text-(--text-primary)">
+                        Variables for:
+                      </span>
+                      <span className="rounded bg-(--accent-subtle) px-2 py-0.5 font-mono text-[11px] font-semibold text-(--accent)">
+                        {selectedEnv}
+                      </span>
+                    </div>
+                    <Button
+                      variant="secondary"
+                      size="compact"
+                      onClick={handleAddEnvVarRow}
+                      icon={<Plus className="h-3.5 w-3.5" />}
                     >
-                      <tr>
-                        <th className="w-1/3 px-3 py-1.5 text-[11px] font-semibold tracking-wider text-(--text-muted) uppercase">
-                          Variable Key
-                        </th>
-                        <th className="px-3 py-1.5 text-[11px] font-semibold tracking-wider text-(--text-muted) uppercase">
-                          Value
-                        </th>
-                        <th className="w-10 px-2 py-1.5 text-center text-(--text-muted)">#</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {envVars.length === 0 ? (
+                      Add Variable
+                    </Button>
+                  </div>
+
+                  {/* Variables Table */}
+                  <div
+                    className="flex-1 overflow-y-auto rounded border"
+                    style={{ borderColor: 'var(--border)', backgroundColor: 'var(--bg-input)' }}
+                  >
+                    <table className="w-full border-collapse text-left font-mono text-[12px]">
+                      <thead
+                        className="sticky top-0 z-10 border-b select-none"
+                        style={{
+                          backgroundColor: 'var(--bg-surface)',
+                          borderColor: 'var(--border)',
+                        }}
+                      >
                         <tr>
-                          <td
-                            colSpan={3}
-                            className="py-8 text-center font-sans text-(--text-muted) italic"
-                          >
-                            No variables defined for this environment. Click "Add Variable" to
-                            start.
-                          </td>
+                          <th className="w-1/3 px-3 py-1.5 text-[11px] font-semibold tracking-wider text-(--text-muted) uppercase">
+                            Variable Key
+                          </th>
+                          <th className="px-3 py-1.5 text-[11px] font-semibold tracking-wider text-(--text-muted) uppercase">
+                            Value
+                          </th>
+                          <th className="w-10 px-2 py-1.5 text-center text-(--text-muted)">#</th>
                         </tr>
-                      ) : (
-                        envVars.map(row => (
-                          <tr
-                            key={row.id}
-                            className="transition-fast border-b hover:bg-(--bg-hover)"
-                            style={{ borderColor: 'var(--border)' }}
-                          >
-                            <td className="p-1 px-3">
-                              <input
-                                type="text"
-                                placeholder="KEY_NAME"
-                                value={row.key}
-                                onChange={e => handleUpdateEnvVar(row.id, 'key', e.target.value)}
-                                className="w-full rounded bg-transparent px-2 py-1 text-[12px] text-(--text-primary) outline-none focus:bg-(--bg-surface)"
-                              />
-                            </td>
-                            <td className="p-1 px-3">
-                              <input
-                                type="text"
-                                placeholder="value"
-                                value={row.value}
-                                onChange={e => handleUpdateEnvVar(row.id, 'value', e.target.value)}
-                                className="w-full rounded bg-transparent px-2 py-1 text-[12px] text-(--text-primary) outline-none focus:bg-(--bg-surface)"
-                              />
-                            </td>
-                            <td className="p-1 text-center">
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveEnvVar(row.id)}
-                                className="transition-fast rounded p-1 text-(--text-muted) hover:bg-red-950/40 hover:text-red-400"
-                                title="Remove row"
-                              >
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </button>
+                      </thead>
+                      <tbody>
+                        {envVars.length === 0 ? (
+                          <tr>
+                            <td
+                              colSpan={3}
+                              className="py-8 text-center font-sans text-(--text-muted) italic"
+                            >
+                              No variables defined for this environment. Click "Add Variable" to
+                              start.
                             </td>
                           </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </>
-            ) : (
-              <>
-                {/* Secrets Banner */}
-                <div
-                  className="mb-2 flex items-center justify-between rounded border p-2"
-                  style={{
-                    backgroundColor: 'var(--bg-surface)',
-                    borderColor: 'var(--border)',
-                  }}
-                >
-                  <div className="flex items-center gap-2">
-                    <Lock className="h-4 w-4 shrink-0 text-emerald-400" />
-                    <div>
-                      <span className="text-[12px] font-semibold text-(--text-primary)">
-                        Sensitive Secrets
-                      </span>
-                      <p className="text-[11px] text-(--text-muted)">
-                        Stored in <code className="text-emerald-400">.reqit/secrets.yaml</code> and
-                        gitignored. Never committed.
-                      </p>
-                    </div>
-                  </div>
-                  <Button
-                    variant="secondary"
-                    size="compact"
-                    onClick={handleAddSecretVarRow}
-                    icon={<Plus className="h-3.5 w-3.5" />}
-                  >
-                    Add Secret
-                  </Button>
-                </div>
-
-                {/* Secrets Table Header */}
-                <div className="mb-2 flex items-center justify-between pb-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[13px] font-semibold text-(--text-primary)">
-                      Secrets for:
-                    </span>
-                    <span className="rounded bg-(--accent-subtle) px-2 py-0.5 font-mono text-[11px] font-semibold text-(--accent)">
-                      {selectedEnv}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Secrets Table */}
-                <div
-                  className="flex-1 overflow-y-auto rounded border"
-                  style={{ borderColor: 'var(--border)', backgroundColor: 'var(--bg-input)' }}
-                >
-                  <table className="w-full border-collapse text-left font-mono text-[12px]">
-                    <thead
-                      className="sticky top-0 z-10 border-b select-none"
-                      style={{
-                        backgroundColor: 'var(--bg-surface)',
-                        borderColor: 'var(--border)',
-                      }}
-                    >
-                      <tr>
-                        <th className="w-1/3 px-3 py-1.5 text-[11px] font-semibold tracking-wider text-(--text-muted) uppercase">
-                          Secret Key
-                        </th>
-                        <th className="px-3 py-1.5 text-[11px] font-semibold tracking-wider text-(--text-muted) uppercase">
-                          Secret Value (Masked)
-                        </th>
-                        <th className="w-16 px-2 py-1.5 text-center text-(--text-muted)">#</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {secretVars.length === 0 ? (
-                        <tr>
-                          <td
-                            colSpan={3}
-                            className="py-8 text-center font-sans text-(--text-muted) italic"
-                          >
-                            No secrets configured for this environment. Click "Add Secret" to add
-                            one.
-                          </td>
-                        </tr>
-                      ) : (
-                        secretVars.map(row => {
-                          const isRevealed = !!revealedSecrets[row.id];
-                          return (
+                        ) : (
+                          envVars.map(row => (
                             <tr
                               key={row.id}
                               className="transition-fast border-b hover:bg-(--bg-hover)"
@@ -712,60 +740,185 @@ export function EnvironmentSecretsModal({
                               <td className="p-1 px-3">
                                 <input
                                   type="text"
-                                  placeholder="API_KEY"
+                                  placeholder="KEY_NAME"
                                   value={row.key}
-                                  onChange={e =>
-                                    handleUpdateSecretVar(row.id, 'key', e.target.value)
-                                  }
+                                  onChange={e => handleUpdateEnvVar(row.id, 'key', e.target.value)}
                                   className="w-full rounded bg-transparent px-2 py-1 text-[12px] text-(--text-primary) outline-none focus:bg-(--bg-surface)"
                                 />
                               </td>
                               <td className="p-1 px-3">
                                 <input
-                                  type={isRevealed ? 'text' : 'password'}
-                                  placeholder="secret-token-value"
+                                  type="text"
+                                  placeholder="value"
                                   value={row.value}
                                   onChange={e =>
-                                    handleUpdateSecretVar(row.id, 'value', e.target.value)
+                                    handleUpdateEnvVar(row.id, 'value', e.target.value)
                                   }
-                                  className="w-full rounded bg-transparent px-2 py-1 text-[12px] tracking-wider text-(--text-primary) outline-none focus:bg-(--bg-surface)"
+                                  className="w-full rounded bg-transparent px-2 py-1 text-[12px] text-(--text-primary) outline-none focus:bg-(--bg-surface)"
                                 />
                               </td>
                               <td className="p-1 text-center">
-                                <div className="flex items-center justify-center gap-1">
-                                  <button
-                                    type="button"
-                                    onClick={() => toggleRevealSecret(row.id)}
-                                    className="transition-fast rounded p-1 text-(--text-muted) hover:bg-(--bg-hover) hover:text-(--text-primary)"
-                                    title={isRevealed ? 'Mask secret' : 'Reveal secret'}
-                                  >
-                                    {isRevealed ? (
-                                      <EyeOff className="h-3.5 w-3.5" />
-                                    ) : (
-                                      <Eye className="h-3.5 w-3.5" />
-                                    )}
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleRemoveSecretVar(row.id)}
-                                    className="transition-fast rounded p-1 text-(--text-muted) hover:bg-red-950/40 hover:text-red-400"
-                                    title="Remove secret"
-                                  >
-                                    <Trash2 className="h-3.5 w-3.5" />
-                                  </button>
-                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveEnvVar(row.id)}
+                                  className="transition-fast rounded p-1 text-(--text-muted) hover:bg-red-950/40 hover:text-red-400"
+                                  title="Remove row"
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </button>
                               </td>
                             </tr>
-                          );
-                        })
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </>
-            )}
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* Secrets Banner */}
+                  <div
+                    className="mb-2 flex items-center justify-between rounded border p-2"
+                    style={{
+                      backgroundColor: 'var(--bg-surface)',
+                      borderColor: 'var(--border)',
+                    }}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Lock className="h-4 w-4 shrink-0 text-emerald-400" />
+                      <div>
+                        <span className="text-[12px] font-semibold text-(--text-primary)">
+                          Sensitive Secrets
+                        </span>
+                        <p className="text-[11px] text-(--text-muted)">
+                          Stored in <code className="text-emerald-400">.reqit/secrets.yaml</code>{' '}
+                          and gitignored. Never committed.
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      variant="secondary"
+                      size="compact"
+                      onClick={handleAddSecretVarRow}
+                      icon={<Plus className="h-3.5 w-3.5" />}
+                    >
+                      Add Secret
+                    </Button>
+                  </div>
+
+                  {/* Secrets Table Header */}
+                  <div className="mb-2 flex items-center justify-between pb-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[13px] font-semibold text-(--text-primary)">
+                        Secrets for:
+                      </span>
+                      <span className="rounded bg-(--accent-subtle) px-2 py-0.5 font-mono text-[11px] font-semibold text-(--accent)">
+                        {selectedEnv}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Secrets Table */}
+                  <div
+                    className="flex-1 overflow-y-auto rounded border"
+                    style={{ borderColor: 'var(--border)', backgroundColor: 'var(--bg-input)' }}
+                  >
+                    <table className="w-full border-collapse text-left font-mono text-[12px]">
+                      <thead
+                        className="sticky top-0 z-10 border-b select-none"
+                        style={{
+                          backgroundColor: 'var(--bg-surface)',
+                          borderColor: 'var(--border)',
+                        }}
+                      >
+                        <tr>
+                          <th className="w-1/3 px-3 py-1.5 text-[11px] font-semibold tracking-wider text-(--text-muted) uppercase">
+                            Secret Key
+                          </th>
+                          <th className="px-3 py-1.5 text-[11px] font-semibold tracking-wider text-(--text-muted) uppercase">
+                            Secret Value (Masked)
+                          </th>
+                          <th className="w-16 px-2 py-1.5 text-center text-(--text-muted)">#</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {secretVars.length === 0 ? (
+                          <tr>
+                            <td
+                              colSpan={3}
+                              className="py-8 text-center font-sans text-(--text-muted) italic"
+                            >
+                              No secrets configured for this environment. Click "Add Secret" to add
+                              one.
+                            </td>
+                          </tr>
+                        ) : (
+                          secretVars.map(row => {
+                            const isRevealed = !!revealedSecrets[row.id];
+                            return (
+                              <tr
+                                key={row.id}
+                                className="transition-fast border-b hover:bg-(--bg-hover)"
+                                style={{ borderColor: 'var(--border)' }}
+                              >
+                                <td className="p-1 px-3">
+                                  <input
+                                    type="text"
+                                    placeholder="API_KEY"
+                                    value={row.key}
+                                    onChange={e =>
+                                      handleUpdateSecretVar(row.id, 'key', e.target.value)
+                                    }
+                                    className="w-full rounded bg-transparent px-2 py-1 text-[12px] text-(--text-primary) outline-none focus:bg-(--bg-surface)"
+                                  />
+                                </td>
+                                <td className="p-1 px-3">
+                                  <input
+                                    type={isRevealed ? 'text' : 'password'}
+                                    placeholder="secret-token-value"
+                                    value={row.value}
+                                    onChange={e =>
+                                      handleUpdateSecretVar(row.id, 'value', e.target.value)
+                                    }
+                                    className="w-full rounded bg-transparent px-2 py-1 text-[12px] tracking-wider text-(--text-primary) outline-none focus:bg-(--bg-surface)"
+                                  />
+                                </td>
+                                <td className="p-1 text-center">
+                                  <div className="flex items-center justify-center gap-1">
+                                    <button
+                                      type="button"
+                                      onClick={() => toggleRevealSecret(row.id)}
+                                      className="transition-fast rounded p-1 text-(--text-muted) hover:bg-(--bg-hover) hover:text-(--text-primary)"
+                                      title={isRevealed ? 'Mask secret' : 'Reveal secret'}
+                                    >
+                                      {isRevealed ? (
+                                        <EyeOff className="h-3.5 w-3.5" />
+                                      ) : (
+                                        <Eye className="h-3.5 w-3.5" />
+                                      )}
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleRemoveSecretVar(row.id)}
+                                      className="transition-fast rounded p-1 text-(--text-muted) hover:bg-red-950/40 hover:text-red-400"
+                                      title="Remove secret"
+                                    >
+                                      <Trash2 className="h-3.5 w-3.5" />
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </Modal>
   );

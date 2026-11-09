@@ -22,6 +22,13 @@ export interface RequestConflict {
   diskRequest: RequestFile;
 }
 
+export interface TestAssertionItem {
+  id: string;
+  name: string;
+  assert: string;
+  enabled?: boolean;
+}
+
 export interface RequestDraft {
   id: string;
   filePath?: string;
@@ -37,10 +44,38 @@ export interface RequestDraft {
   apiKeyName: string;
   apiKeyValue: string;
   apiKeyIn: 'header' | 'query';
+  // Extra Auth: OAuth 2.0
+  oauthGrantType?: 'authorization_code' | 'client_credentials';
+  oauthAuthUrl?: string;
+  oauthTokenUrl?: string;
+  oauthClientId?: string;
+  oauthClientSecret?: string;
+  oauthScope?: string;
+  oauthRedirectUri?: string;
+  oauthUsePkce?: boolean;
+  oauthAccessToken?: string;
+  oauthRefreshToken?: string;
+  oauthTokenType?: string;
+  oauthTokenName?: string;
+  // Extra Auth: Digest
+  digestUser?: string;
+  digestPass?: string;
+  digestRealm?: string;
+  // Extra Auth: AWS SigV4
+  awsAccessKeyId?: string;
+  awsSecretAccessKey?: string;
+  awsRegion?: string;
+  awsService?: string;
+  awsSessionToken?: string;
+  // Cookies
+  disableCookieJar?: boolean;
   bodyType: BodyType;
   bodyContent: string;
   bodyFormRows: KeyValueRow[];
   bodyMultipartRows: MultipartRow[];
+  preScript?: string;
+  postScript?: string;
+  tests?: TestAssertionItem[];
   isDirty?: boolean;
   parseError?: string;
   rawRequest?: RequestFile;
@@ -54,6 +89,8 @@ export interface RequestState {
   activeRequestId: string;
   result: ResponseResult | null;
   error: { message: string; cause?: string; action?: string } | null;
+  scriptLogs: import('@reqit/core').ScriptLogEntry[];
+  scriptError: import('@reqit/core').ScriptError | null;
   loading: boolean;
   activeExecutionId: string | null;
   historyCount: number;
@@ -77,6 +114,9 @@ export interface RequestState {
   setLoading: (loading: boolean) => void;
   setResult: (result: ResponseResult | null) => void;
   setError: (error: { message: string; cause?: string; action?: string } | null) => void;
+  setScriptLogs: (logs: import('@reqit/core').ScriptLogEntry[]) => void;
+  clearScriptLogs: () => void;
+  setScriptError: (err: import('@reqit/core').ScriptError | null) => void;
   setActiveExecutionId: (id: string | null) => void;
   incrementHistoryCount: () => void;
 }
@@ -100,6 +140,9 @@ const DEFAULT_INITIAL_DRAFT: RequestDraft = {
   bodyContent: '',
   bodyFormRows: [],
   bodyMultipartRows: [],
+  preScript: '',
+  postScript: '',
+  tests: [],
   isDirty: false,
 };
 
@@ -117,6 +160,8 @@ export const useRequestStore = create<RequestState>((set, get) => ({
   activeRequestId: DEFAULT_INITIAL_ID,
   result: null,
   error: null,
+  scriptLogs: [],
+  scriptError: null,
   loading: false,
   activeExecutionId: null,
   historyCount: 0,
@@ -552,6 +597,9 @@ export const useRequestStore = create<RequestState>((set, get) => ({
   setLoading: (loading: boolean) => set({ loading }),
   setResult: (result: ResponseResult | null) => set({ result }),
   setError: (error: { message: string; cause?: string; action?: string } | null) => set({ error }),
+  setScriptLogs: (logs: import('@reqit/core').ScriptLogEntry[]) => set({ scriptLogs: logs }),
+  clearScriptLogs: () => set({ scriptLogs: [], scriptError: null }),
+  setScriptError: (err: import('@reqit/core').ScriptError | null) => set({ scriptError: err }),
   setActiveExecutionId: (id: string | null) => set({ activeExecutionId: id }),
   incrementHistoryCount: () => set(state => ({ historyCount: state.historyCount + 1 })),
 }));

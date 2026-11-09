@@ -25,6 +25,8 @@ import type {
   PostmanParsePayload,
   PostmanImportPayload,
   OpenJsonFileResult,
+  OAuthAuthCodeConfig,
+  OAuthClientCredentialsConfig,
 } from '../shared/ipc-types.js';
 
 const api: ReqitApi = {
@@ -183,6 +185,35 @@ const api: ReqitApi = {
   },
   importPostman: (payload: PostmanImportPayload): Promise<PostmanImportReport> => {
     return ipcRenderer.invoke('postman:import', payload);
+  },
+  isWorkspaceTrusted: (collectionPath: string): Promise<boolean> => {
+    return ipcRenderer.invoke('workspace:isTrusted', collectionPath);
+  },
+  setWorkspaceTrusted: (collectionPath: string, trusted: boolean): Promise<boolean> => {
+    return ipcRenderer.invoke('workspace:setTrusted', { collectionPath, trusted });
+  },
+  getCookies: (collectionPath?: string) => {
+    return ipcRenderer.invoke('cookies:getForCollection', collectionPath);
+  },
+  updateCookie: (collectionPath: string | undefined, cookie: import('@reqit/core').Cookie) => {
+    return ipcRenderer.invoke('cookies:updateCookie', { collectionPath, cookie });
+  },
+  deleteCookie: (payload: {
+    collectionPath?: string;
+    domain: string;
+    path: string;
+    name: string;
+  }) => {
+    return ipcRenderer.invoke('cookies:deleteCookie', payload);
+  },
+  clearCookies: (collectionPath?: string) => {
+    return ipcRenderer.invoke('cookies:clear', collectionPath);
+  },
+  startOAuthAuthCodeFlow: (config: OAuthAuthCodeConfig) => {
+    return ipcRenderer.invoke('oauth:startAuthCodeFlow', config);
+  },
+  fetchOAuthClientCredentials: (config: OAuthClientCredentialsConfig) => {
+    return ipcRenderer.invoke('oauth:fetchClientCredentials', config);
   },
   onMenuAction: (callback: (action: string) => void) => {
     const handler = (_event: Electron.IpcRendererEvent, action: string) => {

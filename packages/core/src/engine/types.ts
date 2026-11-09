@@ -43,6 +43,10 @@ export interface SendOptions {
   agent?: http.Agent | https.Agent;
   /** Proxy configuration (system, none, or custom URL) */
   proxy?: ProxyOption;
+  /** Cookie Jar for managing collection cookies */
+  cookieJar?: import('../cookies/jar.js').CookieJar;
+  /** Whether to disable cookie jar handling for this request */
+  disableCookieJar?: boolean;
   /** Internal tracking for redirect count and loop detection */
   redirectCount?: number;
   visitedUrls?: string[];
@@ -68,4 +72,14 @@ export interface ResponseResult {
   getHeader: (name: string) => string | undefined;
   /** Helper to parse JSON body */
   json: <T = unknown>() => T;
+  /** Runtime variables updated during pre/post script execution */
+  runtimeVariables?: Record<string, unknown>;
+  /** Console and reqit logs produced during script execution */
+  scriptLogs?: import('../scripts/types.js').ScriptLogEntry[];
+  /** Any uncaught script error */
+  scriptError?: import('../scripts/types.js').ScriptError | null;
+  /** Test assertion results executed on this response */
+  testResults?: import('../format/types.js').TestAssertionResult[];
+  /** Cookies set or sent for this response */
+  cookies?: import('../format/types.js').Cookie[];
 }

@@ -11,6 +11,7 @@ import { ShortcutsDialog } from './components/ShortcutsDialog';
 import { NewCollectionModal } from './components/NewCollectionModal';
 import { ConflictBanner } from './components/ConflictBanner';
 import { DeletedBanner } from './components/DeletedBanner';
+import { TrustBanner } from './components/TrustBanner';
 import { DiffModal } from './components/DiffModal';
 import { EnvironmentSecretsModal } from './components/EnvironmentSecretsModal';
 import { HistoryDetailModal } from './components/HistoryDetailModal';
@@ -18,6 +19,7 @@ import { HistorySettingsModal } from './components/HistorySettingsModal';
 import { ClearHistoryConfirmModal } from './components/ClearHistoryConfirmModal';
 import { ImportCurlModal } from './components/ImportCurlModal';
 import { ImportPostmanModal } from './components/ImportPostmanModal';
+import { CookieManagerModal } from './components/CookieManagerModal';
 import { SettingsModal } from './components/SettingsModal';
 import { WelcomeScreen } from './components/WelcomeScreen';
 import { useAppStore } from './stores/appStore';
@@ -60,10 +62,13 @@ export default function App(): React.JSX.Element {
   const [newCollectionModalOpen, setNewCollectionModalOpen] = useState(false);
   const [diffModalOpen, setDiffModalOpen] = useState(false);
   const [envModalOpen, setEnvModalOpen] = useState(false);
-  const [envModalTab, setEnvModalTab] = useState<'environments' | 'secrets'>('environments');
+  const [envModalTab, setEnvModalTab] = useState<'environments' | 'secrets' | 'runtime'>(
+    'environments',
+  );
   const [envModalVarName, setEnvModalVarName] = useState<string | undefined>(undefined);
   const [importCurlModalOpen, setImportCurlModalOpen] = useState(false);
   const [importPostmanModalOpen, setImportPostmanModalOpen] = useState(false);
+  const [cookieModalOpen, setCookieModalOpen] = useState(false);
   const [showWelcomeScreen, setShowWelcomeScreen] = useState(false);
 
   const { openSettings, loadSettings } = useSettingsStore();
@@ -76,6 +81,10 @@ export default function App(): React.JSX.Element {
     environments,
     secrets,
     activeEnvironment,
+    isWorkspaceTrusted,
+    setWorkspaceTrusted,
+    runtimeVariables,
+    setRuntimeVariables,
     setActiveEnvironment,
     loadCollection,
     createCollection,
@@ -85,7 +94,7 @@ export default function App(): React.JSX.Element {
   } = useCollectionStore();
 
   const handleOpenEnvModal = (
-    tab: 'environments' | 'secrets' = 'environments',
+    tab: 'environments' | 'secrets' | 'runtime' = 'environments',
     varName?: string,
   ) => {
     setEnvModalTab(tab);
@@ -100,6 +109,11 @@ export default function App(): React.JSX.Element {
     activeRequestId,
     result,
     error,
+    scriptLogs,
+    scriptError,
+    setScriptLogs,
+    setScriptError,
+    clearScriptLogs,
     loading,
     activeExecutionId,
     historyCount,
@@ -139,6 +153,9 @@ export default function App(): React.JSX.Element {
     bodyContent: '',
     bodyFormRows: [],
     bodyMultipartRows: [],
+    preScript: '',
+    postScript: '',
+    tests: [],
     isDirty: false,
   };
 
@@ -299,6 +316,7 @@ export default function App(): React.JSX.Element {
     const { requestId, promise } = window.reqitApi.sendRequest(reqFile, undefined, {
       activeEnvironment,
       collectionPath: currentTree?.rootPath,
+      runtimeVariables,
     });
 
     setActiveExecutionId(requestId);
@@ -306,6 +324,15 @@ export default function App(): React.JSX.Element {
     try {
       const res = await promise;
       setResult(res);
+      if (res.runtimeVariables) {
+        setRuntimeVariables(res.runtimeVariables);
+      }
+      if (res.scriptLogs) {
+        setScriptLogs(res.scriptLogs);
+      }
+      if (res.scriptError !== undefined) {
+        setScriptError(res.scriptError);
+      }
       incrementHistoryCount();
       loadHistoryEntries();
     } catch (err: unknown) {
@@ -497,6 +524,10 @@ export default function App(): React.JSX.Element {
         case 'help:shortcuts':
           setShortcutsModalOpen(true);
           break;
+        case 'manage-cookies':
+        case 'cookies:manage':
+          setCookieModalOpen(true);
+          break;
       }
     });
     return () => unsub();
@@ -686,6 +717,7 @@ export default function App(): React.JSX.Element {
         onOpenSettings={openSettings}
         onOpenWelcome={() => setShowWelcomeScreen(true)}
         onOpenExample={handleOpenExample}
+        onOpenCookies={() => setCookieModalOpen(true)}
         recentCollections={recentCollections}
         onSelectRecentCollection={p => loadCollection(p)}
       />
@@ -754,6 +786,11 @@ export default function App(): React.JSX.Element {
                 />
               )}
 
+              {/* Workspace Trust Banner (Phase 16) */}
+              {currentTree?.rootPath && !isWorkspaceTrusted && (
+                <TrustBanner onTrust={() => setWorkspaceTrusted(true)} />
+              )}
+
               {/* URL Bar (32px) */}
               <UrlBar
                 method={activeDraft.method}
@@ -799,6 +836,49 @@ export default function App(): React.JSX.Element {
                     onApiKeyValueChange={v => updateActiveDraft({ apiKeyValue: v })}
                     apiKeyIn={activeDraft.apiKeyIn || 'header'}
                     onApiKeyInChange={inLoc => updateActiveDraft({ apiKeyIn: inLoc })}
+                    oauthGrantType={activeDraft.oauthGrantType}
+                    onOauthGrantTypeChange={gt => updateActiveDraft({ oauthGrantType: gt })}
+                    oauthAuthUrl={activeDraft.oauthAuthUrl}
+                    onOauthAuthUrlChange={u => updateActiveDraft({ oauthAuthUrl: u })}
+                    oauthTokenUrl={activeDraft.oauthTokenUrl}
+                    onOauthTokenUrlChange={u => updateActiveDraft({ oauthTokenUrl: u })}
+                    oauthClientId={activeDraft.oauthClientId}
+                    onOauthClientIdChange={id => updateActiveDraft({ oauthClientId: id })}
+                    oauthClientSecret={activeDraft.oauthClientSecret}
+                    onOauthClientSecretChange={s => updateActiveDraft({ oauthClientSecret: s })}
+                    oauthScope={activeDraft.oauthScope}
+                    onOauthScopeChange={s => updateActiveDraft({ oauthScope: s })}
+                    oauthRedirectUri={activeDraft.oauthRedirectUri}
+                    onOauthRedirectUriChange={uri => updateActiveDraft({ oauthRedirectUri: uri })}
+                    oauthUsePkce={activeDraft.oauthUsePkce}
+                    onOauthUsePkceChange={pkce => updateActiveDraft({ oauthUsePkce: pkce })}
+                    oauthAccessToken={activeDraft.oauthAccessToken}
+                    onOauthAccessTokenChange={token =>
+                      updateActiveDraft({ oauthAccessToken: token })
+                    }
+                    digestUser={activeDraft.digestUser}
+                    onDigestUserChange={u => updateActiveDraft({ digestUser: u })}
+                    digestPass={activeDraft.digestPass}
+                    onDigestPassChange={p => updateActiveDraft({ digestPass: p })}
+                    digestRealm={activeDraft.digestRealm}
+                    onDigestRealmChange={r => updateActiveDraft({ digestRealm: r })}
+                    awsAccessKeyId={activeDraft.awsAccessKeyId}
+                    onAwsAccessKeyIdChange={k => updateActiveDraft({ awsAccessKeyId: k })}
+                    awsSecretAccessKey={activeDraft.awsSecretAccessKey}
+                    onAwsSecretAccessKeyChange={s => updateActiveDraft({ awsSecretAccessKey: s })}
+                    awsRegion={activeDraft.awsRegion}
+                    onAwsRegionChange={r => updateActiveDraft({ awsRegion: r })}
+                    awsService={activeDraft.awsService}
+                    onAwsServiceChange={s => updateActiveDraft({ awsService: s })}
+                    awsSessionToken={activeDraft.awsSessionToken}
+                    onAwsSessionTokenChange={t => updateActiveDraft({ awsSessionToken: t })}
+                    disableCookieJar={activeDraft.disableCookieJar}
+                    onDisableCookieJarChange={disabled =>
+                      updateActiveDraft({ disableCookieJar: disabled })
+                    }
+                    onOpenCookieManager={() => setCookieModalOpen(true)}
+                    collectionPath={currentTree?.rootPath}
+                    activeEnvironment={activeEnvironment !== 'none' ? activeEnvironment : undefined}
                     bodyType={activeDraft.bodyType}
                     onBodyTypeChange={b => updateActiveDraft({ bodyType: b })}
                     bodyContent={activeDraft.bodyContent}
@@ -809,6 +889,14 @@ export default function App(): React.JSX.Element {
                     onBodyMultipartRowsChange={rows =>
                       updateActiveDraft({ bodyMultipartRows: rows })
                     }
+                    preScript={activeDraft.preScript}
+                    onPreScriptChange={s => updateActiveDraft({ preScript: s })}
+                    postScript={activeDraft.postScript}
+                    onPostScriptChange={s => updateActiveDraft({ postScript: s })}
+                    tests={activeDraft.tests || []}
+                    onTestsChange={t => updateActiveDraft({ tests: t })}
+                    isWorkspaceTrusted={isWorkspaceTrusted}
+                    onTrustWorkspace={() => setWorkspaceTrusted(true)}
                     knownVariables={knownVariableNames}
                     variablesMap={variablesMap}
                     onOpenSecrets={() => handleOpenEnvModal('secrets')}
@@ -841,6 +929,10 @@ export default function App(): React.JSX.Element {
                     onSend={handleSend}
                     onCancel={handleCancel}
                     onAddVariable={varName => handleOpenEnvModal('environments', varName)}
+                    onOpenCookieManager={() => setCookieModalOpen(true)}
+                    scriptLogs={scriptLogs}
+                    scriptError={scriptError}
+                    onClearScriptLogs={clearScriptLogs}
                   />
                 </div>
               </div>
@@ -895,6 +987,11 @@ export default function App(): React.JSX.Element {
         isOpen={importPostmanModalOpen}
         onClose={() => setImportPostmanModalOpen(false)}
         onSuccess={() => setShowWelcomeScreen(false)}
+      />
+      <CookieManagerModal
+        isOpen={cookieModalOpen}
+        onClose={() => setCookieModalOpen(false)}
+        collectionPath={currentTree?.rootPath}
       />
     </div>
   );

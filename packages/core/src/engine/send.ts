@@ -6,7 +6,9 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import type { Readable } from 'node:stream';
 import * as zlib from 'node:zlib';
-import type { KeyValue, RequestFile } from '../format/types.js';
+import type { Cookie, KeyValue, RequestFile } from '../format/types.js';
+import { parseSetCookie } from '../cookies/cookie.js';
+import { parseDigestChallenge, createDigestAuthHeader } from './digest.js';
 import { prepareAuthHeaders } from './auth.js';
 import { prepareRequestBody } from './body.js';
 import {
@@ -60,8 +62,12 @@ export async function sendRequest(
     resolvedRequest.auth,
   );
 
-  const authHeaders = prepareAuthHeaders(resolvedRequest.auth);
   const preparedBody = prepareRequestBody(resolvedRequest.body);
+  const authHeaders = prepareAuthHeaders(resolvedRequest.auth, {
+    method: resolvedRequest.method || 'GET',
+    url: targetUrl.toString(),
+    body: preparedBody.buffer,
+  });
 
   // Headers: request headers take precedence over defaults
   const headersRecord: Record<string, string> = {};
@@ -74,7 +80,7 @@ export async function sendRequest(
     headersRecord['content-type'] = preparedBody.defaultContentType;
   }
 
-  // 3. Auth headers (e.g. authorization, apiKey in header)
+  // 3. Auth headers (e.g. authorization, apiKey in header, AWS SigV4)
   for (const [k, v] of Object.entries(authHeaders)) {
     headersRecord[k.toLowerCase()] = v;
   }
@@ -88,7 +94,19 @@ export async function sendRequest(
     }
   }
 
-  // 5. Content-Length for bodies with buffers
+  // 5. Cookie Jar (Phase 18)
+  const isCookieJarActive =
+    options?.disableCookieJar !== true && resolvedRequest.disableCookieJar !== true;
+  const cookieJar = isCookieJarActive ? options?.cookieJar : undefined;
+
+  if (cookieJar && !headersRecord['cookie']) {
+    const cookieHeader = cookieJar.getCookieString(targetUrl.toString());
+    if (cookieHeader) {
+      headersRecord['cookie'] = cookieHeader;
+    }
+  }
+
+  // 6. Content-Length for bodies with buffers
   if (preparedBody.buffer && !headersRecord['content-length']) {
     headersRecord['content-length'] = String(preparedBody.buffer.length);
   }
@@ -185,8 +203,81 @@ export async function sendRequest(
     const req = httpModule.request(requestOptions, async res => {
       timingTracker.onResponse();
 
+      // Extract Set-Cookie headers (Phase 18)
+      const responseCookies: Cookie[] = [];
+      const rawHeaders = res.rawHeaders || [];
+      for (let i = 0; i < rawHeaders.length; i += 2) {
+        if (rawHeaders[i]!.toLowerCase() === 'set-cookie') {
+          const cookieVal = rawHeaders[i + 1]!;
+          if (cookieJar) {
+            const parsed = cookieJar.setCookie(cookieVal, targetUrl.toString());
+            if (parsed) responseCookies.push(parsed);
+          } else {
+            const parsed = parseSetCookie(cookieVal, targetUrl.toString());
+            if (parsed) responseCookies.push(parsed);
+          }
+        }
+      }
+
       // Check if redirect should be handled
       const statusCode = res.statusCode ?? 200;
+
+      // Digest Auth Challenge/Response retry (Phase 18)
+      const isDigestAuth = resolvedRequest.auth?.type === 'digest';
+      const hasRetriedDigest = Boolean(
+        (options as unknown as { _digestRetried?: boolean })?._digestRetried,
+      );
+
+      if (statusCode === 401 && isDigestAuth && !hasRetriedDigest) {
+        const rawAuthHeader = res.headers['www-authenticate'];
+        const wwwAuth = Array.isArray(rawAuthHeader) ? rawAuthHeader.join(', ') : rawAuthHeader;
+        if (typeof wwwAuth === 'string') {
+          const challenge = parseDigestChallenge(wwwAuth);
+          if (challenge) {
+            res.resume();
+            cleanup();
+
+            const digestAuth = resolvedRequest.auth as import('../format/types.js').AuthDigest;
+            const digestHeader = createDigestAuthHeader(
+              challenge,
+              {
+                username: digestAuth.username || '',
+                password: digestAuth.password || '',
+              },
+              resolvedRequest.method || 'GET',
+              targetUrl.pathname + targetUrl.search,
+            );
+
+            // Re-send with calculated Authorization: Digest ...
+            const updatedHeaders = (resolvedRequest.headers || []).filter(
+              h => h.name.toLowerCase() !== 'authorization',
+            );
+            updatedHeaders.push({
+              name: 'Authorization',
+              value: digestHeader,
+              enabled: true,
+            });
+
+            const nextRequest: RequestFile = {
+              ...resolvedRequest,
+              headers: updatedHeaders,
+            };
+
+            try {
+              const digestResult = await sendRequest(nextRequest, {
+                ...options,
+                _digestRetried: true,
+              } as SendOptions);
+              isSettled = true;
+              resolve(digestResult);
+            } catch (digestErr) {
+              fail(digestErr);
+            }
+            return;
+          }
+        }
+      }
+
       const followRedirects =
         options?.followRedirects ??
         (typeof resolvedRequest.followRedirects === 'boolean'
@@ -278,7 +369,6 @@ export async function sendRequest(
 
       // Convert rawHeaders to KeyValue[]
       const responseHeaders: KeyValue[] = [];
-      const rawHeaders = res.rawHeaders || [];
       for (let i = 0; i < rawHeaders.length; i += 2) {
         responseHeaders.push({
           name: rawHeaders[i]!,
@@ -403,6 +493,7 @@ export async function sendRequest(
             redirects: redirectHops && redirectHops.length > 0 ? redirectHops : undefined,
             getHeader,
             json: jsonHelper,
+            cookies: responseCookies.length > 0 ? responseCookies : undefined,
           });
         };
 

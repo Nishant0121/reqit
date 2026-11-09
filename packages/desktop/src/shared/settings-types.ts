@@ -17,6 +17,7 @@ export interface AppSettings {
   historyMaxEntries: number;
   historyRetentionDays: number;
   hasCompletedFirstRun: boolean;
+  trustedCollections: string[];
 }
 
 export const DEFAULT_APP_SETTINGS: AppSettings = {
@@ -34,4 +35,5 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   historyMaxEntries: 1000,
   historyRetentionDays: 30,
   hasCompletedFirstRun: false,
+  trustedCollections: [],
 };
