@@ -11,6 +11,9 @@ import {
   Plus,
   Trash2,
   FlaskConical,
+  Cookie as CookieIcon,
+  KeyRound,
+  RefreshCw,
 } from 'lucide-react';
 import { Tabs } from './ui/Tabs';
 import { KeyValueTable, type KeyValueRow } from './ui/KeyValueTable';
@@ -20,9 +23,9 @@ import { MultipartTable } from './MultipartTable';
 import { COMMON_HEADER_NAMES, getHeaderValueSuggestions } from '../lib/http-constants';
 import { strings } from '../lib/strings';
 import type { MultipartRow, TestAssertionItem } from '../stores/requestStore';
-import { detectHardcodedSecrets } from '@reqit/core/format';
+import { detectHardcodedSecrets, type Auth } from '@reqit/core/format';
 
-export type AuthType = 'none' | 'bearer' | 'basic' | 'apiKey';
+export type AuthType = 'none' | 'bearer' | 'basic' | 'apiKey' | 'oauth2' | 'digest' | 'awsv4';
 export type BodyType = 'none' | 'json' | 'text' | 'form' | 'multipart';
 
 const BODY_TYPE_OPTIONS = [
@@ -52,6 +55,49 @@ export interface RequestPanelProps {
   onApiKeyValueChange: (v: string) => void;
   apiKeyIn: 'header' | 'query';
   onApiKeyInChange: (inLoc: 'header' | 'query') => void;
+  // Extra Auth: OAuth 2.0
+  oauthGrantType?: 'authorization_code' | 'client_credentials';
+  onOauthGrantTypeChange?: (grantType: 'authorization_code' | 'client_credentials') => void;
+  oauthAuthUrl?: string;
+  onOauthAuthUrlChange?: (url: string) => void;
+  oauthTokenUrl?: string;
+  onOauthTokenUrlChange?: (url: string) => void;
+  oauthClientId?: string;
+  onOauthClientIdChange?: (id: string) => void;
+  oauthClientSecret?: string;
+  onOauthClientSecretChange?: (secret: string) => void;
+  oauthScope?: string;
+  onOauthScopeChange?: (scope: string) => void;
+  oauthRedirectUri?: string;
+  onOauthRedirectUriChange?: (uri: string) => void;
+  oauthUsePkce?: boolean;
+  onOauthUsePkceChange?: (usePkce: boolean) => void;
+  oauthAccessToken?: string;
+  onOauthAccessTokenChange?: (token: string) => void;
+  // Extra Auth: Digest
+  digestUser?: string;
+  onDigestUserChange?: (u: string) => void;
+  digestPass?: string;
+  onDigestPassChange?: (p: string) => void;
+  digestRealm?: string;
+  onDigestRealmChange?: (r: string) => void;
+  // Extra Auth: AWS SigV4
+  awsAccessKeyId?: string;
+  onAwsAccessKeyIdChange?: (k: string) => void;
+  awsSecretAccessKey?: string;
+  onAwsSecretAccessKeyChange?: (s: string) => void;
+  awsRegion?: string;
+  onAwsRegionChange?: (r: string) => void;
+  awsService?: string;
+  onAwsServiceChange?: (s: string) => void;
+  awsSessionToken?: string;
+  onAwsSessionTokenChange?: (t: string) => void;
+  // Cookie jar
+  disableCookieJar?: boolean;
+  onDisableCookieJarChange?: (disabled: boolean) => void;
+  onOpenCookieManager?: () => void;
+  collectionPath?: string;
+  activeEnvironment?: string;
   bodyType: BodyType;
   onBodyTypeChange: (type: BodyType) => void;
   bodyContent: string;
@@ -92,6 +138,49 @@ export function RequestPanel({
   onApiKeyValueChange,
   apiKeyIn,
   onApiKeyInChange,
+  // Extra Auth: OAuth 2.0
+  oauthGrantType = 'authorization_code',
+  onOauthGrantTypeChange,
+  oauthAuthUrl = '',
+  onOauthAuthUrlChange,
+  oauthTokenUrl = '',
+  onOauthTokenUrlChange,
+  oauthClientId = '',
+  onOauthClientIdChange,
+  oauthClientSecret = '',
+  onOauthClientSecretChange,
+  oauthScope = '',
+  onOauthScopeChange,
+  oauthRedirectUri = '',
+  onOauthRedirectUriChange,
+  oauthUsePkce = true,
+  onOauthUsePkceChange,
+  oauthAccessToken = '',
+  onOauthAccessTokenChange,
+  // Extra Auth: Digest
+  digestUser = '',
+  onDigestUserChange,
+  digestPass = '',
+  onDigestPassChange,
+  digestRealm = '',
+  onDigestRealmChange,
+  // Extra Auth: AWS SigV4
+  awsAccessKeyId = '',
+  onAwsAccessKeyIdChange,
+  awsSecretAccessKey = '',
+  onAwsSecretAccessKeyChange,
+  awsRegion = 'us-east-1',
+  onAwsRegionChange,
+  awsService = '',
+  onAwsServiceChange,
+  awsSessionToken = '',
+  onAwsSessionTokenChange,
+  // Cookie jar
+  disableCookieJar = false,
+  onDisableCookieJarChange,
+  onOpenCookieManager,
+  collectionPath,
+  activeEnvironment,
   bodyType,
   onBodyTypeChange,
   bodyContent,
@@ -147,22 +236,127 @@ export function RequestPanel({
 
   // Check for hardcoded secrets
   const hardcodedFindings = React.useMemo(() => {
+    let authObj: Auth | undefined = undefined;
+    if (authType === 'bearer') {
+      authObj = { type: 'bearer', token: bearerToken };
+    } else if (authType === 'basic') {
+      authObj = { type: 'basic', username: basicUser, password: basicPass };
+    } else if (authType === 'apiKey') {
+      authObj = { type: 'apikey', key: apiKeyName, value: apiKeyValue, in: apiKeyIn };
+    } else if (authType === 'oauth2') {
+      authObj = {
+        type: 'oauth2',
+        grantType: oauthGrantType,
+        tokenUrl: oauthTokenUrl,
+        clientId: oauthClientId,
+        clientSecret: oauthClientSecret,
+        accessToken: oauthAccessToken,
+      };
+    } else if (authType === 'digest') {
+      authObj = { type: 'digest', username: digestUser, password: digestPass, realm: digestRealm };
+    } else if (authType === 'awsv4') {
+      authObj = {
+        type: 'awsv4',
+        accessKeyId: awsAccessKeyId,
+        secretAccessKey: awsSecretAccessKey,
+        region: awsRegion,
+        service: awsService,
+      };
+    }
+
     return detectHardcodedSecrets({
       version: 1,
       name: 'check',
       method: 'GET',
       url: '',
       headers: headers.filter(h => h.enabled).map(h => ({ name: h.key, value: h.value })),
-      auth:
-        authType === 'bearer'
-          ? { type: 'bearer', token: bearerToken }
-          : authType === 'basic'
-            ? { type: 'basic', username: basicUser, password: basicPass }
-            : authType === 'apiKey'
-              ? { type: 'apikey', key: apiKeyName, value: apiKeyValue, in: apiKeyIn }
-              : undefined,
+      auth: authObj,
     });
-  }, [headers, authType, bearerToken, basicUser, basicPass, apiKeyName, apiKeyValue, apiKeyIn]);
+  }, [
+    headers,
+    authType,
+    bearerToken,
+    basicUser,
+    basicPass,
+    apiKeyName,
+    apiKeyValue,
+    apiKeyIn,
+    oauthGrantType,
+    oauthTokenUrl,
+    oauthClientId,
+    oauthClientSecret,
+    oauthAccessToken,
+    digestUser,
+    digestPass,
+    digestRealm,
+    awsAccessKeyId,
+    awsSecretAccessKey,
+    awsRegion,
+    awsService,
+  ]);
+
+  const [oauthLoading, setOauthLoading] = useState<boolean>(false);
+  const [oauthStatusMsg, setOauthStatusMsg] = useState<{
+    type: 'success' | 'error';
+    text: string;
+  } | null>(null);
+
+  const handleFetchOAuthToken = async () => {
+    setOauthStatusMsg(null);
+    setOauthLoading(true);
+    try {
+      if (oauthGrantType === 'client_credentials') {
+        if (!oauthTokenUrl?.trim() || !oauthClientId?.trim()) {
+          throw new Error('Access Token URL and Client ID are required.');
+        }
+        if (!window.reqitApi?.fetchOAuthClientCredentials) {
+          throw new Error('OAuth API not available');
+        }
+        const tokenResult = await window.reqitApi.fetchOAuthClientCredentials({
+          tokenUrl: oauthTokenUrl,
+          clientId: oauthClientId,
+          clientSecret: oauthClientSecret || '',
+          scope: oauthScope,
+          collectionPath,
+          activeEnvironment,
+        });
+        onOauthAccessTokenChange?.(tokenResult.accessToken);
+        setOauthStatusMsg({
+          type: 'success',
+          text: `Token received successfully! Expires in ${tokenResult.expiresIn ?? 'N/A'}s`,
+        });
+      } else {
+        // authorization_code
+        if (!oauthAuthUrl?.trim() || !oauthTokenUrl?.trim() || !oauthClientId?.trim()) {
+          throw new Error('Auth URL, Token URL, and Client ID are required.');
+        }
+        if (!window.reqitApi?.startOAuthAuthCodeFlow) {
+          throw new Error('OAuth API not available');
+        }
+        const tokenResult = await window.reqitApi.startOAuthAuthCodeFlow({
+          authUrl: oauthAuthUrl,
+          tokenUrl: oauthTokenUrl,
+          clientId: oauthClientId,
+          clientSecret: oauthClientSecret,
+          scope: oauthScope,
+          redirectUri: oauthRedirectUri,
+          usePkce: oauthUsePkce !== false,
+          collectionPath,
+          activeEnvironment,
+        });
+        onOauthAccessTokenChange?.(tokenResult.accessToken);
+        setOauthStatusMsg({
+          type: 'success',
+          text: `Token received from browser! Expires in ${tokenResult.expiresIn ?? 'N/A'}s`,
+        });
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setOauthStatusMsg({ type: 'error', text: msg });
+    } finally {
+      setOauthLoading(false);
+    }
+  };
 
   // Beautify JSON handler
   const handleBeautifyJson = () => {
@@ -184,27 +378,55 @@ export function RequestPanel({
       style={{ backgroundColor: 'var(--bg-base)' }}
     >
       {/* Sub Tabs */}
-      <Tabs
-        items={[
-          { id: 'params', label: strings.requestPanel.params, count: activeParamsCount },
-          { id: 'headers', label: strings.requestPanel.headers, count: activeHeadersCount },
-          { id: 'auth', label: strings.requestPanel.auth },
-          { id: 'body', label: strings.requestPanel.body },
-          {
-            id: 'scripts',
-            label: strings.requestPanel.scripts,
-            count: (preScript.trim() ? 1 : 0) + (postScript.trim() ? 1 : 0) || undefined,
-          },
-          {
-            id: 'tests',
-            label: strings.requestPanel.tests,
-            count: activeTestsCount || undefined,
-          },
-        ]}
-        activeId={activeSubTab}
-        onChange={id => setActiveSubTab(id as typeof activeSubTab)}
-        className="px-3"
-      />
+      <div
+        className="flex shrink-0 items-center justify-between border-b px-3"
+        style={{ borderColor: 'var(--border)' }}
+      >
+        <Tabs
+          items={[
+            { id: 'params', label: strings.requestPanel.params, count: activeParamsCount },
+            { id: 'headers', label: strings.requestPanel.headers, count: activeHeadersCount },
+            { id: 'auth', label: strings.requestPanel.auth },
+            { id: 'body', label: strings.requestPanel.body },
+            {
+              id: 'scripts',
+              label: strings.requestPanel.scripts,
+              count: (preScript.trim() ? 1 : 0) + (postScript.trim() ? 1 : 0) || undefined,
+            },
+            {
+              id: 'tests',
+              label: strings.requestPanel.tests,
+              count: activeTestsCount || undefined,
+            },
+          ]}
+          activeId={activeSubTab}
+          onChange={id => setActiveSubTab(id as typeof activeSubTab)}
+        />
+
+        {/* Cookie Jar toggle & Manager button (Phase 18) */}
+        <div className="flex items-center gap-3">
+          <label className="flex cursor-pointer items-center gap-1.5 text-[11px] font-medium text-(--text-secondary) select-none hover:text-(--text-primary)">
+            <input
+              type="checkbox"
+              checked={!disableCookieJar}
+              onChange={e => onDisableCookieJarChange?.(!e.target.checked)}
+              className="h-3.5 w-3.5 rounded border-(--border) accent-(--accent)"
+            />
+            <span>Send cookies</span>
+          </label>
+          {onOpenCookieManager && (
+            <button
+              type="button"
+              onClick={onOpenCookieManager}
+              className="transition-fast flex items-center gap-1 rounded px-2 py-0.5 text-[11px] font-medium text-(--text-secondary) hover:bg-(--bg-hover) hover:text-(--text-primary)"
+              title="Manage collection cookies"
+            >
+              <CookieIcon className="h-3.5 w-3.5" />
+              <span>Cookies</span>
+            </button>
+          )}
+        </div>
+      </div>
 
       {/* Sub Tab Content */}
       <div className="flex-1 overflow-y-auto p-3">
@@ -311,6 +533,24 @@ export function RequestPanel({
                   style={{ backgroundColor: 'var(--bg-elevated)', color: 'var(--text-primary)' }}
                 >
                   {strings.requestPanel.apiKey}
+                </option>
+                <option
+                  value="oauth2"
+                  style={{ backgroundColor: 'var(--bg-elevated)', color: 'var(--text-primary)' }}
+                >
+                  OAuth 2.0
+                </option>
+                <option
+                  value="digest"
+                  style={{ backgroundColor: 'var(--bg-elevated)', color: 'var(--text-primary)' }}
+                >
+                  Digest Auth
+                </option>
+                <option
+                  value="awsv4"
+                  style={{ backgroundColor: 'var(--bg-elevated)', color: 'var(--text-primary)' }}
+                >
+                  AWS Signature v4
                 </option>
               </select>
             </div>
@@ -449,6 +689,370 @@ export function RequestPanel({
                     })}
                   </div>
                 </div>
+              </div>
+            )}
+
+            {/* OAuth 2.0 Auth (Phase 18) */}
+            {authType === 'oauth2' && (
+              <div className="space-y-3.5">
+                <div>
+                  <label
+                    className="mb-1 block text-[12px] font-medium"
+                    style={{ color: 'var(--text-secondary)' }}
+                  >
+                    Grant Type
+                  </label>
+                  <div className="flex items-center gap-4 text-[12px]">
+                    <label className="flex cursor-pointer items-center gap-1.5 text-(--text-primary)">
+                      <input
+                        type="radio"
+                        name="oauthGrantType"
+                        value="authorization_code"
+                        checked={oauthGrantType === 'authorization_code'}
+                        onChange={() => onOauthGrantTypeChange?.('authorization_code')}
+                        className="accent-(--accent)"
+                      />
+                      <span>Authorization Code (PKCE)</span>
+                    </label>
+                    <label className="flex cursor-pointer items-center gap-1.5 text-(--text-primary)">
+                      <input
+                        type="radio"
+                        name="oauthGrantType"
+                        value="client_credentials"
+                        checked={oauthGrantType === 'client_credentials'}
+                        onChange={() => onOauthGrantTypeChange?.('client_credentials')}
+                        className="accent-(--accent)"
+                      />
+                      <span>Client Credentials</span>
+                    </label>
+                  </div>
+                </div>
+
+                {oauthGrantType === 'authorization_code' && (
+                  <div>
+                    <label
+                      className="mb-1 block text-[12px] font-medium"
+                      style={{ color: 'var(--text-secondary)' }}
+                    >
+                      Auth URL <span className="text-red-400">*</span>
+                    </label>
+                    <VariableInput
+                      value={oauthAuthUrl}
+                      onChange={v => onOauthAuthUrlChange?.(v)}
+                      knownVariables={knownVariables}
+                      variablesMap={variablesMap}
+                      placeholder="https://auth.example.com/oauth/authorize"
+                    />
+                  </div>
+                )}
+
+                <div>
+                  <label
+                    className="mb-1 block text-[12px] font-medium"
+                    style={{ color: 'var(--text-secondary)' }}
+                  >
+                    Access Token URL <span className="text-red-400">*</span>
+                  </label>
+                  <VariableInput
+                    value={oauthTokenUrl}
+                    onChange={v => onOauthTokenUrlChange?.(v)}
+                    knownVariables={knownVariables}
+                    variablesMap={variablesMap}
+                    placeholder="https://auth.example.com/oauth/token"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label
+                      className="mb-1 block text-[12px] font-medium"
+                      style={{ color: 'var(--text-secondary)' }}
+                    >
+                      Client ID <span className="text-red-400">*</span>
+                    </label>
+                    <VariableInput
+                      value={oauthClientId}
+                      onChange={v => onOauthClientIdChange?.(v)}
+                      knownVariables={knownVariables}
+                      variablesMap={variablesMap}
+                      placeholder="client_id or {{client_id}}"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      className="mb-1 block text-[12px] font-medium"
+                      style={{ color: 'var(--text-secondary)' }}
+                    >
+                      Client Secret{' '}
+                      {oauthGrantType === 'client_credentials' && (
+                        <span className="text-red-400">*</span>
+                      )}
+                    </label>
+                    <VariableInput
+                      value={oauthClientSecret}
+                      onChange={v => onOauthClientSecretChange?.(v)}
+                      knownVariables={knownVariables}
+                      variablesMap={variablesMap}
+                      placeholder="client_secret or {{client_secret}}"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label
+                      className="mb-1 block text-[12px] font-medium"
+                      style={{ color: 'var(--text-secondary)' }}
+                    >
+                      Scope
+                    </label>
+                    <VariableInput
+                      value={oauthScope}
+                      onChange={v => onOauthScopeChange?.(v)}
+                      knownVariables={knownVariables}
+                      variablesMap={variablesMap}
+                      placeholder="read write email"
+                    />
+                  </div>
+                  {oauthGrantType === 'authorization_code' && (
+                    <div>
+                      <label
+                        className="mb-1 block text-[12px] font-medium"
+                        style={{ color: 'var(--text-secondary)' }}
+                      >
+                        Callback / Redirect URI
+                      </label>
+                      <VariableInput
+                        value={oauthRedirectUri}
+                        onChange={v => onOauthRedirectUriChange?.(v)}
+                        knownVariables={knownVariables}
+                        variablesMap={variablesMap}
+                        placeholder="http://127.0.0.1:41920/callback"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {oauthGrantType === 'authorization_code' && (
+                  <div className="flex items-center gap-2">
+                    <label className="flex cursor-pointer items-center gap-2 text-[12px] text-(--text-secondary)">
+                      <input
+                        type="checkbox"
+                        checked={oauthUsePkce}
+                        onChange={e => onOauthUsePkceChange?.(e.target.checked)}
+                        className="h-3.5 w-3.5 rounded border-(--border) accent-(--accent)"
+                      />
+                      <span>Use PKCE (SHA-256 Code Challenge)</span>
+                    </label>
+                  </div>
+                )}
+
+                {/* Fetch token action */}
+                <div className="pt-1">
+                  <button
+                    type="button"
+                    onClick={handleFetchOAuthToken}
+                    disabled={oauthLoading}
+                    className="transition-fast inline-flex cursor-pointer items-center gap-1.5 rounded bg-(--accent) px-3 py-1.5 text-[12px] font-medium text-(--accent-fg) hover:opacity-90 disabled:opacity-50"
+                  >
+                    {oauthLoading ? (
+                      <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <KeyRound className="h-3.5 w-3.5" />
+                    )}
+                    <span>
+                      {oauthLoading
+                        ? oauthGrantType === 'authorization_code'
+                          ? 'Waiting for browser...'
+                          : 'Requesting token...'
+                        : 'Get New Access Token'}
+                    </span>
+                  </button>
+                </div>
+
+                {/* Status / feedback message */}
+                {oauthStatusMsg && (
+                  <div
+                    className={`rounded border p-2 text-[11px] ${
+                      oauthStatusMsg.type === 'success'
+                        ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
+                        : 'border-red-500/30 bg-red-500/10 text-red-400'
+                    }`}
+                  >
+                    {oauthStatusMsg.text}
+                  </div>
+                )}
+
+                {/* Token display */}
+                {oauthAccessToken && (
+                  <div className="border-t border-(--border) pt-2">
+                    <div className="mb-1 flex items-center justify-between">
+                      <label className="block text-[12px] font-medium text-emerald-400">
+                        Active Access Token
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => onOauthAccessTokenChange?.('')}
+                        className="text-[11px] text-(--text-muted) hover:text-red-400"
+                      >
+                        Clear Token
+                      </button>
+                    </div>
+                    <VariableInput
+                      value={oauthAccessToken}
+                      onChange={v => onOauthAccessTokenChange?.(v)}
+                      knownVariables={knownVariables}
+                      variablesMap={variablesMap}
+                      placeholder="Access Token"
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Digest Auth (Phase 18) */}
+            {authType === 'digest' && (
+              <div className="space-y-3">
+                <div>
+                  <label
+                    className="mb-1 block text-[12px] font-medium"
+                    style={{ color: 'var(--text-secondary)' }}
+                  >
+                    Username <span className="text-red-400">*</span>
+                  </label>
+                  <VariableInput
+                    value={digestUser}
+                    onChange={v => onDigestUserChange?.(v)}
+                    knownVariables={knownVariables}
+                    variablesMap={variablesMap}
+                    placeholder="Username"
+                  />
+                </div>
+                <div>
+                  <label
+                    className="mb-1 block text-[12px] font-medium"
+                    style={{ color: 'var(--text-secondary)' }}
+                  >
+                    Password <span className="text-red-400">*</span>
+                  </label>
+                  <VariableInput
+                    value={digestPass}
+                    onChange={v => onDigestPassChange?.(v)}
+                    knownVariables={knownVariables}
+                    variablesMap={variablesMap}
+                    placeholder="Password"
+                  />
+                </div>
+                <div>
+                  <label
+                    className="mb-1 block text-[12px] font-medium"
+                    style={{ color: 'var(--text-secondary)' }}
+                  >
+                    Realm (optional)
+                  </label>
+                  <VariableInput
+                    value={digestRealm}
+                    onChange={v => onDigestRealmChange?.(v)}
+                    knownVariables={knownVariables}
+                    variablesMap={variablesMap}
+                    placeholder="Auth Realm (optional override)"
+                  />
+                </div>
+                <p className="text-[11px] text-(--text-muted)">
+                  Reqit automatically sends the request and calculates the RFC 7616 / RFC 2617
+                  challenge-response upon receiving a 401 Unauthorized status.
+                </p>
+              </div>
+            )}
+
+            {/* AWS Signature v4 Auth (Phase 18) */}
+            {authType === 'awsv4' && (
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label
+                      className="mb-1 block text-[12px] font-medium"
+                      style={{ color: 'var(--text-secondary)' }}
+                    >
+                      Access Key ID <span className="text-red-400">*</span>
+                    </label>
+                    <VariableInput
+                      value={awsAccessKeyId}
+                      onChange={v => onAwsAccessKeyIdChange?.(v)}
+                      knownVariables={knownVariables}
+                      variablesMap={variablesMap}
+                      placeholder="AKIAIOSFODNN7EXAMPLE"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      className="mb-1 block text-[12px] font-medium"
+                      style={{ color: 'var(--text-secondary)' }}
+                    >
+                      Secret Access Key <span className="text-red-400">*</span>
+                    </label>
+                    <VariableInput
+                      value={awsSecretAccessKey}
+                      onChange={v => onAwsSecretAccessKeyChange?.(v)}
+                      knownVariables={knownVariables}
+                      variablesMap={variablesMap}
+                      placeholder="wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label
+                      className="mb-1 block text-[12px] font-medium"
+                      style={{ color: 'var(--text-secondary)' }}
+                    >
+                      AWS Region <span className="text-red-400">*</span>
+                    </label>
+                    <VariableInput
+                      value={awsRegion}
+                      onChange={v => onAwsRegionChange?.(v)}
+                      knownVariables={knownVariables}
+                      variablesMap={variablesMap}
+                      placeholder="us-east-1"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      className="mb-1 block text-[12px] font-medium"
+                      style={{ color: 'var(--text-secondary)' }}
+                    >
+                      Service Name <span className="text-red-400">*</span>
+                    </label>
+                    <VariableInput
+                      value={awsService}
+                      onChange={v => onAwsServiceChange?.(v)}
+                      knownVariables={knownVariables}
+                      variablesMap={variablesMap}
+                      placeholder="s3, execute-api, etc."
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label
+                    className="mb-1 block text-[12px] font-medium"
+                    style={{ color: 'var(--text-secondary)' }}
+                  >
+                    Session Token (optional)
+                  </label>
+                  <VariableInput
+                    value={awsSessionToken}
+                    onChange={v => onAwsSessionTokenChange?.(v)}
+                    knownVariables={knownVariables}
+                    variablesMap={variablesMap}
+                    placeholder="AQoDYXdzEJr1... (for temporary credentials)"
+                  />
+                </div>
+                <p className="text-[11px] text-(--text-muted)">
+                  Reqit creates canonical requests, computes HMAC-SHA256 signatures, and includes
+                  Authorization and X-Amz-Date headers automatically.
+                </p>
               </div>
             )}
           </div>

@@ -16,3 +16,5 @@ export * from './collection/index.js';
 export * from './curl/index.js';
 export * from './postman/index.js';
 export * from './scripts/index.js';
+export * from './cookies/index.js';
+export * from './oauth/index.js';

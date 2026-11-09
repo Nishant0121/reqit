@@ -19,6 +19,7 @@ import { HistorySettingsModal } from './components/HistorySettingsModal';
 import { ClearHistoryConfirmModal } from './components/ClearHistoryConfirmModal';
 import { ImportCurlModal } from './components/ImportCurlModal';
 import { ImportPostmanModal } from './components/ImportPostmanModal';
+import { CookieManagerModal } from './components/CookieManagerModal';
 import { SettingsModal } from './components/SettingsModal';
 import { WelcomeScreen } from './components/WelcomeScreen';
 import { useAppStore } from './stores/appStore';
@@ -67,6 +68,7 @@ export default function App(): React.JSX.Element {
   const [envModalVarName, setEnvModalVarName] = useState<string | undefined>(undefined);
   const [importCurlModalOpen, setImportCurlModalOpen] = useState(false);
   const [importPostmanModalOpen, setImportPostmanModalOpen] = useState(false);
+  const [cookieModalOpen, setCookieModalOpen] = useState(false);
   const [showWelcomeScreen, setShowWelcomeScreen] = useState(false);
 
   const { openSettings, loadSettings } = useSettingsStore();
@@ -522,6 +524,10 @@ export default function App(): React.JSX.Element {
         case 'help:shortcuts':
           setShortcutsModalOpen(true);
           break;
+        case 'manage-cookies':
+        case 'cookies:manage':
+          setCookieModalOpen(true);
+          break;
       }
     });
     return () => unsub();
@@ -711,6 +717,7 @@ export default function App(): React.JSX.Element {
         onOpenSettings={openSettings}
         onOpenWelcome={() => setShowWelcomeScreen(true)}
         onOpenExample={handleOpenExample}
+        onOpenCookies={() => setCookieModalOpen(true)}
         recentCollections={recentCollections}
         onSelectRecentCollection={p => loadCollection(p)}
       />
@@ -829,6 +836,49 @@ export default function App(): React.JSX.Element {
                     onApiKeyValueChange={v => updateActiveDraft({ apiKeyValue: v })}
                     apiKeyIn={activeDraft.apiKeyIn || 'header'}
                     onApiKeyInChange={inLoc => updateActiveDraft({ apiKeyIn: inLoc })}
+                    oauthGrantType={activeDraft.oauthGrantType}
+                    onOauthGrantTypeChange={gt => updateActiveDraft({ oauthGrantType: gt })}
+                    oauthAuthUrl={activeDraft.oauthAuthUrl}
+                    onOauthAuthUrlChange={u => updateActiveDraft({ oauthAuthUrl: u })}
+                    oauthTokenUrl={activeDraft.oauthTokenUrl}
+                    onOauthTokenUrlChange={u => updateActiveDraft({ oauthTokenUrl: u })}
+                    oauthClientId={activeDraft.oauthClientId}
+                    onOauthClientIdChange={id => updateActiveDraft({ oauthClientId: id })}
+                    oauthClientSecret={activeDraft.oauthClientSecret}
+                    onOauthClientSecretChange={s => updateActiveDraft({ oauthClientSecret: s })}
+                    oauthScope={activeDraft.oauthScope}
+                    onOauthScopeChange={s => updateActiveDraft({ oauthScope: s })}
+                    oauthRedirectUri={activeDraft.oauthRedirectUri}
+                    onOauthRedirectUriChange={uri => updateActiveDraft({ oauthRedirectUri: uri })}
+                    oauthUsePkce={activeDraft.oauthUsePkce}
+                    onOauthUsePkceChange={pkce => updateActiveDraft({ oauthUsePkce: pkce })}
+                    oauthAccessToken={activeDraft.oauthAccessToken}
+                    onOauthAccessTokenChange={token =>
+                      updateActiveDraft({ oauthAccessToken: token })
+                    }
+                    digestUser={activeDraft.digestUser}
+                    onDigestUserChange={u => updateActiveDraft({ digestUser: u })}
+                    digestPass={activeDraft.digestPass}
+                    onDigestPassChange={p => updateActiveDraft({ digestPass: p })}
+                    digestRealm={activeDraft.digestRealm}
+                    onDigestRealmChange={r => updateActiveDraft({ digestRealm: r })}
+                    awsAccessKeyId={activeDraft.awsAccessKeyId}
+                    onAwsAccessKeyIdChange={k => updateActiveDraft({ awsAccessKeyId: k })}
+                    awsSecretAccessKey={activeDraft.awsSecretAccessKey}
+                    onAwsSecretAccessKeyChange={s => updateActiveDraft({ awsSecretAccessKey: s })}
+                    awsRegion={activeDraft.awsRegion}
+                    onAwsRegionChange={r => updateActiveDraft({ awsRegion: r })}
+                    awsService={activeDraft.awsService}
+                    onAwsServiceChange={s => updateActiveDraft({ awsService: s })}
+                    awsSessionToken={activeDraft.awsSessionToken}
+                    onAwsSessionTokenChange={t => updateActiveDraft({ awsSessionToken: t })}
+                    disableCookieJar={activeDraft.disableCookieJar}
+                    onDisableCookieJarChange={disabled =>
+                      updateActiveDraft({ disableCookieJar: disabled })
+                    }
+                    onOpenCookieManager={() => setCookieModalOpen(true)}
+                    collectionPath={currentTree?.rootPath}
+                    activeEnvironment={activeEnvironment !== 'none' ? activeEnvironment : undefined}
                     bodyType={activeDraft.bodyType}
                     onBodyTypeChange={b => updateActiveDraft({ bodyType: b })}
                     bodyContent={activeDraft.bodyContent}
@@ -879,6 +929,7 @@ export default function App(): React.JSX.Element {
                     onSend={handleSend}
                     onCancel={handleCancel}
                     onAddVariable={varName => handleOpenEnvModal('environments', varName)}
+                    onOpenCookieManager={() => setCookieModalOpen(true)}
                     scriptLogs={scriptLogs}
                     scriptError={scriptError}
                     onClearScriptLogs={clearScriptLogs}
@@ -936,6 +987,11 @@ export default function App(): React.JSX.Element {
         isOpen={importPostmanModalOpen}
         onClose={() => setImportPostmanModalOpen(false)}
         onSuccess={() => setShowWelcomeScreen(false)}
+      />
+      <CookieManagerModal
+        isOpen={cookieModalOpen}
+        onClose={() => setCookieModalOpen(false)}
+        collectionPath={currentTree?.rootPath}
       />
     </div>
   );

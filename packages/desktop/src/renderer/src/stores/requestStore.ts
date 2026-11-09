@@ -44,6 +44,31 @@ export interface RequestDraft {
   apiKeyName: string;
   apiKeyValue: string;
   apiKeyIn: 'header' | 'query';
+  // Extra Auth: OAuth 2.0
+  oauthGrantType?: 'authorization_code' | 'client_credentials';
+  oauthAuthUrl?: string;
+  oauthTokenUrl?: string;
+  oauthClientId?: string;
+  oauthClientSecret?: string;
+  oauthScope?: string;
+  oauthRedirectUri?: string;
+  oauthUsePkce?: boolean;
+  oauthAccessToken?: string;
+  oauthRefreshToken?: string;
+  oauthTokenType?: string;
+  oauthTokenName?: string;
+  // Extra Auth: Digest
+  digestUser?: string;
+  digestPass?: string;
+  digestRealm?: string;
+  // Extra Auth: AWS SigV4
+  awsAccessKeyId?: string;
+  awsSecretAccessKey?: string;
+  awsRegion?: string;
+  awsService?: string;
+  awsSessionToken?: string;
+  // Cookies
+  disableCookieJar?: boolean;
   bodyType: BodyType;
   bodyContent: string;
   bodyFormRows: KeyValueRow[];

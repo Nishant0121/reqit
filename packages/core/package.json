@@ -27,6 +27,14 @@
     "./scripts": {
       "types": "./src/scripts/index.ts",
       "import": "./src/scripts/index.ts"
+    },
+    "./cookies": {
+      "types": "./src/cookies/index.ts",
+      "import": "./src/cookies/index.ts"
+    },
+    "./oauth": {
+      "types": "./src/oauth/index.ts",
+      "import": "./src/oauth/index.ts"
     }
   },
   "scripts": {

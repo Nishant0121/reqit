@@ -117,6 +117,7 @@ export const requestFileSchema = z
     body: bodySchema.optional(),
     scripts: scriptsSchema.optional(),
     tests: z.array(testAssertionSchema).optional(),
+    disableCookieJar: z.boolean().optional(),
     docs: z.string().optional(),
   })
   .passthrough();

@@ -150,4 +150,47 @@ describe('request-mapper', () => {
     expect(converted.tests![2]!.name).toBe('Time under 500ms');
     expect(converted.tests![2]!.assert).toBe('res.timeMs < 500');
   });
+
+  it('maps OAuth 2.0, Digest, AWS SigV4, and disableCookieJar (Phase 18)', () => {
+    const oauthReq: RequestFile = {
+      version: 1,
+      name: 'OAuth Request',
+      method: 'GET',
+      url: 'https://api.example.com/data',
+      disableCookieJar: true,
+      auth: {
+        type: 'oauth2',
+        grantType: 'authorization_code',
+        authUrl: 'https://auth.example.com/oauth/authorize',
+        tokenUrl: 'https://auth.example.com/oauth/token',
+        clientId: 'my-client-id',
+        usePkce: true,
+        accessToken: 'access-12345',
+      },
+    };
+
+    const draft = requestFileToDraft(oauthReq);
+    expect(draft.disableCookieJar).toBe(true);
+    expect(draft.authType).toBe('oauth2');
+    expect(draft.oauthGrantType).toBe('authorization_code');
+    expect(draft.oauthAuthUrl).toBe('https://auth.example.com/oauth/authorize');
+    expect(draft.oauthAccessToken).toBe('access-12345');
+
+    // Test conversion back to RequestFile
+    draft.isDirty = true;
+    draft.disableCookieJar = false;
+    draft.authType = 'digest';
+    draft.digestUser = 'admin';
+    draft.digestPass = 'secret123';
+    draft.digestRealm = 'Secured Area';
+
+    const converted = draftToRequestFile(draft);
+    expect(converted.disableCookieJar).toBeUndefined();
+    expect(converted.auth?.type).toBe('digest');
+    if (converted.auth?.type === 'digest') {
+      expect(converted.auth.username).toBe('admin');
+      expect(converted.auth.password).toBe('secret123');
+      expect(converted.auth.realm).toBe('Secured Area');
+    }
+  });
 });

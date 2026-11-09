@@ -1,6 +1,15 @@
-import type { Auth } from '../format/types.js';
+import type { Auth, AuthAwsV4 } from '../format/types.js';
+import { signAwsV4 } from './awsv4.js';
 
-export function prepareAuthHeaders(auth?: Auth): Record<string, string> {
+export function prepareAuthHeaders(
+  auth?: Auth,
+  requestContext?: {
+    method: string;
+    url: string;
+    headers?: Record<string, string>;
+    body?: string | Buffer;
+  },
+): Record<string, string> {
   if (!auth || auth.type === 'none') {
     return {};
   }
@@ -10,6 +19,16 @@ export function prepareAuthHeaders(auth?: Auth): Record<string, string> {
     return {
       authorization: `Bearer ${token}`,
     };
+  }
+
+  if (auth.type === 'oauth2') {
+    const token = typeof auth.accessToken === 'string' ? auth.accessToken : '';
+    if (token) {
+      return {
+        authorization: `Bearer ${token}`,
+      };
+    }
+    return {};
   }
 
   if (auth.type === 'basic') {
@@ -28,6 +47,14 @@ export function prepareAuthHeaders(auth?: Auth): Record<string, string> {
       return {
         [key.toLowerCase()]: val,
       };
+    }
+  }
+
+  if (auth.type === 'awsv4' && requestContext) {
+    try {
+      return signAwsV4(requestContext, auth as AuthAwsV4);
+    } catch {
+      // fallback
     }
   }
 

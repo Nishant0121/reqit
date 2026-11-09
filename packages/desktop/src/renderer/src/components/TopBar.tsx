@@ -16,6 +16,7 @@ import {
   Zap,
   Sparkles,
   Layers,
+  Cookie as CookieIcon,
 } from 'lucide-react';
 import { Button } from './ui/Button';
 import { strings } from '../lib/strings';
@@ -41,6 +42,7 @@ export interface TopBarProps {
   onOpenSettings?: () => void;
   onOpenWelcome?: () => void;
   onOpenExample?: () => void;
+  onOpenCookies?: () => void;
   recentCollections?: string[];
   onSelectRecentCollection?: (path: string) => void;
 }
@@ -64,6 +66,7 @@ export function TopBar({
   onOpenSettings,
   onOpenWelcome,
   onOpenExample,
+  onOpenCookies,
   recentCollections = [],
   onSelectRecentCollection,
 }: TopBarProps): React.JSX.Element {
@@ -252,6 +255,21 @@ export function TopBar({
                 <span className="flex-1 font-medium">Import Postman Collection...</span>
               </button>
 
+              {onOpenCookies && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    onOpenCookies();
+                  }}
+                  className="transition-fast flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-(--bg-hover)"
+                  style={{ color: 'var(--text-primary)' }}
+                >
+                  <CookieIcon className="h-5 w-5 text-(--accent)" strokeWidth={1.75} />
+                  <span className="flex-1 font-medium">Manage Cookies...</span>
+                </button>
+              )}
+
               {recentCollections.length > 0 && (
                 <>
                   <div className="my-1 border-t" style={{ borderColor: 'var(--border)' }} />
@@ -348,6 +366,17 @@ export function TopBar({
               aria-label="Manage Environments & Secrets"
             >
               <Globe className="h-4 w-4" />
+            </button>
+          )}
+          {onOpenCookies && (
+            <button
+              type="button"
+              onClick={onOpenCookies}
+              className="transition-fast flex h-7 w-7 items-center justify-center rounded-sm text-(--text-secondary) hover:bg-(--bg-hover) hover:text-(--text-primary)"
+              title="Manage Cookies"
+              aria-label="Manage Cookies"
+            >
+              <CookieIcon className="h-4 w-4" />
             </button>
           )}
         </div>

@@ -18,6 +18,7 @@ import {
   CheckCircle2,
   XCircle,
   FlaskConical,
+  Cookie as CookieIcon,
 } from 'lucide-react';
 import type { ResponseResult } from '@reqit/core';
 import { StatusBadge } from './ui/Badge';
@@ -40,6 +41,7 @@ export interface ResponsePanelProps {
   scriptLogs?: import('@reqit/core').ScriptLogEntry[];
   scriptError?: import('@reqit/core').ScriptError | null;
   onClearScriptLogs?: () => void;
+  onOpenCookieManager?: () => void;
 }
 
 export type ViewFormat = 'pretty' | 'raw' | 'preview';
@@ -57,11 +59,12 @@ export function ResponsePanel({
   scriptLogs = [],
   scriptError = null,
   onClearScriptLogs,
+  onOpenCookieManager,
 }: ResponsePanelProps): React.JSX.Element {
   // Navigation & view states
-  const [activeTab, setActiveTab] = useState<'body' | 'headers' | 'timing' | 'tests' | 'console'>(
-    'body',
-  );
+  const [activeTab, setActiveTab] = useState<
+    'body' | 'headers' | 'timing' | 'tests' | 'console' | 'cookies'
+  >('body');
   const [testFilter, setTestFilter] = useState<'all' | 'passed' | 'failed'>('all');
   const [testSearch, setTestSearch] = useState<string>('');
   const [consoleFilter, setConsoleFilter] = useState<'all' | 'log' | 'info' | 'warn' | 'error'>(
@@ -618,6 +621,12 @@ export function ResponsePanel({
               id: 'console',
               label: 'Console',
               count: allLogs.length > 0 ? allLogs.length : undefined,
+            },
+            {
+              id: 'cookies',
+              label: 'Cookies',
+              count:
+                result.cookies && result.cookies.length > 0 ? result.cookies.length : undefined,
             },
           ]}
           activeId={activeTab}
@@ -1379,6 +1388,102 @@ export function ResponsePanel({
                 </div>
               );
             })()}
+          </div>
+        )}
+
+        {/* COOKIES TAB VIEW (Phase 18) */}
+        {activeTab === 'cookies' && (
+          <div className="flex flex-col gap-3">
+            <div
+              className="flex items-center justify-between border-b pb-2"
+              style={{ borderColor: 'var(--border)' }}
+            >
+              <div className="text-[12px] font-medium text-(--text-secondary)">
+                Response Cookies ({result.cookies?.length || 0})
+              </div>
+              {onOpenCookieManager && (
+                <Button
+                  variant="secondary"
+                  size="compact"
+                  onClick={onOpenCookieManager}
+                  title="Open full cookie jar manager"
+                >
+                  <CookieIcon className="mr-1.5 h-3.5 w-3.5" />
+                  Manage Collection Cookies
+                </Button>
+              )}
+            </div>
+
+            {!result.cookies || result.cookies.length === 0 ? (
+              <div className="py-12 text-center text-(--text-muted)">
+                <CookieIcon className="mx-auto mb-2 h-8 w-8 stroke-[1.25] opacity-40" />
+                <p className="text-[13px] font-medium">No cookies returned</p>
+                <p className="mt-1 text-[11px]">
+                  The server did not send any <code>Set-Cookie</code> headers in this response.
+                </p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto rounded border border-(--border)">
+                <table className="w-full border-collapse text-left font-mono text-[11px]">
+                  <thead className="border-b border-(--border) bg-(--bg-elevated) text-(--text-secondary)">
+                    <tr>
+                      <th className="px-2.5 py-1.5 font-medium">Name</th>
+                      <th className="px-2.5 py-1.5 font-medium">Value</th>
+                      <th className="px-2.5 py-1.5 font-medium">Domain</th>
+                      <th className="px-2.5 py-1.5 font-medium">Path</th>
+                      <th className="px-2.5 py-1.5 font-medium">Expires</th>
+                      <th className="px-2.5 py-1.5 text-center font-medium">HttpOnly</th>
+                      <th className="px-2.5 py-1.5 text-center font-medium">Secure</th>
+                      <th className="px-2.5 py-1.5 text-center font-medium">SameSite</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-(--border)">
+                    {result.cookies.map((c, i) => (
+                      <tr
+                        key={`${c.domain}-${c.path}-${c.name}-${i}`}
+                        className="transition-colors hover:bg-(--bg-hover)/50"
+                      >
+                        <td className="px-2.5 py-1.5 font-semibold text-(--text-primary)">
+                          {c.name}
+                        </td>
+                        <td
+                          className="max-w-[200px] truncate px-2.5 py-1.5 text-(--text-secondary)"
+                          title={c.value}
+                        >
+                          {c.value}
+                        </td>
+                        <td className="px-2.5 py-1.5 text-(--text-secondary)">{c.domain}</td>
+                        <td className="px-2.5 py-1.5 text-(--text-secondary)">{c.path}</td>
+                        <td className="px-2.5 py-1.5 text-(--text-muted)">
+                          {c.expires ? new Date(c.expires).toLocaleDateString() : 'Session'}
+                        </td>
+                        <td className="px-2.5 py-1.5 text-center font-sans">
+                          {c.httpOnly ? (
+                            <span className="py-0.2 rounded bg-blue-500/15 px-1 text-[10px] font-medium text-blue-400">
+                              ✓
+                            </span>
+                          ) : (
+                            <span className="text-(--text-muted)">-</span>
+                          )}
+                        </td>
+                        <td className="px-2.5 py-1.5 text-center font-sans">
+                          {c.secure ? (
+                            <span className="py-0.2 rounded bg-emerald-500/15 px-1 text-[10px] font-medium text-emerald-400">
+                              ✓
+                            </span>
+                          ) : (
+                            <span className="text-(--text-muted)">-</span>
+                          )}
+                        </td>
+                        <td className="px-2.5 py-1.5 text-center font-sans text-(--text-muted)">
+                          {c.sameSite || '-'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         )}
       </div>

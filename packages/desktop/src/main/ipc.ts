@@ -22,10 +22,17 @@ import {
   type ScriptLogEntry,
   type ScriptError,
   type TestAssertionResult,
+  type Cookie,
 } from '@reqit/core';
 import { fileService } from './services/file-service.js';
 import { historyService } from './services/history-service.js';
 import { settingsService } from './services/settings-service.js';
+import { cookieService } from './services/cookie-service.js';
+import {
+  oauthService,
+  type OAuthAuthCodeConfig,
+  type OAuthClientCredentialsConfig,
+} from './services/oauth-service.js';
 import { openBundledExampleCollection } from './services/example-collection.js';
 import type { AppSettings } from '../shared/settings-types.js';
 import type {
@@ -321,8 +328,14 @@ export function registerIpcHandlers(): void {
       }
 
       // Merge application settings defaults with request options
+      const cookieJar = payload.collectionPath
+        ? cookieService.getJar(payload.collectionPath)
+        : cookieService.getJar();
+
       const sendOptions = {
         ...options,
+        cookieJar,
+        disableCookieJar: options?.disableCookieJar ?? request.disableCookieJar,
         timeoutMs: options?.timeoutMs ?? appSettings.requestTimeoutMs,
         followRedirects: options?.followRedirects ?? appSettings.followRedirects,
         maxRedirects: options?.maxRedirects ?? appSettings.maxRedirects,
@@ -349,6 +362,13 @@ export function registerIpcHandlers(): void {
       let result;
       try {
         result = await sendRequest(resolvedRequest, sendOptions);
+        if (payload.collectionPath) {
+          try {
+            cookieService.saveCookies(payload.collectionPath);
+          } catch (cookieErr) {
+            console.error('Failed to save cookies for collection:', cookieErr);
+          }
+        }
       } catch (err: unknown) {
         const durationMs = Date.now() - startTime;
         try {
@@ -470,6 +490,7 @@ export function registerIpcHandlers(): void {
         timing: result.timing,
         redirectHops: result.redirectHops,
         redirects: result.redirects,
+        cookies: result.cookies,
         runtimeVariables: currentRuntimeVars,
         scriptLogs,
         scriptError,
@@ -748,6 +769,63 @@ export function registerIpcHandlers(): void {
       }
       settingsService.updateSettings({ trustedCollections: list });
       return payload.trusted;
+    },
+  );
+
+  // 38. cookies:getForCollection
+  ipcMain.handle(
+    'cookies:getForCollection',
+    async (_event, collectionPath?: string): Promise<Cookie[]> => {
+      return cookieService.getAll(collectionPath);
+    },
+  );
+
+  // 39. cookies:updateCookie
+  ipcMain.handle(
+    'cookies:updateCookie',
+    async (_event, payload: { collectionPath?: string; cookie: Cookie }): Promise<boolean> => {
+      cookieService.addOrUpdate(payload.collectionPath, payload.cookie);
+      return true;
+    },
+  );
+
+  // 40. cookies:deleteCookie
+  ipcMain.handle(
+    'cookies:deleteCookie',
+    async (
+      _event,
+      payload: {
+        collectionPath?: string;
+        domain: string;
+        path: string;
+        name: string;
+      },
+    ): Promise<boolean> => {
+      return cookieService.deleteCookie(
+        payload.collectionPath,
+        payload.domain,
+        payload.path,
+        payload.name,
+      );
+    },
+  );
+
+  // 41. cookies:clear
+  ipcMain.handle('cookies:clear', async (_event, collectionPath?: string): Promise<boolean> => {
+    cookieService.clear(collectionPath);
+    return true;
+  });
+
+  // 42. oauth:startAuthCodeFlow
+  ipcMain.handle('oauth:startAuthCodeFlow', async (_event, config: OAuthAuthCodeConfig) => {
+    return oauthService.startAuthCodeFlow(config);
+  });
+
+  // 43. oauth:fetchClientCredentials
+  ipcMain.handle(
+    'oauth:fetchClientCredentials',
+    async (_event, config: OAuthClientCredentialsConfig) => {
+      return oauthService.fetchClientCredentials(config);
     },
   );
 }

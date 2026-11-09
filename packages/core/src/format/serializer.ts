@@ -26,6 +26,7 @@ export const REQUEST_FIELD_ORDER = [
   'body',
   'scripts',
   'tests',
+  'disableCookieJar',
   'docs',
 ];
 
@@ -110,7 +111,38 @@ function serializeKeyValue(kv: KeyValue): YAML.YAMLMap {
 
 function serializeAuth(auth: Auth): YAML.YAMLMap {
   const map = new YAML.YAMLMap();
-  const fixedOrder = ['type', 'token', 'username', 'password', 'key', 'value', 'in'];
+  const fixedOrder = [
+    'type',
+    'token',
+    'username',
+    'password',
+    'key',
+    'value',
+    'in',
+    'grantType',
+    'authUrl',
+    'tokenUrl',
+    'clientId',
+    'clientSecret',
+    'scope',
+    'redirectUri',
+    'usePkce',
+    'codeVerifier',
+    'accessToken',
+    'refreshToken',
+    'expiresAt',
+    'tokenType',
+    'realm',
+    'nonce',
+    'algorithm',
+    'qop',
+    'opaque',
+    'accessKeyId',
+    'secretAccessKey',
+    'region',
+    'service',
+    'sessionToken',
+  ];
   const keys = sortKeys(Object.keys(auth), fixedOrder);
 
   for (const key of keys) {
