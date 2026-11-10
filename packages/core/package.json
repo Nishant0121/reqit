@@ -35,6 +35,11 @@
     "./oauth": {
       "types": "./src/oauth/index.ts",
       "import": "./src/oauth/index.ts"
+    },
+    "./snippets": {
+      "types": "./src/snippets/index.ts",
+      "import": "./src/snippets/index.ts",
+      "default": "./src/snippets/index.ts"
     }
   },
   "scripts": {

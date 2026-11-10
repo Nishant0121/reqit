@@ -1,6 +1,19 @@
 import { describe, it } from 'vitest';
-import { sendRequest, resolveRequest, type RequestFile } from '@reqit/core';
-import { CookieService } from '../../../packages/desktop/src/main/services/cookie-service.js';
+import { sendRequest, resolveRequest, CookieJar, type RequestFile } from '@reqit/core';
+
+class CookieService {
+  private jars: Map<string, CookieJar> = new Map();
+  public getJar(collectionPath?: string): CookieJar {
+    const key = collectionPath || '__default__';
+    if (!this.jars.has(key)) {
+      this.jars.set(key, new CookieJar());
+    }
+    return this.jars.get(key)!;
+  }
+  public getAll(collectionPath?: string) {
+    return this.getJar(collectionPath).getAllCookies();
+  }
+}
 
 describe('Desktop IPC Exact Simulation', () => {
   it('runs Section A: Session Cookies Handshake', async () => {

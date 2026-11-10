@@ -43,20 +43,49 @@ export function generateCurl(request: RequestFile, options?: CurlFormatOptions):
     try {
       const urlObj = new URL(fullUrl);
       for (const param of request.params) {
-        if (param.enabled !== false && param.name) {
+        if (param.enabled === false && param.name) {
+          urlObj.searchParams.delete(param.name);
+        } else if (param.name) {
           urlObj.searchParams.set(param.name, param.value ?? '');
         }
       }
       fullUrl = urlObj.toString();
     } catch {
-      // If URL has template variables (e.g. {{baseUrl}}), string append query params
-      const searchParts = request.params
-        .filter(p => p.enabled !== false && p.name)
-        .map(p => `${encodeURIComponent(p.name)}=${encodeURIComponent(p.value ?? '')}`)
-        .join('&');
-      if (searchParts) {
-        fullUrl += (fullUrl.includes('?') ? '&' : '?') + searchParts;
+      const qIdx = fullUrl.indexOf('?');
+      const base = qIdx !== -1 ? fullUrl.slice(0, qIdx) : fullUrl;
+      const search = qIdx !== -1 ? fullUrl.slice(qIdx + 1) : '';
+      const pairs: Array<{ name: string; value: string }> = [];
+      if (search) {
+        for (const pair of search.split('&')) {
+          if (!pair) continue;
+          const eq = pair.indexOf('=');
+          pairs.push({
+            name: eq !== -1 ? pair.slice(0, eq) : pair,
+            value: eq !== -1 ? pair.slice(eq + 1) : '',
+          });
+        }
       }
+      for (const param of request.params) {
+        if (param.enabled === false && param.name) {
+          const idx = pairs.findIndex(p => p.name === param.name);
+          if (idx !== -1) pairs.splice(idx, 1);
+        } else if (param.name) {
+          const safeName = encodeURIComponent(param.name)
+            .replace(/%7B%7B/g, '{{')
+            .replace(/%7D%7D/g, '}}');
+          const safeVal = encodeURIComponent(param.value ?? '')
+            .replace(/%7B%7B/g, '{{')
+            .replace(/%7D%7D/g, '}}');
+          const existing = pairs.find(p => p.name === safeName);
+          if (existing) {
+            existing.value = safeVal;
+          } else {
+            pairs.push({ name: safeName, value: safeVal });
+          }
+        }
+      }
+      fullUrl =
+        pairs.length > 0 ? `${base}?${pairs.map(p => `${p.name}=${p.value}`).join('&')}` : base;
     }
   }
 
@@ -67,7 +96,13 @@ export function generateCurl(request: RequestFile, options?: CurlFormatOptions):
       const apiKeyObj = (a.apiKey as Record<string, unknown>) || a;
       if (apiKeyObj.in === 'query' && apiKeyObj.key && apiKeyObj.value) {
         const joinChar = fullUrl.includes('?') ? '&' : '?';
-        fullUrl += `${joinChar}${encodeURIComponent(String(apiKeyObj.key))}=${encodeURIComponent(String(apiKeyObj.value))}`;
+        const safeKey = encodeURIComponent(String(apiKeyObj.key))
+          .replace(/%7B%7B/g, '{{')
+          .replace(/%7D%7D/g, '}}');
+        const safeVal = encodeURIComponent(String(apiKeyObj.value))
+          .replace(/%7B%7B/g, '{{')
+          .replace(/%7D%7D/g, '}}');
+        fullUrl += `${joinChar}${safeKey}=${safeVal}`;
       }
     }
   }

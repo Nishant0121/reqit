@@ -17,6 +17,7 @@ import {
   Sparkles,
   Layers,
   Cookie as CookieIcon,
+  Code2,
 } from 'lucide-react';
 import { Button } from './ui/Button';
 import { strings } from '../lib/strings';
@@ -43,6 +44,7 @@ export interface TopBarProps {
   onOpenWelcome?: () => void;
   onOpenExample?: () => void;
   onOpenCookies?: () => void;
+  onOpenSnippets?: () => void;
   recentCollections?: string[];
   onSelectRecentCollection?: (path: string) => void;
 }
@@ -67,6 +69,7 @@ export function TopBar({
   onOpenWelcome,
   onOpenExample,
   onOpenCookies,
+  onOpenSnippets,
   recentCollections = [],
   onSelectRecentCollection,
 }: TopBarProps): React.JSX.Element {
@@ -377,6 +380,17 @@ export function TopBar({
               aria-label="Manage Cookies"
             >
               <CookieIcon className="h-4 w-4" />
+            </button>
+          )}
+          {onOpenSnippets && (
+            <button
+              type="button"
+              onClick={onOpenSnippets}
+              className="transition-fast flex h-7 w-7 items-center justify-center rounded-sm text-(--text-secondary) hover:bg-(--bg-hover) hover:text-(--text-primary)"
+              title="Code Snippets (Ctrl+Alt+C)"
+              aria-label="Code Snippets"
+            >
+              <Code2 className="h-4 w-4" />
             </button>
           )}
         </div>

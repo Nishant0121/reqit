@@ -43,6 +43,13 @@ export default defineConfig({
     resolve: {
       alias: {
         chokidar: resolve(__dirname, 'src/renderer/src/lib/chokidar-mock.ts'),
+        '@reqit/core/snippets': resolve(__dirname, '../core/src/snippets/index.ts'),
+        '@reqit/core/format': resolve(__dirname, '../core/src/format/index.ts'),
+        '@reqit/core/variables': resolve(__dirname, '../core/src/variables/index.ts'),
+        '@reqit/core/curl': resolve(__dirname, '../core/src/curl/index.ts'),
+        '@reqit/core/postman': resolve(__dirname, '../core/src/postman/index.ts'),
+        '@reqit/core/cookies': resolve(__dirname, '../core/src/cookies/index.ts'),
+        '@reqit/core/oauth': resolve(__dirname, '../core/src/oauth/index.ts'),
       },
     },
     optimizeDeps: {

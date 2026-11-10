@@ -20,6 +20,7 @@ import { ClearHistoryConfirmModal } from './components/ClearHistoryConfirmModal'
 import { ImportCurlModal } from './components/ImportCurlModal';
 import { ImportPostmanModal } from './components/ImportPostmanModal';
 import { CookieManagerModal } from './components/CookieManagerModal';
+import { SnippetModal } from './components/SnippetModal';
 import { SettingsModal } from './components/SettingsModal';
 import { WelcomeScreen } from './components/WelcomeScreen';
 import { useAppStore } from './stores/appStore';
@@ -69,6 +70,7 @@ export default function App(): React.JSX.Element {
   const [importCurlModalOpen, setImportCurlModalOpen] = useState(false);
   const [importPostmanModalOpen, setImportPostmanModalOpen] = useState(false);
   const [cookieModalOpen, setCookieModalOpen] = useState(false);
+  const [snippetModalOpen, setSnippetModalOpen] = useState(false);
   const [showWelcomeScreen, setShowWelcomeScreen] = useState(false);
 
   const { openSettings, loadSettings } = useSettingsStore();
@@ -173,6 +175,16 @@ export default function App(): React.JSX.Element {
   const knownVariableNames = React.useMemo(() => {
     const names = Object.keys(variablesMap);
     return names.length > 0 ? names : KNOWN_VARIABLES;
+  }, [variablesMap]);
+
+  const currentRequestFile = React.useMemo(() => draftToRequestFile(activeDraft), [activeDraft]);
+
+  const snippetScope = React.useMemo(() => {
+    const res: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(variablesMap)) {
+      res[k] = v.value;
+    }
+    return res;
   }, [variablesMap]);
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -528,6 +540,10 @@ export default function App(): React.JSX.Element {
         case 'cookies:manage':
           setCookieModalOpen(true);
           break;
+        case 'open-snippets':
+        case 'tools:open-snippets':
+          setSnippetModalOpen(true);
+          break;
       }
     });
     return () => unsub();
@@ -613,7 +629,14 @@ export default function App(): React.JSX.Element {
         return;
       }
 
-      // 11. Open settings (Ctrl/Cmd + ,)
+      // 11. Code Snippets (Ctrl/Cmd + Alt + C)
+      if (matchesShortcut(e, 'Ctrl+Alt+C')) {
+        e.preventDefault();
+        setSnippetModalOpen(true);
+        return;
+      }
+
+      // 12. Open settings (Ctrl/Cmd + ,)
       if (matchesShortcut(e, 'Ctrl+,')) {
         e.preventDefault();
         openSettings();
@@ -718,6 +741,7 @@ export default function App(): React.JSX.Element {
         onOpenWelcome={() => setShowWelcomeScreen(true)}
         onOpenExample={handleOpenExample}
         onOpenCookies={() => setCookieModalOpen(true)}
+        onOpenSnippets={() => setSnippetModalOpen(true)}
         recentCollections={recentCollections}
         onSelectRecentCollection={p => loadCollection(p)}
       />
@@ -805,6 +829,7 @@ export default function App(): React.JSX.Element {
                 onImportCurl={handleImportCurl}
                 onOpenImportCurl={() => setImportCurlModalOpen(true)}
                 onCopyCurl={handleCopyCurl}
+                onOpenSnippets={() => setSnippetModalOpen(true)}
               />
 
               {/* Split Panes: Request Panel (top) + Response Panel (bottom) */}
@@ -992,6 +1017,12 @@ export default function App(): React.JSX.Element {
         isOpen={cookieModalOpen}
         onClose={() => setCookieModalOpen(false)}
         collectionPath={currentTree?.rootPath}
+      />
+      <SnippetModal
+        isOpen={snippetModalOpen}
+        onClose={() => setSnippetModalOpen(false)}
+        requestFile={currentRequestFile}
+        scopes={snippetScope}
       />
     </div>
   );

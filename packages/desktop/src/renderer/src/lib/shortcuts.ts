@@ -43,6 +43,13 @@ export const SHORTCUT_REGISTRY: ShortcutDefinition[] = [
     description: 'Import an HTTP request from a cURL command',
   },
   {
+    id: 'request.snippets',
+    name: 'Code snippets',
+    section: 'Request',
+    keyCombination: 'Ctrl+Alt+C',
+    description: 'Generate code snippets in cURL, Fetch, Python, Go, Java, etc.',
+  },
+  {
     id: 'tab.close',
     name: 'Close tab',
     section: 'Navigation',

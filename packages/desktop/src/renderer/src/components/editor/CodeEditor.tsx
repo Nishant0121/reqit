@@ -26,8 +26,11 @@ import { json } from '@codemirror/lang-json';
 import { xml } from '@codemirror/lang-xml';
 import { html } from '@codemirror/lang-html';
 import { javascript } from '@codemirror/lang-javascript';
+import { python } from '@codemirror/lang-python';
+import { java } from '@codemirror/lang-java';
+import { go } from '@codemirror/lang-go';
 
-export type EditorMode = 'json' | 'xml' | 'html' | 'javascript' | 'text';
+export type EditorMode = 'json' | 'xml' | 'html' | 'javascript' | 'python' | 'java' | 'go' | 'text';
 
 export interface CodeEditorProps {
   value: string;
@@ -99,6 +102,12 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(function
         return html();
       case 'javascript':
         return javascript();
+      case 'python':
+        return python();
+      case 'java':
+        return java();
+      case 'go':
+        return go();
       default:
         return [];
     }

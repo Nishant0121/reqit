@@ -72,6 +72,11 @@ export function setupApplicationMenu(mainWindow: BrowserWindow): void {
           label: 'Import Postman Collection...',
           click: () => sendAction('import-postman'),
         },
+        {
+          label: 'Code Snippets...',
+          accelerator: 'CmdOrCtrl+Alt+C',
+          click: () => sendAction('open-snippets'),
+        },
         { type: 'separator' as const },
         {
           label: 'Save Request',

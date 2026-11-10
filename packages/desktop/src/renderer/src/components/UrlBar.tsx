@@ -3,7 +3,7 @@ import type { HttpMethod, ShellTarget } from '@reqit/core';
 import { Button } from './ui/Button';
 import { VariableInput, type VariableDetail } from './ui/VariableInput';
 import { strings } from '../lib/strings';
-import { Terminal, ChevronDown, Check, Download } from 'lucide-react';
+import { Terminal, ChevronDown, Check, Download, Code2 } from 'lucide-react';
 
 export interface UrlBarProps {
   method: HttpMethod;
@@ -18,6 +18,7 @@ export interface UrlBarProps {
   onImportCurl?: (curlCommand: string) => void;
   onOpenImportCurl?: () => void;
   onCopyCurl?: (options: { target: ShellTarget; resolveVariables: boolean }) => void;
+  onOpenSnippets?: () => void;
 }
 
 const HTTP_METHODS: HttpMethod[] = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'];
@@ -35,6 +36,7 @@ export function UrlBar({
   onImportCurl,
   onOpenImportCurl,
   onCopyCurl,
+  onOpenSnippets,
 }: UrlBarProps): React.JSX.Element {
   const [curlMenuOpen, setCurlMenuOpen] = useState(false);
   const [curlTarget, setCurlTarget] = useState<ShellTarget>('bash');
@@ -274,9 +276,42 @@ export function UrlBar({
                 </button>
               </>
             )}
+
+            {onOpenSnippets && (
+              <>
+                <div className="my-1 border-t" style={{ borderColor: 'var(--border)' }} />
+                <button
+                  type="button"
+                  id="open-snippets-menu-item"
+                  onClick={() => {
+                    setCurlMenuOpen(false);
+                    onOpenSnippets();
+                  }}
+                  className="transition-fast flex w-full items-center gap-2 px-3 py-1.5 text-left text-(--text-primary) hover:bg-(--bg-hover)"
+                >
+                  <Code2 className="h-3.5 w-3.5 text-(--accent)" />
+                  <span className="flex-1 font-medium">Code Snippets...</span>
+                  <span className="font-mono text-[10px] text-(--text-muted)">Ctrl+Alt+C</span>
+                </button>
+              </>
+            )}
           </div>
         )}
       </div>
+
+      {/* Code Snippets Direct Button */}
+      {onOpenSnippets && (
+        <button
+          type="button"
+          onClick={onOpenSnippets}
+          className="flex h-9 items-center gap-1.5 rounded-md border border-(--border) bg-(--bg-elevated) px-2.5 text-[12px] font-medium text-(--text-secondary) transition-colors hover:bg-(--bg-hover) hover:text-(--text-primary)"
+          title="Generate Code Snippets (Ctrl+Alt+C)"
+          id="code-snippets-btn"
+        >
+          <Code2 className="h-4 w-4 text-(--accent)" />
+          <span className="hidden sm:inline">Code</span>
+        </button>
+      )}
 
       {/* Send or Cancel Button */}
       {loading ? (
