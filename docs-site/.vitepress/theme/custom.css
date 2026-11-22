@@ -18,6 +18,7 @@
   width: 100%;
 }
 
-.vp-doc th, .vp-doc td {
+.vp-doc th,
+.vp-doc td {
   padding: 10px 14px;
 }
