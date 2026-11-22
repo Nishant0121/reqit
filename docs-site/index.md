@@ -37,7 +37,7 @@ features:
     details: Isolated Node.js sandbox for pre-request dynamic setup and post-request test assertions using familiar reqit.test() and reqit.expect() syntax.
   - icon: 🚀
     title: Headless CLI & CI/CD Runner
-    details: Run entire collections headless in GitHub Actions, GitLab CI, or terminal using @reqit/cli with JUnit and HTML test reports.
+    details: Run entire collections headless in GitHub Actions, GitLab CI, or terminal using reqit-cli with JUnit and HTML test reports.
 ---
 
 ## Why Developers Love Reqit
@@ -67,4 +67,4 @@ my-project/
 
 - **Zero Cloud Lock-in:** 100% offline-first. No mandatory user accounts, no logins, no tracking.
 - **Git Pull Request Reviews:** Request modifications show up as clean line diffs in GitHub/GitLab PRs.
-- **Automated CI Integration:** Run the exact same collection in CI pipelines using `@reqit/cli`.
+- **Automated CI Integration:** Run the exact same collection in CI pipelines using `reqit-cli`.

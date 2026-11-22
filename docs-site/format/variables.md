@@ -69,7 +69,7 @@ Credentials should never be committed into public or private Git repositories. R
 1. **Automatic Gitignore Enforcement:** Whenever a collection is created or opened, Reqit checks if `.reqit/` is covered by your repository's `.gitignore`. If not, Reqit safely appends `.reqit/` automatically.
 2. **Secret Masking:** In the UI, secret values are masked by default (`••••••••`).
 3. **Log Sanitization:** When generating diagnostic reports or copying logs, all secret values matching sensitive keys are automatically redacted.
-4. **CI/CD Injection:** In automated pipelines where `.reqit/secrets.yaml` does not exist on disk, `@reqit/cli` allows injecting secrets via environment variables:
+4. **CI/CD Injection:** In automated pipelines where `.reqit/secrets.yaml` does not exist on disk, `reqit-cli` allows injecting secrets via environment variables:
    ```bash
    export REQIT_SECRET_apiKey="ci_secret_token_123"
    reqit run ./api --env staging

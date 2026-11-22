@@ -13,7 +13,7 @@ Choosing the right API client is a critical developer workflow decision. Here is
 | **Account Required**           | **Never (100% Offline)**       | Yes (Forced Cloud)          | Yes (For Sync)           | Never                  | Optional (For Sync)    |
 | **Sub-ms Timing Breakdown**    | **Yes (DNS/TCP/TLS/TTFB)**     | Basic duration only         | Basic duration only      | Basic duration only    | Basic duration only    |
 | **Live External File Watcher** | **Yes (Diff Conflict Engine)** | No                          | No                       | Basic file reload      | No                     |
-| **Headless CI/CD CLI**         | **Yes (`@reqit/cli`)**         | Newman (Heavy)              | Inso                     | `@usebruno/cli`        | `@hoppscotch/cli`      |
+| **Headless CI/CD CLI**         | **Yes (`reqit-cli`)**          | Newman (Heavy)              | Inso                     | `@usebruno/cli`        | `@hoppscotch/cli`      |
 | **Hierarchical Variables**     | **5-layer Cascade**            | 3-layer (Global/Col/Env)    | 2-layer (Base/Env)       | 2-layer (Col/Env)      | 2-layer (Global/Env)   |
 | **Secrets Protection**         | **Auto-Gitignored `.yaml`**    | Cloud Vault                 | Cloud Vault              | Manual Gitignore       | Cloud Vault            |
 | **OpenAPI / Postman Import**   | **Built-in Native Parsers**    | Native                      | Native                   | Via Plugins            | Native                 |

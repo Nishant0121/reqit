@@ -207,20 +207,19 @@ importers:
         version: 3.2.7(@types/debug@4.1.13)(@types/node@26.6.5)(jiti@2.7.0)(lightningcss@1.33.0)(supports-color@7.2.0)(yaml@2.9.1)
 
   packages/cli:
-    dependencies:
+    devDependencies:
       '@reqit/core':
         specifier: workspace:*
         version: link:../core
       commander:
         specifier: ^15.1.0
         version: 15.1.0
-      picocolors:
-        specifier: ^1.1.1
-        version: 1.1.1
-    devDependencies:
       esbuild:
         specifier: ^0.28.2
         version: 0.28.2
+      picocolors:
+        specifier: ^1.1.1
+        version: 1.1.1
 
   packages/core:
     dependencies:

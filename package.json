@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "pnpm --filter desktop dev",
     "build": "pnpm --filter desktop build",
-    "build:cli": "pnpm --filter @reqit/cli run build",
+    "build:cli": "pnpm --filter reqit-cli run build",
     "docs:dev": "vitepress dev docs-site",
     "docs:build": "vitepress build docs-site",
     "docs:preview": "vitepress preview docs-site",

@@ -24,10 +24,10 @@ Reqit keeps all sensitive values (passwords, private API keys, bearer tokens) in
 
 ### Can I run collections headless in CI/CD?
 
-Yes! Use `@reqit/cli`:
+Yes! Use `reqit-cli`:
 
 ```bash
-npx @reqit/cli run ./api --env staging --reporter cli,junit --output ./results
+npx reqit-cli run ./api --env staging --reporter cli,junit --output ./results
 ```
 
 The CLI exits with code `0` on success or code `1` if any assertions fail, allowing you to gate your deployment pipeline.

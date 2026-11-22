@@ -1,6 +1,6 @@
 # Collection Runner & Headless CLI
 
-Reqit provides two ways to execute automated test suites across collections: an interactive **Desktop Runner** and a headless **Command-Line Interface (`@reqit/cli`)** for CI/CD pipelines.
+Reqit provides two ways to execute automated test suites across collections: an interactive **Desktop Runner** and a headless **Command-Line Interface (`reqit-cli`)** for CI/CD pipelines.
 
 ---
 
@@ -20,7 +20,7 @@ The Desktop Runner allows you to execute entire collections or specific subfolde
 
 ---
 
-## 2. Headless CLI (`@reqit/cli`)
+## 2. Headless CLI (`reqit-cli`)
 
 The Reqit CLI brings the exact same HTTP engine and test assertion sandbox into your terminal and continuous integration workflows.
 
@@ -28,10 +28,10 @@ The Reqit CLI brings the exact same HTTP engine and test assertion sandbox into 
 
 ```bash
 # Global install
-npm install -g @reqit/cli
+npm install -g reqit-cli
 
 # Or run directly with npx
-npx @reqit/cli run ./api-collection --env staging
+npx reqit-cli run ./api-collection --env staging
 ```
 
 ### CLI Command Options
@@ -80,7 +80,7 @@ jobs:
           node-version: 22
 
       - name: Install Reqit CLI
-        run: npm install -g @reqit/cli
+        run: npm install -g reqit-cli
 
       - name: Run API Collection
         env:
