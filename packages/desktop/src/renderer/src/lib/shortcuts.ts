@@ -98,6 +98,42 @@ export function formatKeyCombination(keys: string): string {
   return keys;
 }
 
+export function getEffectiveShortcuts(
+  customShortcuts?: Record<string, string>,
+): ShortcutDefinition[] {
+  return SHORTCUT_REGISTRY.map(shortcut => ({
+    ...shortcut,
+    keyCombination: customShortcuts?.[shortcut.id] || shortcut.keyCombination,
+  }));
+}
+
+export function getEffectiveShortcut(id: string, customShortcuts?: Record<string, string>): string {
+  if (customShortcuts?.[id]) return customShortcuts[id];
+  return SHORTCUT_REGISTRY.find(s => s.id === id)?.keyCombination || '';
+}
+
+export function recordKeyCombination(e: KeyboardEvent): string | null {
+  // If only a modifier key is pressed, wait for the full combo
+  if (['Control', 'Alt', 'Shift', 'Meta'].includes(e.key)) {
+    return null;
+  }
+
+  const parts: string[] = [];
+  if (e.ctrlKey || e.metaKey) parts.push('Ctrl');
+  if (e.altKey) parts.push('Alt');
+  if (e.shiftKey) parts.push('Shift');
+
+  let key = e.key;
+  if (key === ' ') key = 'Space';
+  else if (key === 'Escape') key = 'Escape';
+  else if (key === 'Enter') key = 'Enter';
+  else if (key === 'Tab') key = 'Tab';
+  else if (key.length === 1) key = key.toUpperCase();
+
+  parts.push(key);
+  return parts.join('+');
+}
+
 export function matchesShortcut(e: KeyboardEvent, keys: string): boolean {
   const parts = keys.split('+').map(p => p.trim().toLowerCase());
   const needsCtrl = parts.includes('ctrl') || parts.includes('cmd');

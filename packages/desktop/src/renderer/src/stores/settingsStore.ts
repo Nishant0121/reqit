@@ -4,7 +4,7 @@ import { DEFAULT_APP_SETTINGS } from '../../../shared/settings-types.js';
 import { applyTheme } from '../lib/theme';
 import { useAppStore } from './appStore';
 
-export type SettingsTab = 'general' | 'request' | 'proxy' | 'history';
+export type SettingsTab = 'general' | 'request' | 'proxy' | 'history' | 'shortcuts';
 
 interface SettingsState {
   settings: AppSettings;
@@ -66,7 +66,7 @@ export const useSettingsStore = create<SettingsState>(set => ({
   },
 
   openSettings: (tab?: SettingsTab) => {
-    const validTabs: SettingsTab[] = ['general', 'request', 'proxy', 'history'];
+    const validTabs: SettingsTab[] = ['general', 'request', 'proxy', 'history', 'shortcuts'];
     const effectiveTab = typeof tab === 'string' && validTabs.includes(tab) ? tab : 'general';
     set({ isOpen: true, activeTab: effectiveTab });
   },

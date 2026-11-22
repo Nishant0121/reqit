@@ -7,6 +7,64 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.3.0] - 2026-11-10
+
+### Added
+
+- **Command Palette & Global Search (Phase 20)**:
+  - Accessible via `Ctrl+K` / `Cmd+K` anywhere across the application.
+  - Unified search across actions, environment switching, and all collection requests.
+  - Global search matching request name, endpoint URL, documentation, and JSON/text request body contents.
+  - Dedicated prefix search modes (`> ` for actions, `@ ` for environments, `# ` for requests).
+- **Tabs, Preview Tabs & Pinning (Phase 20)**:
+  - Open requests in preview mode (italic title) when single-clicked in sidebar or switcher.
+  - Preview tabs are replaced when clicking another file to avoid clutter.
+  - Permanent tab pinning upon double-clicking, editing any field, or creating/duplicating requests.
+  - Unsaved modifications indicator dot and close-on-middle-click.
+- **Request Docs Tab (Phase 20)**:
+  - Added `Docs` subtab in the Request Builder with Edit, Preview, and Side-by-Side Split views.
+  - Built-in safe Markdown renderer supporting headings, code fences with copy button, tables, blockquotes, lists, links, and text formatting.
+  - Direct round-trip persistence to the `docs:` multiline YAML field.
+- **Keyboard Shortcut Rebinding (Phase 20)**:
+  - Configurable keyboard shortcuts stored in user settings.
+  - Interactive key combination recording in Settings -> Shortcuts with modifier detection.
+  - Per-shortcut and global "Reset to Default" actions.
+- **Response Comparison & Diff (Phase 20)**:
+  - "Pin Response" button in the response viewer to hold a baseline response.
+  - Compare subsequent responses against pinned baseline with line-by-line unified or split body diff.
+  - Comprehensive delta comparison for HTTP status codes, execution duration, payload size, and header modifications.
+- **Cookies & Advanced Authentication (Phase 18)**:
+  - Cookie jar per collection (RFC 6265 compliant with domain, path, expiry, and flags).
+  - Dedicated Cookie Manager dialog to inspect and purge cookies.
+  - OAuth 2.0 (Authorization code with PKCE and client credentials) with token caching in secrets.
+  - Digest and AWS Signature v4 authentication support.
+- **Code Snippet Generator (Phase 19)**:
+  - Multi-language snippet generator for cURL, Fetch (ESM/JS), Axios, Python requests, Node.js http, Go, and Java.
+  - Support for raw `{{variables}}` placeholders or resolved environment values.
+
+---
+
+## [0.2.0] - 2026-11-05
+
+### Added
+
+- **Postman Import (Phase 15)**:
+  - Parse Postman Collection v2.1 JSON files into Reqit folder trees and YAML requests.
+  - Map auth, inherited auth, headers, query params, and body modes (raw, form, multipart).
+  - Environment conversion into `.reqit/environments/` and secret isolation.
+  - Comprehensive import report summary of converted, approximated, and skipped elements.
+- **Scripting Sandbox (Phase 16)**:
+  - Isolated Node.js `vm` sandbox running pre-request and post-response scripts with timeout and memory enforcement.
+  - Script API: `req`, `res`, `reqit.setVar`, `reqit.getVar`, `reqit.log`.
+  - Live console logs viewer with log level filtering and line numbers.
+  - Collection trust model preventing execution of untrusted scripts.
+- **Tests & Assertions (Phase 17)**:
+  - Named assertions executed post-request with `res` and Chai-like assertion API.
+  - Quick-add helpers for status codes, body contents, JSON path checks, and header validation.
+  - Live test results panel with pass/fail summary badge in the response header.
+
+---
+
 ## [0.1.0] - 2026-10-29
 
 ### Added

@@ -8,7 +8,19 @@ import type {
   FontSizeSetting,
   ProxyModeSetting,
 } from '../../../shared/settings-types';
-import { Sliders, Globe, Shield, Clock, Sun, Moon, Laptop, Trash2 } from 'lucide-react';
+import {
+  Sliders,
+  Globe,
+  Shield,
+  Clock,
+  Sun,
+  Moon,
+  Laptop,
+  Trash2,
+  Keyboard,
+  RotateCcw,
+} from 'lucide-react';
+import { SHORTCUT_REGISTRY, formatKeyCombination, recordKeyCombination } from '../lib/shortcuts';
 
 export function SettingsModal(): React.JSX.Element | null {
   const { isOpen, closeSettings, activeTab, setActiveTab, settings, updateSettings } =
@@ -31,6 +43,10 @@ export function SettingsModal(): React.JSX.Element | null {
   const [historyRetentionDays, setHistoryRetentionDays] = useState<number>(
     settings.historyRetentionDays,
   );
+  const [customShortcuts, setCustomShortcuts] = useState<Record<string, string>>(
+    settings.customShortcuts || {},
+  );
+  const [recordingId, setRecordingId] = useState<string | null>(null);
 
   const [saving, setSaving] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
@@ -50,9 +66,35 @@ export function SettingsModal(): React.JSX.Element | null {
       setHistoryEnabled(settings.historyEnabled);
       setHistoryMaxEntries(settings.historyMaxEntries);
       setHistoryRetentionDays(settings.historyRetentionDays);
+      setCustomShortcuts(settings.customShortcuts || {});
+      setRecordingId(null);
       setSavedSuccess(false);
     }
   }, [isOpen, settings]);
+
+  // Handle keyboard shortcut recording
+  useEffect(() => {
+    if (!recordingId) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (e.key === 'Escape' && !e.ctrlKey && !e.altKey && !e.shiftKey && !e.metaKey) {
+        setRecordingId(null);
+        return;
+      }
+
+      const combo = recordKeyCombination(e);
+      if (combo) {
+        setCustomShortcuts(prev => ({ ...prev, [recordingId]: combo }));
+        setRecordingId(null);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown, true);
+    return () => window.removeEventListener('keydown', handleKeyDown, true);
+  }, [recordingId]);
 
   if (!isOpen) return null;
 
@@ -73,6 +115,7 @@ export function SettingsModal(): React.JSX.Element | null {
         historyEnabled,
         historyMaxEntries: Number(historyMaxEntries) || 1000,
         historyRetentionDays: Number(historyRetentionDays) || 30,
+        customShortcuts,
       });
       setSavedSuccess(true);
       addToast({
@@ -116,6 +159,7 @@ export function SettingsModal(): React.JSX.Element | null {
     { id: 'request', label: 'Request Defaults', icon: <Clock size={15} /> },
     { id: 'proxy', label: 'Proxy', icon: <Globe size={15} /> },
     { id: 'history', label: 'Privacy & History', icon: <Shield size={15} /> },
+    { id: 'shortcuts', label: 'Shortcuts', icon: <Keyboard size={15} /> },
   ];
 
   return (
@@ -571,6 +615,123 @@ export function SettingsModal(): React.JSX.Element | null {
                   Clear All History Now
                 </button>
               </div>
+            </div>
+          )}
+
+          {/* 5. SHORTCUTS TAB */}
+          {activeTab === 'shortcuts' && (
+            <div className="flex flex-col gap-5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="mb-1 font-semibold text-(--text-primary)">Keyboard Shortcuts</h4>
+                  <p className="text-[12px] text-(--text-muted)">
+                    Click Rebind on any shortcut and press your preferred key combination.
+                  </p>
+                </div>
+                {Object.keys(customShortcuts).length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setCustomShortcuts({})}
+                    className="transition-fast flex cursor-pointer items-center gap-1 text-[11px] font-medium text-(--text-muted) hover:text-(--status-err)"
+                  >
+                    <RotateCcw className="h-3 w-3" />
+                    <span>Reset All to Defaults</span>
+                  </button>
+                )}
+              </div>
+
+              {(['Request', 'Navigation', 'General'] as const).map(section => {
+                const items = SHORTCUT_REGISTRY.filter(s => s.section === section);
+                if (items.length === 0) return null;
+
+                return (
+                  <div key={section} className="space-y-2">
+                    <h5 className="text-[11px] font-semibold tracking-wider text-(--text-secondary) uppercase">
+                      {section}
+                    </h5>
+                    <div
+                      className="divide-y rounded border text-[12px]"
+                      style={{
+                        borderColor: 'var(--border)',
+                        backgroundColor: 'var(--bg-input)',
+                      }}
+                    >
+                      {items.map(item => {
+                        const currentKey = customShortcuts[item.id] || item.keyCombination;
+                        const isCustom = Boolean(customShortcuts[item.id]);
+                        const isRecording = recordingId === item.id;
+
+                        return (
+                          <div
+                            key={item.id}
+                            className="flex items-center justify-between p-2.5"
+                            style={{ borderColor: 'var(--border)' }}
+                          >
+                            <div className="pr-4">
+                              <span className="font-medium text-(--text-primary)">{item.name}</span>
+                              <p className="text-[11px] text-(--text-muted)">{item.description}</p>
+                            </div>
+
+                            <div className="flex shrink-0 items-center gap-2">
+                              {isRecording ? (
+                                <span className="animate-pulse rounded border border-(--accent) bg-(--accent)/10 px-2 py-0.5 font-mono text-[11px] font-medium text-(--accent)">
+                                  Press keys (Esc to cancel)...
+                                </span>
+                              ) : (
+                                <kbd
+                                  className="rounded border px-2 py-0.5 font-mono text-[11px] font-semibold select-none"
+                                  style={{
+                                    backgroundColor: 'var(--bg-surface)',
+                                    borderColor: isCustom
+                                      ? 'var(--accent)'
+                                      : 'var(--border-strong)',
+                                    color: isCustom ? 'var(--accent)' : 'var(--text-primary)',
+                                  }}
+                                >
+                                  {formatKeyCombination(currentKey)}
+                                </kbd>
+                              )}
+
+                              {isRecording ? (
+                                <button
+                                  type="button"
+                                  onClick={() => setRecordingId(null)}
+                                  className="cursor-pointer text-[11px] text-(--text-secondary) hover:text-(--text-primary)"
+                                >
+                                  Cancel
+                                </button>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => setRecordingId(item.id)}
+                                  className="transition-fast cursor-pointer rounded px-2 py-0.5 text-[11px] font-medium text-(--text-secondary) hover:bg-(--bg-hover) hover:text-(--text-primary)"
+                                >
+                                  Rebind
+                                </button>
+                              )}
+
+                              {isCustom && !isRecording && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const next = { ...customShortcuts };
+                                    delete next[item.id];
+                                    setCustomShortcuts(next);
+                                  }}
+                                  title="Reset to default key combination"
+                                  className="transition-fast cursor-pointer p-1 text-(--text-muted) hover:bg-(--bg-hover) hover:text-(--text-primary)"
+                                >
+                                  <RotateCcw className="h-3 w-3" />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>

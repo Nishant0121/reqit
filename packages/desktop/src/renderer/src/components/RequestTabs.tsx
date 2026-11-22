@@ -11,6 +11,7 @@ export interface TabItemData {
   isDirty?: boolean;
   hasConflict?: boolean;
   isDeleted?: boolean;
+  isPreview?: boolean;
 }
 
 export interface RequestTabsProps {
@@ -19,6 +20,7 @@ export interface RequestTabsProps {
   onSelectTab: (id: string) => void;
   onCloseTab: (id: string) => void;
   onNewTab: () => void;
+  onPinTab?: (id: string) => void;
 }
 
 export function RequestTabs({
@@ -27,6 +29,7 @@ export function RequestTabs({
   onSelectTab,
   onCloseTab,
   onNewTab,
+  onPinTab,
 }: RequestTabsProps): React.JSX.Element {
   return (
     <div
@@ -47,6 +50,13 @@ export function RequestTabs({
             aria-selected={isActive}
             tabIndex={isActive ? 0 : -1}
             onClick={() => onSelectTab(tab.id)}
+            onDoubleClick={() => onPinTab?.(tab.id)}
+            onMouseDown={e => {
+              if (e.button === 1) {
+                e.preventDefault();
+                onCloseTab(tab.id);
+              }
+            }}
             onKeyDown={e => {
               if (e.key === 'Enter' || e.key === ' ') {
                 onSelectTab(tab.id);
@@ -59,10 +69,14 @@ export function RequestTabs({
               borderBottom: isActive ? '2px solid var(--accent)' : '2px solid transparent',
               color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
               maxWidth: '180px',
+              fontStyle: tab.isPreview ? 'italic' : 'normal',
             }}
           >
             <MethodBadge method={tab.method} short className="mr-1.5 w-auto" />
-            <span className="flex-1 truncate" title={tab.name}>
+            <span
+              className={`flex-1 truncate ${tab.isPreview ? 'opacity-85' : ''}`}
+              title={tab.isPreview ? `${tab.name} (preview - double-click to pin)` : tab.name}
+            >
               {tab.name}
             </span>
 

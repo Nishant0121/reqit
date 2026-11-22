@@ -18,6 +18,7 @@ import {
   Layers,
   Cookie as CookieIcon,
   Code2,
+  Search,
 } from 'lucide-react';
 import { Button } from './ui/Button';
 import { strings } from '../lib/strings';
@@ -45,6 +46,7 @@ export interface TopBarProps {
   onOpenExample?: () => void;
   onOpenCookies?: () => void;
   onOpenSnippets?: () => void;
+  onOpenCommandPalette?: () => void;
   recentCollections?: string[];
   onSelectRecentCollection?: (path: string) => void;
 }
@@ -70,6 +72,7 @@ export function TopBar({
   onOpenExample,
   onOpenCookies,
   onOpenSnippets,
+  onOpenCommandPalette,
   recentCollections = [],
   onSelectRecentCollection,
 }: TopBarProps): React.JSX.Element {
@@ -394,6 +397,26 @@ export function TopBar({
             </button>
           )}
         </div>
+
+        {/* Command Palette Button (Ctrl+K) */}
+        {onOpenCommandPalette && (
+          <button
+            type="button"
+            onClick={onOpenCommandPalette}
+            className="transition-fast flex h-7 cursor-pointer items-center gap-2 rounded border px-2.5 text-[11px] text-(--text-muted) hover:border-(--text-muted) hover:text-(--text-primary)"
+            style={{
+              backgroundColor: 'var(--bg-input)',
+              borderColor: 'var(--border)',
+            }}
+            title="Command Palette (Ctrl+K)"
+          >
+            <Search className="h-3.5 w-3.5" />
+            <span className="hidden md:inline">Command palette...</span>
+            <kbd className="py-0.2 rounded border border-(--border-strong) bg-(--bg-elevated) px-1 font-mono text-[10px]">
+              Ctrl+K
+            </kbd>
+          </button>
+        )}
 
         {onOpenImportCurl && (
           <Button

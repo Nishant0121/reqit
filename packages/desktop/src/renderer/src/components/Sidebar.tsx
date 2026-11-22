@@ -35,7 +35,7 @@ export interface SidebarProps {
   onWidthChange: (w: number) => void;
   tree?: CollectionTree | null;
   activeRequestId: string;
-  onSelectRequestNode?: (node: CollectionTreeNode) => void;
+  onSelectRequestNode?: (node: CollectionTreeNode, isPreview?: boolean) => void;
   requests?: RequestItem[];
   onSelectRequest?: (id: string) => void;
   onNewRequest?: () => void;
@@ -166,10 +166,32 @@ export function Sidebar({
     window.addEventListener('mouseup', handleMouseUp);
   };
 
-  // Node filtering helper
+  // Node filtering helper (Global search: name, URL, body, docs, headers, params)
   const matchesFilter = (node: CollectionTreeNode, query: string): boolean => {
     if (node.name.toLowerCase().includes(query)) return true;
     if (node.request?.url.toLowerCase().includes(query)) return true;
+    if (node.request?.body?.content && node.request.body.content.toLowerCase().includes(query)) {
+      return true;
+    }
+    if (node.request?.docs && node.request.docs.toLowerCase().includes(query)) {
+      return true;
+    }
+    if (
+      node.request?.headers &&
+      node.request.headers.some(
+        h => h.name.toLowerCase().includes(query) || h.value.toLowerCase().includes(query),
+      )
+    ) {
+      return true;
+    }
+    if (
+      node.request?.params &&
+      node.request.params.some(
+        p => p.name.toLowerCase().includes(query) || p.value.toLowerCase().includes(query),
+      )
+    ) {
+      return true;
+    }
     if (node.children) {
       return node.children.some(child => matchesFilter(child, query));
     }
@@ -192,7 +214,7 @@ export function Sidebar({
     if (type === 'request') {
       const newNode = await createRequest(parentDir, name);
       if (newNode && onSelectRequestNode) {
-        onSelectRequestNode(newNode);
+        onSelectRequestNode(newNode, false);
       }
     } else {
       await createFolder(parentDir, name);
@@ -326,7 +348,12 @@ export function Sidebar({
             if (isFolder) {
               toggleFolder(node.path);
             } else if (onSelectRequestNode) {
-              onSelectRequestNode(node);
+              onSelectRequestNode(node, true);
+            }
+          }}
+          onDoubleClick={() => {
+            if (!isFolder && onSelectRequestNode) {
+              onSelectRequestNode(node, false);
             }
           }}
           onContextMenu={e => {
@@ -846,7 +873,7 @@ export function Sidebar({
                   setContextMenu(null);
                   const newNode = await duplicateRequest(src);
                   if (newNode && onSelectRequestNode) {
-                    onSelectRequestNode(newNode);
+                    onSelectRequestNode(newNode, false);
                   }
                 }}
                 className="transition-fast flex w-full items-center gap-2 px-3 py-1.5 text-left text-(--text-primary) hover:bg-(--bg-hover)"
