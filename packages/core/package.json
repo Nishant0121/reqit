@@ -48,6 +48,10 @@
     "./openapi": {
       "types": "./src/openapi/index.ts",
       "import": "./src/openapi/index.ts"
+    },
+    "./graphql": {
+      "types": "./src/graphql/index.ts",
+      "import": "./src/graphql/index.ts"
     }
   },
   "scripts": {

@@ -246,6 +246,36 @@ export function getEffectiveRequestData(
         content,
         jsonParsed,
       };
+    } else if (bType === 'graphql') {
+      const query = request.body.content || '';
+      let variablesParsed: unknown = undefined;
+      if (typeof request.body.variables === 'string' && request.body.variables.trim()) {
+        try {
+          variablesParsed = JSON.parse(request.body.variables);
+        } catch {
+          variablesParsed = request.body.variables;
+        }
+      } else if (request.body.variables && typeof request.body.variables === 'object') {
+        variablesParsed = request.body.variables;
+      }
+
+      const payload: Record<string, unknown> = { query };
+      if (variablesParsed !== undefined) {
+        payload.variables = variablesParsed;
+      }
+
+      const content = JSON.stringify(payload, null, 2);
+
+      if (!existingHeaderNames.has('content-type')) {
+        headers.push({ name: 'Content-Type', value: 'application/json' });
+        existingHeaderNames.add('content-type');
+      }
+
+      bodyData = {
+        type: 'json',
+        content,
+        jsonParsed: payload,
+      };
     } else if (bType === 'form') {
       const formFields: Array<{ name: string; value: string }> = [];
       if (Array.isArray(request.body.form)) {

@@ -29,6 +29,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@codemirror/autocomplete": "^6.20.4",
     "@codemirror/commands": "^6.11.1",
     "@codemirror/lang-go": "^6.0.1",
     "@codemirror/lang-html": "^6.4.12",

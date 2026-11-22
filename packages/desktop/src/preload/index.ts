@@ -248,6 +248,9 @@ const api: ReqitApi = {
   importOpenApi: (payload: import('../shared/ipc-types.js').OpenApiImportPayload) => {
     return ipcRenderer.invoke('openapi:import', payload);
   },
+  introspectGraphQL: (payload: import('../shared/ipc-types.js').GraphQLIntrospectPayload) => {
+    return ipcRenderer.invoke('graphql:introspect', payload);
+  },
   onMenuAction: (callback: (action: string) => void) => {
     const handler = (_event: Electron.IpcRendererEvent, action: string) => {
       callback(action);

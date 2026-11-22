@@ -21,3 +21,4 @@ export * from './oauth/index.js';
 export * from './snippets/index.js';
 export * from './runner/index.js';
 export * from './openapi/index.js';
+export * from './graphql/index.js';

@@ -71,6 +71,7 @@ export interface RequestDraft {
   disableCookieJar?: boolean;
   bodyType: BodyType;
   bodyContent: string;
+  bodyVariables?: string;
   bodyFormRows: KeyValueRow[];
   bodyMultipartRows: MultipartRow[];
   preScript?: string;
@@ -95,6 +96,8 @@ export interface RequestState {
   loading: boolean;
   activeExecutionId: string | null;
   historyCount: number;
+  graphqlSchema: import('@reqit/core').GraphQLSchemaSummary | null;
+  setGraphqlSchema: (schema: import('@reqit/core').GraphQLSchemaSummary | null) => void;
 
   createRequest: (initialUrl?: string) => string;
   createRequestFromHistory: (historyDetail: HistoryEntryDetail) => string;
@@ -140,6 +143,7 @@ const DEFAULT_INITIAL_DRAFT: RequestDraft = {
   apiKeyIn: 'header',
   bodyType: 'none',
   bodyContent: '',
+  bodyVariables: '',
   bodyFormRows: [],
   bodyMultipartRows: [],
   preScript: '',
@@ -168,6 +172,8 @@ export const useRequestStore = create<RequestState>((set, get) => ({
   loading: false,
   activeExecutionId: null,
   historyCount: 0,
+  graphqlSchema: null,
+  setGraphqlSchema: schema => set({ graphqlSchema: schema }),
 
   createRequest: (initialUrl = 'https://httpbin.org/get') => {
     const id = `req-${Date.now()}`;
@@ -190,6 +196,7 @@ export const useRequestStore = create<RequestState>((set, get) => ({
       apiKeyIn: 'header',
       bodyType: 'none',
       bodyContent: '',
+      bodyVariables: '',
       bodyFormRows: [],
       bodyMultipartRows: [],
       isDirty: false,

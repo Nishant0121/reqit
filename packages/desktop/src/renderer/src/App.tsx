@@ -24,6 +24,7 @@ import { CookieManagerModal } from './components/CookieManagerModal';
 import { SnippetModal } from './components/SnippetModal';
 import { CommandPalette } from './components/CommandPalette';
 import { CollectionRunnerModal } from './components/CollectionRunnerModal';
+import { GraphQLSchemaDrawer } from './components/GraphQLSchemaDrawer';
 import { SettingsModal } from './components/SettingsModal';
 import { WelcomeScreen } from './components/WelcomeScreen';
 import { useAppStore } from './stores/appStore';
@@ -79,6 +80,8 @@ export default function App(): React.JSX.Element {
   const [runnerModalOpen, setRunnerModalOpen] = useState(false);
   const [runnerTargetFolder, setRunnerTargetFolder] = useState<string | undefined>(undefined);
   const [showWelcomeScreen, setShowWelcomeScreen] = useState(false);
+  const [graphqlDrawerOpen, setGraphqlDrawerOpen] = useState(false);
+  const [isIntrospectingGraphQL, setIsIntrospectingGraphQL] = useState(false);
 
   const handleOpenRunner = useCallback((folderPath?: string) => {
     setRunnerTargetFolder(folderPath);
@@ -132,6 +135,8 @@ export default function App(): React.JSX.Element {
     loading,
     activeExecutionId,
     historyCount,
+    graphqlSchema,
+    setGraphqlSchema,
     createRequest,
     importCurlToDraft,
     openRequest,
@@ -200,6 +205,86 @@ export default function App(): React.JSX.Element {
     }
     return res;
   }, [variablesMap]);
+
+  const handleIntrospectGraphQL = useCallback(async () => {
+    if (!window.reqitApi || !activeDraft.url) return;
+    setIsIntrospectingGraphQL(true);
+    try {
+      const mappedHeaders = (activeDraft.headers || [])
+        .filter(h => h.enabled && h.key.trim() !== '')
+        .map(h => ({ name: h.key.trim(), value: h.value, enabled: true }));
+
+      let auth: import('@reqit/core').Auth | undefined = undefined;
+      if (activeDraft.authType === 'bearer' && activeDraft.bearerToken) {
+        auth = { type: 'bearer', token: activeDraft.bearerToken };
+      } else if (
+        activeDraft.authType === 'basic' &&
+        (activeDraft.basicUser || activeDraft.basicPass)
+      ) {
+        auth = {
+          type: 'basic',
+          username: activeDraft.basicUser,
+          password: activeDraft.basicPass,
+        };
+      } else if (activeDraft.authType === 'apiKey' && activeDraft.apiKeyName) {
+        auth = {
+          type: 'apikey',
+          key: activeDraft.apiKeyName,
+          value: activeDraft.apiKeyValue,
+          in: activeDraft.apiKeyIn || 'header',
+        };
+      }
+
+      const res = await window.reqitApi.introspectGraphQL({
+        url: activeDraft.url,
+        headers: mappedHeaders,
+        auth,
+        collectionPath: currentTree?.rootPath,
+        activeEnvironment: activeEnvironment !== 'none' ? activeEnvironment : undefined,
+      });
+
+      if (res.success && res.schema) {
+        setGraphqlSchema(res.schema);
+        setGraphqlDrawerOpen(true);
+        addToast({
+          type: 'success',
+          message: `Loaded ${Object.keys(res.schema.types).length} types successfully.`,
+        });
+      } else {
+        setError({
+          message: `GraphQL Introspection Failed: ${res.error || 'Unknown error'}`,
+          cause: 'The target server did not respond with a valid GraphQL introspection result.',
+          action: 'Ensure the endpoint is a GraphQL server and introspection is enabled.',
+        });
+        addToast({
+          type: 'error',
+          message: res.error || 'GraphQL introspection failed.',
+        });
+      }
+    } catch (err: unknown) {
+      setError({
+        message: (err as Error)?.message || 'GraphQL Introspection Failed',
+        cause: 'Failed to communicate with GraphQL introspection handler.',
+      });
+    } finally {
+      setIsIntrospectingGraphQL(false);
+    }
+  }, [
+    activeDraft.url,
+    activeDraft.headers,
+    activeDraft.authType,
+    activeDraft.bearerToken,
+    activeDraft.basicUser,
+    activeDraft.basicPass,
+    activeDraft.apiKeyName,
+    activeDraft.apiKeyValue,
+    activeDraft.apiKeyIn,
+    currentTree?.rootPath,
+    activeEnvironment,
+    setGraphqlSchema,
+    addToast,
+    setError,
+  ]);
 
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -939,6 +1024,12 @@ export default function App(): React.JSX.Element {
                     onBodyTypeChange={b => updateActiveDraft({ bodyType: b })}
                     bodyContent={activeDraft.bodyContent}
                     onBodyContentChange={c => updateActiveDraft({ bodyContent: c })}
+                    bodyVariables={activeDraft.bodyVariables || ''}
+                    onBodyVariablesChange={vars => updateActiveDraft({ bodyVariables: vars })}
+                    graphqlSchema={graphqlSchema}
+                    onIntrospectGraphQL={handleIntrospectGraphQL}
+                    isIntrospectingGraphQL={isIntrospectingGraphQL}
+                    onOpenGraphQLSchema={() => setGraphqlDrawerOpen(true)}
                     bodyFormRows={activeDraft.bodyFormRows || []}
                     onBodyFormRowsChange={rows => updateActiveDraft({ bodyFormRows: rows })}
                     bodyMultipartRows={activeDraft.bodyMultipartRows || []}
@@ -1085,6 +1176,19 @@ export default function App(): React.JSX.Element {
         collectionTree={currentTree}
         activeEnvironment={activeEnvironment}
         initialFolderPath={runnerTargetFolder}
+      />
+      <GraphQLSchemaDrawer
+        isOpen={graphqlDrawerOpen}
+        onClose={() => setGraphqlDrawerOpen(false)}
+        schema={graphqlSchema}
+        loading={isIntrospectingGraphQL}
+        onIntrospect={handleIntrospectGraphQL}
+        onInsertQuerySnippet={snippet => {
+          updateActiveDraft({
+            bodyType: 'graphql',
+            bodyContent: snippet,
+          });
+        }}
       />
     </div>
   );

@@ -22,6 +22,12 @@ import {
   openSearchPanel,
 } from '@codemirror/search';
 import { tags } from '@lezer/highlight';
+import {
+  autocompletion,
+  closeBrackets,
+  closeBracketsKeymap,
+  type CompletionSource,
+} from '@codemirror/autocomplete';
 import { json } from '@codemirror/lang-json';
 import { xml } from '@codemirror/lang-xml';
 import { html } from '@codemirror/lang-html';
@@ -30,7 +36,8 @@ import { python } from '@codemirror/lang-python';
 import { java } from '@codemirror/lang-java';
 import { go } from '@codemirror/lang-go';
 
-export type EditorMode = 'json' | 'xml' | 'html' | 'javascript' | 'python' | 'java' | 'go' | 'text';
+export type EditorMode =
+  'json' | 'xml' | 'html' | 'javascript' | 'python' | 'java' | 'go' | 'graphql' | 'text';
 
 export interface CodeEditorProps {
   value: string;
@@ -41,6 +48,7 @@ export interface CodeEditorProps {
   minHeight?: string;
   maxHeight?: string;
   className?: string;
+  completionSource?: CompletionSource;
 }
 
 export interface CodeEditorHandle {
@@ -69,6 +77,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(function
     minHeight = '140px',
     maxHeight = '400px',
     className = '',
+    completionSource,
   }: CodeEditorProps,
   ref,
 ): React.JSX.Element {
@@ -76,6 +85,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(function
   const viewRef = useRef<EditorView | null>(null);
   const languageCompartment = useRef(new Compartment());
   const readOnlyCompartment = useRef(new Compartment());
+  const completionCompartment = useRef(new Compartment());
   const onChangeRef = useRef(onChange);
   const isDispatchingRef = useRef(false);
 
@@ -312,6 +322,47 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(function
       '.cm-searchMatch.cm-searchMatch-selected *': {
         color: '#000000 !important',
       },
+      /* Autocomplete Tooltip styling matching Terminal & Slate */
+      '.cm-tooltip.cm-tooltip-autocomplete': {
+        backgroundColor: 'var(--bg-elevated) !important',
+        border: '1px solid var(--border-strong) !important',
+        boxShadow: '0 4px 16px rgba(0, 0, 0, 0.4) !important',
+        borderRadius: 'var(--radius-sm) !important',
+        overflow: 'hidden',
+        zIndex: '100',
+      },
+      '.cm-tooltip-autocomplete > ul': {
+        fontFamily: 'var(--font-mono) !important',
+        fontSize: '11px !important',
+        maxHeight: '220px',
+        padding: '4px 0',
+      },
+      '.cm-tooltip-autocomplete > ul > li': {
+        padding: '4px 10px !important',
+        color: 'var(--text-primary) !important',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: '8px',
+        cursor: 'pointer',
+      },
+      '.cm-tooltip-autocomplete > ul > li[aria-selected]': {
+        backgroundColor: 'var(--accent) !important',
+        color: 'var(--accent-fg) !important',
+      },
+      '.cm-tooltip-autocomplete .cm-completionLabel': {
+        fontWeight: '500',
+      },
+      '.cm-tooltip-autocomplete .cm-completionDetail': {
+        fontStyle: 'normal !important',
+        color: 'var(--text-muted) !important',
+        fontSize: '10px !important',
+        marginLeft: 'auto',
+      },
+      '.cm-tooltip-autocomplete > ul > li[aria-selected] .cm-completionDetail': {
+        color: 'var(--accent-fg) !important',
+        opacity: 0.85,
+      },
     });
 
     const updateListener = EditorView.updateListener.of(update => {
@@ -329,12 +380,24 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(function
         foldGutter(),
         history(),
         bracketMatching(),
+        closeBrackets(),
         search({ top: true }),
         highlightSelectionMatches(),
         syntaxHighlighting(reqitHighlightStyle),
-        keymap.of([...defaultKeymap, ...historyKeymap, ...foldKeymap, ...searchKeymap]),
+        keymap.of([
+          ...defaultKeymap,
+          ...historyKeymap,
+          ...foldKeymap,
+          ...searchKeymap,
+          ...closeBracketsKeymap,
+        ]),
         languageCompartment.current.of(getLanguageExtension(mode)),
         readOnlyCompartment.current.of(EditorState.readOnly.of(readOnly)),
+        completionCompartment.current.of(
+          completionSource
+            ? autocompletion({ override: [completionSource], activateOnTyping: true })
+            : autocompletion({ activateOnTyping: true }),
+        ),
         reqitTheme,
         updateListener,
       ],
@@ -368,6 +431,18 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(function
       effects: languageCompartment.current.reconfigure(getLanguageExtension(mode)),
     });
   }, [mode]);
+
+  // Update autocomplete source dynamically
+  useEffect(() => {
+    if (!viewRef.current) return;
+    viewRef.current.dispatch({
+      effects: completionCompartment.current.reconfigure(
+        completionSource
+          ? autocompletion({ override: [completionSource], activateOnTyping: true })
+          : autocompletion({ activateOnTyping: true }),
+      ),
+    });
+  }, [completionSource]);
 
   // Sync external value changes when not focused
   useEffect(() => {

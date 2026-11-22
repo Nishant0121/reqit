@@ -400,6 +400,22 @@ export interface ReqitApi {
   parseOpenApi: (payload: OpenApiParsePayload) => Promise<OpenApiParseSummary>;
   /** Imports OpenAPI or Swagger spec into a directory on disk */
   importOpenApi: (payload: OpenApiImportPayload) => Promise<OpenApiImportReport>;
+  /** Performs GraphQL schema introspection on the specified endpoint */
+  introspectGraphQL: (payload: GraphQLIntrospectPayload) => Promise<GraphQLIntrospectResult>;
+}
+
+export interface GraphQLIntrospectPayload {
+  url: string;
+  headers?: Array<{ name: string; value: string; enabled?: boolean }>;
+  auth?: import('@reqit/core').Auth;
+  collectionPath?: string;
+  activeEnvironment?: string;
+}
+
+export interface GraphQLIntrospectResult {
+  success: boolean;
+  schema?: import('@reqit/core').GraphQLSchemaSummary;
+  error?: string;
 }
 
 export interface OpenDataFileResult {

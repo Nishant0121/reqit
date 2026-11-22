@@ -110,6 +110,7 @@ export type BodyType = 'none' | 'json' | 'text' | 'form' | 'multipart' | 'graphq
 export interface Body {
   type: BodyType;
   content?: string;
+  variables?: string;
   form?: KeyValue[];
   [key: string]: unknown;
 }

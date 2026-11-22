@@ -105,6 +105,7 @@ export function requestFileToDraft(
   // Body mapping
   let bodyType: BodyType = 'none';
   let bodyContent = '';
+  let bodyVariables = '';
   const bodyFormRows: KeyValueRow[] = [];
   const bodyMultipartRows: MultipartRow[] = [];
 
@@ -112,6 +113,10 @@ export function requestFileToDraft(
     if (file.body.type === 'json' || file.body.type === 'text') {
       bodyType = file.body.type;
       bodyContent = file.body.content ?? '';
+    } else if (file.body.type === 'graphql') {
+      bodyType = 'graphql';
+      bodyContent = file.body.content ?? '';
+      bodyVariables = typeof file.body.variables === 'string' ? file.body.variables : '';
     } else if (file.body.type === 'form') {
       bodyType = 'form';
       (file.body.form || []).forEach((row, i) => {
@@ -176,6 +181,7 @@ export function requestFileToDraft(
     disableCookieJar: file.disableCookieJar ?? false,
     bodyType,
     bodyContent,
+    bodyVariables,
     bodyFormRows,
     bodyMultipartRows,
     preScript: file.scripts?.pre || '',
@@ -268,6 +274,12 @@ export function draftToRequestFile(draft: RequestDraft): RequestFile {
     if (draft.bodyContent) {
       body = { type: draft.bodyType, content: draft.bodyContent };
     }
+  } else if (draft.bodyType === 'graphql') {
+    body = {
+      type: 'graphql' as const,
+      content: draft.bodyContent || '',
+      variables: draft.bodyVariables ? draft.bodyVariables : undefined,
+    };
   } else if (draft.bodyType === 'form') {
     const enabledForm = (draft.bodyFormRows || [])
       .filter(r => r.enabled && r.key.trim() !== '')

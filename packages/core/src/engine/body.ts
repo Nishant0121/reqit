@@ -45,13 +45,37 @@ export function prepareRequestBody(body?: Body): PreparedBody {
     };
   }
 
-  // 2. Plain Text / GraphQL / other raw strings
-  if (bodyType === 'text' || bodyType === 'graphql') {
+  // 2. GraphQL
+  if (bodyType === 'graphql') {
+    const query = typeof body.content === 'string' ? body.content : '';
+    let parsedVars: unknown = undefined;
+    if (typeof body.variables === 'string' && body.variables.trim()) {
+      try {
+        parsedVars = JSON.parse(body.variables);
+      } catch {
+        parsedVars = body.variables;
+      }
+    } else if (body.variables && typeof body.variables === 'object') {
+      parsedVars = body.variables;
+    }
+
+    const payload: Record<string, unknown> = { query };
+    if (parsedVars !== undefined) {
+      payload.variables = parsedVars;
+    }
+
+    return {
+      buffer: Buffer.from(JSON.stringify(payload), 'utf-8'),
+      defaultContentType: 'application/json; charset=utf-8',
+    };
+  }
+
+  // 3. Plain Text / other raw strings
+  if (bodyType === 'text') {
     const content = typeof body.content === 'string' ? body.content : '';
     return {
       buffer: Buffer.from(content, 'utf-8'),
-      defaultContentType:
-        bodyType === 'graphql' ? 'application/graphql' : 'text/plain; charset=utf-8',
+      defaultContentType: 'text/plain; charset=utf-8',
     };
   }
 

@@ -17,7 +17,14 @@ import {
   Edit3,
   Eye,
   Columns,
+  Zap,
+  Database,
 } from 'lucide-react';
+import {
+  formatGraphQLQuery,
+  getGraphQLCompletions,
+  type GraphQLSchemaSummary,
+} from '@reqit/core/graphql';
 import { Tabs } from './ui/Tabs';
 import { KeyValueTable, type KeyValueRow } from './ui/KeyValueTable';
 import { VariableInput, type VariableDetail } from './ui/VariableInput';
@@ -30,11 +37,12 @@ import type { MultipartRow, TestAssertionItem } from '../stores/requestStore';
 import { detectHardcodedSecrets, type Auth } from '@reqit/core/format';
 
 export type AuthType = 'none' | 'bearer' | 'basic' | 'apiKey' | 'oauth2' | 'digest' | 'awsv4';
-export type BodyType = 'none' | 'json' | 'text' | 'form' | 'multipart';
+export type BodyType = 'none' | 'json' | 'text' | 'form' | 'multipart' | 'graphql';
 
 const BODY_TYPE_OPTIONS = [
   { id: 'none', label: 'None', icon: CircleOff },
   { id: 'json', label: 'JSON', icon: Braces },
+  { id: 'graphql', label: 'GraphQL', icon: Zap },
   { id: 'text', label: 'Text', icon: FileText },
   { id: 'form', label: 'Form URL-encoded', icon: ListFilter },
   { id: 'multipart', label: 'Multipart', icon: Paperclip },
@@ -106,6 +114,12 @@ export interface RequestPanelProps {
   onBodyTypeChange: (type: BodyType) => void;
   bodyContent: string;
   onBodyContentChange: (content: string) => void;
+  bodyVariables?: string;
+  onBodyVariablesChange?: (vars: string) => void;
+  graphqlSchema?: GraphQLSchemaSummary | null;
+  onIntrospectGraphQL?: () => void;
+  isIntrospectingGraphQL?: boolean;
+  onOpenGraphQLSchema?: () => void;
   bodyFormRows: KeyValueRow[];
   onBodyFormRowsChange: (rows: KeyValueRow[]) => void;
   bodyMultipartRows: MultipartRow[];
@@ -191,6 +205,12 @@ export function RequestPanel({
   onBodyTypeChange,
   bodyContent,
   onBodyContentChange,
+  bodyVariables = '',
+  onBodyVariablesChange,
+  graphqlSchema,
+  onIntrospectGraphQL,
+  isIntrospectingGraphQL = false,
+  onOpenGraphQLSchema,
   bodyFormRows,
   onBodyFormRowsChange,
   bodyMultipartRows,
@@ -214,8 +234,36 @@ export function RequestPanel({
   >('params');
   const [docsMode, setDocsMode] = useState<'edit' | 'preview' | 'split'>('preview');
   const [scriptSubTab, setScriptSubTab] = useState<'pre' | 'post'>('pre');
+  const [graphqlSubTab, setGraphqlSubTab] = useState<'query' | 'variables'>('query');
 
   const [jsonFormatError, setJsonFormatError] = useState<string | null>(null);
+
+  const handlePrettifyGraphQL = () => {
+    if (!bodyContent) return;
+    const formatted = formatGraphQLQuery(bodyContent);
+    onBodyContentChange(formatted);
+  };
+
+  const graphqlCompletionSource = React.useMemo(() => {
+    if (bodyType !== 'graphql') return undefined;
+    return (context: import('@codemirror/autocomplete').CompletionContext) => {
+      const word = context.matchBefore(/[\w$]+/);
+      if (!word && !context.explicit) return null;
+      const doc = context.state.doc.toString();
+      const items = getGraphQLCompletions(doc, context.pos, graphqlSchema || undefined);
+      if (!items || items.length === 0) return null;
+      return {
+        from: word ? word.from : context.pos,
+        options: items.map(item => ({
+          label: item.label,
+          type: item.kind,
+          detail: item.detail,
+          info: item.documentation,
+          apply: item.insertText || item.label,
+        })),
+      };
+    };
+  }, [bodyType, graphqlSchema]);
 
   const activeParamsCount = params.filter(p => p.enabled && p.key.trim() !== '').length;
   const activeHeadersCount = headers.filter(h => h.enabled && h.key.trim() !== '').length;
@@ -1172,6 +1220,139 @@ export function RequestPanel({
                 style={{ borderColor: 'var(--border)', color: 'var(--text-muted)' }}
               >
                 This request does not have a body.
+              </div>
+            )}
+
+            {/* GraphQL Editor */}
+            {bodyType === 'graphql' && (
+              <div className="flex min-h-40 flex-1 flex-col gap-2">
+                {/* GraphQL Toolbar: Sub-tabs + Prettify + Introspect + Schema Explorer */}
+                <div
+                  className="flex items-center justify-between border-b pb-2 select-none"
+                  style={{ borderColor: 'var(--border)' }}
+                >
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setGraphqlSubTab('query')}
+                      className={`rounded px-2.5 py-1 text-[12px] font-medium transition-colors ${
+                        graphqlSubTab === 'query'
+                          ? 'bg-(--accent) text-(--accent-fg)'
+                          : 'text-(--text-secondary) hover:text-(--text-primary)'
+                      }`}
+                    >
+                      Query
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setGraphqlSubTab('variables')}
+                      className={`rounded px-2.5 py-1 text-[12px] font-medium transition-colors ${
+                        graphqlSubTab === 'variables'
+                          ? 'bg-(--accent) text-(--accent-fg)'
+                          : 'text-(--text-secondary) hover:text-(--text-primary)'
+                      }`}
+                    >
+                      Variables {bodyVariables?.trim() ? '•' : ''}
+                    </button>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    {graphqlSubTab === 'query' && (
+                      <button
+                        type="button"
+                        onClick={handlePrettifyGraphQL}
+                        className="flex items-center gap-1 rounded-sm border px-2 py-0.5 text-[11px] font-medium transition-colors hover:bg-(--bg-hover)"
+                        style={{
+                          borderColor: 'var(--border-strong)',
+                          backgroundColor: 'var(--bg-surface)',
+                          color: 'var(--text-primary)',
+                        }}
+                        title="Format GraphQL Query"
+                      >
+                        <Sparkles className="h-3.5 w-3.5 text-(--accent)" strokeWidth={1.75} />
+                        <span>Prettify</span>
+                      </button>
+                    )}
+
+                    {onIntrospectGraphQL && (
+                      <button
+                        type="button"
+                        onClick={onIntrospectGraphQL}
+                        disabled={isIntrospectingGraphQL}
+                        className="flex items-center gap-1.5 rounded-sm border px-2 py-0.5 text-[11px] font-medium transition-colors hover:bg-(--bg-hover) disabled:opacity-50"
+                        style={{
+                          borderColor: 'var(--border-strong)',
+                          backgroundColor: 'var(--bg-surface)',
+                          color: 'var(--text-primary)',
+                        }}
+                        title="Introspect schema from target URL"
+                      >
+                        <RefreshCw
+                          className={`h-3 w-3 ${isIntrospectingGraphQL ? 'animate-spin text-(--accent)' : 'text-(--text-muted)'}`}
+                        />
+                        <span>
+                          {isIntrospectingGraphQL
+                            ? 'Introspecting...'
+                            : graphqlSchema
+                              ? 'Introspect'
+                              : 'Introspect Schema'}
+                        </span>
+                      </button>
+                    )}
+
+                    {onOpenGraphQLSchema && (
+                      <button
+                        type="button"
+                        onClick={onOpenGraphQLSchema}
+                        className="flex items-center gap-1.5 rounded-sm border px-2 py-0.5 text-[11px] font-medium transition-colors hover:bg-(--bg-hover)"
+                        style={{
+                          borderColor: 'var(--border-strong)',
+                          backgroundColor: 'var(--bg-surface)',
+                          color: 'var(--text-primary)',
+                        }}
+                        title="Open GraphQL Schema Explorer"
+                      >
+                        <Database className="h-3.5 w-3.5 text-(--accent)" />
+                        <span>Schema Explorer</span>
+                        {graphqlSchema && (
+                          <span
+                            className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500"
+                            title="Schema loaded"
+                          />
+                        )}
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Query Tab */}
+                {graphqlSubTab === 'query' && (
+                  <div className="flex-1">
+                    <CodeEditor
+                      value={bodyContent}
+                      onChange={onBodyContentChange}
+                      mode="graphql"
+                      completionSource={graphqlCompletionSource}
+                      background="base"
+                      minHeight="180px"
+                      maxHeight="320px"
+                    />
+                  </div>
+                )}
+
+                {/* Variables Tab */}
+                {graphqlSubTab === 'variables' && (
+                  <div className="flex-1">
+                    <CodeEditor
+                      value={bodyVariables || ''}
+                      onChange={val => onBodyVariablesChange?.(val)}
+                      mode="json"
+                      background="base"
+                      minHeight="180px"
+                      maxHeight="320px"
+                    />
+                  </div>
+                )}
               </div>
             )}
 

@@ -74,6 +74,7 @@ export const bodySchema = z
       message: 'Body field "type" is required',
     }),
     content: z.string().optional(),
+    variables: z.string().optional(),
     form: z.array(keyValueSchema).optional(),
   })
   .passthrough();

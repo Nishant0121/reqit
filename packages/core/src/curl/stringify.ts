@@ -35,6 +35,7 @@ export function generateCurl(request: RequestFile, options?: CurlFormatOptions):
     request.body &&
     request.body.type !== 'none' &&
     (Boolean(request.body.content) ||
+      Boolean(request.body.variables) ||
       (Array.isArray(request.body.form) && request.body.form.length > 0));
 
   // 1. Build target URL with params if not already in URL
@@ -150,7 +151,11 @@ export function generateCurl(request: RequestFile, options?: CurlFormatOptions):
   }
 
   // Content-Type default from body
-  if (request.body && request.body.type === 'json' && !existingHeaderNames.has('content-type')) {
+  if (
+    request.body &&
+    (request.body.type === 'json' || request.body.type === 'graphql') &&
+    !existingHeaderNames.has('content-type')
+  ) {
     headers.push({ name: 'Content-Type', value: 'application/json', enabled: true });
     existingHeaderNames.add('content-type');
   }
@@ -178,6 +183,24 @@ export function generateCurl(request: RequestFile, options?: CurlFormatOptions):
           );
         }
       }
+    } else if (request.body.type === 'graphql') {
+      let parsedVars: unknown = undefined;
+      if (typeof request.body.variables === 'string' && request.body.variables.trim()) {
+        try {
+          parsedVars = JSON.parse(request.body.variables);
+        } catch {
+          parsedVars = request.body.variables;
+        }
+      } else if (request.body.variables && typeof request.body.variables === 'object') {
+        parsedVars = request.body.variables;
+      }
+      const payload: Record<string, unknown> = {
+        query: request.body.content || '',
+      };
+      if (parsedVars !== undefined) {
+        payload.variables = parsedVars;
+      }
+      otherParts.push(`-d ${escapeShellArg(JSON.stringify(payload), target)}`);
     } else if (typeof request.body.content === 'string' && request.body.content.length > 0) {
       otherParts.push(`-d ${escapeShellArg(request.body.content, target)}`);
     }

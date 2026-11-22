@@ -69,7 +69,7 @@ function createScalarNode(val: unknown, keyName = ''): YAML.Scalar {
     if (keyName === 'url') {
       s.type = 'QUOTE_SINGLE';
     } else if (
-      ['content', 'pre', 'post', 'docs', 'assert'].includes(keyName) &&
+      ['content', 'variables', 'pre', 'post', 'docs', 'assert'].includes(keyName) &&
       (isMultiLineBlock(val) || val.endsWith('\n'))
     ) {
       s.type = 'BLOCK_LITERAL';
@@ -159,7 +159,7 @@ function serializeAuth(auth: Auth): YAML.YAMLMap {
 
 function serializeBody(body: Body): YAML.YAMLMap {
   const map = new YAML.YAMLMap();
-  const keys = sortKeys(Object.keys(body), ['type', 'content', 'form']);
+  const keys = sortKeys(Object.keys(body), ['type', 'content', 'variables', 'form']);
 
   for (const key of keys) {
     const val = (body as Record<string, unknown>)[key];

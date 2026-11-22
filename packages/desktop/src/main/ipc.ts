@@ -34,6 +34,8 @@ import {
   type RunnerSummary,
   type OpenApiParseSummary,
   type OpenApiImportReport,
+  INTROSPECTION_QUERY,
+  parseIntrospectionResponse,
 } from '@reqit/core';
 import { fileService } from './services/file-service.js';
 import { historyService } from './services/history-service.js';
@@ -72,6 +74,8 @@ import type {
   OpenOpenApiFileResult,
   OpenApiParsePayload,
   OpenApiImportPayload,
+  GraphQLIntrospectPayload,
+  GraphQLIntrospectResult,
 } from '../shared/ipc-types.js';
 
 const activeRequests = new Map<string, AbortController>();
@@ -1028,6 +1032,112 @@ export function registerIpcHandlers(): void {
       await fileService.openCollection(report.targetDirectory || payload.targetDir.trim());
 
       return report;
+    },
+  );
+
+  // 51. graphql:introspect
+  ipcMain.handle(
+    'graphql:introspect',
+    async (_event, payload: GraphQLIntrospectPayload): Promise<GraphQLIntrospectResult> => {
+      try {
+        if (!payload.url || !payload.url.trim()) {
+          return { success: false, error: 'Target URL is required for GraphQL introspection.' };
+        }
+
+        // 1. Gather variable scopes if collectionPath is provided
+        const scopes: VariableScopes = {};
+        if (payload.collectionPath && fs.existsSync(payload.collectionPath)) {
+          const reqitPath = path.join(payload.collectionPath, 'reqit.yaml');
+          if (fs.existsSync(reqitPath)) {
+            try {
+              const colData = parseCollection(fs.readFileSync(reqitPath, 'utf-8'), reqitPath);
+              if (colData.defaults?.variables) {
+                scopes.collection = colData.defaults.variables as Record<string, unknown>;
+              }
+            } catch {
+              // ignore
+            }
+          }
+
+          const activeEnv = payload.activeEnvironment;
+          if (activeEnv && activeEnv !== 'none') {
+            const envs = await loadEnvironments(payload.collectionPath);
+            const env = envs[activeEnv];
+            if (env?.variables) {
+              scopes.environment = env.variables;
+            }
+
+            const secrets = await loadSecrets(payload.collectionPath);
+            if (secrets?.environments?.[activeEnv]) {
+              scopes.secrets = secrets.environments[activeEnv];
+            }
+          }
+        }
+
+        // 2. Build RequestFile for introspection query
+        const headers: Array<{ name: string; value: string; enabled?: boolean }> = [
+          { name: 'Content-Type', value: 'application/json', enabled: true },
+          { name: 'Accept', value: 'application/json', enabled: true },
+        ];
+        if (payload.headers && Array.isArray(payload.headers)) {
+          for (const h of payload.headers) {
+            if (h.enabled !== false && h.name) {
+              headers.push({ name: h.name, value: h.value, enabled: true });
+            }
+          }
+        }
+
+        const rawReq: RequestFile = {
+          version: 1,
+          name: 'GraphQL Introspection',
+          method: 'POST',
+          url: payload.url.trim(),
+          headers,
+          auth: payload.auth,
+          body: {
+            type: 'json',
+            content: JSON.stringify({ query: INTROSPECTION_QUERY }),
+          },
+        };
+
+        const resolved = resolveRequest(rawReq, scopes);
+        const res = await sendRequest(resolved);
+
+        if (res.status < 200 || res.status >= 300) {
+          return {
+            success: false,
+            error: `Server returned HTTP ${res.status}: ${res.statusText || 'Error'}\n${res.body ? res.body.slice(0, 300) : ''}`,
+          };
+        }
+
+        if (!res.body) {
+          return {
+            success: false,
+            error: 'Server returned an empty response body.',
+          };
+        }
+
+        let parsedBody: unknown;
+        try {
+          parsedBody = JSON.parse(res.body);
+        } catch {
+          return {
+            success: false,
+            error: `Failed to parse response JSON: ${res.body.slice(0, 200)}`,
+          };
+        }
+
+        const schemaSummary = parseIntrospectionResponse(parsedBody);
+        return {
+          success: true,
+          schema: schemaSummary,
+        };
+      } catch (err: unknown) {
+        return {
+          success: false,
+          error: (err as Error)?.message || 'GraphQL introspection failed.',
+        };
+      }
     },
   );
 }
