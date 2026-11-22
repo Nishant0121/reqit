@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "pnpm --filter desktop dev",
     "build": "pnpm --filter desktop build",
+    "build:cli": "pnpm --filter @reqit/cli run build",
     "test": "vitest run",
     "test:smoke": "pnpm --filter desktop test:smoke",
     "lint": "eslint .",
