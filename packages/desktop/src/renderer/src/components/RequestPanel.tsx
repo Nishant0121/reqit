@@ -14,11 +14,15 @@ import {
   Cookie as CookieIcon,
   KeyRound,
   RefreshCw,
+  Edit3,
+  Eye,
+  Columns,
 } from 'lucide-react';
 import { Tabs } from './ui/Tabs';
 import { KeyValueTable, type KeyValueRow } from './ui/KeyValueTable';
 import { VariableInput, type VariableDetail } from './ui/VariableInput';
 import { CodeEditor } from './editor/CodeEditor';
+import { MarkdownViewer } from './MarkdownViewer';
 import { MultipartTable } from './MultipartTable';
 import { COMMON_HEADER_NAMES, getHeaderValueSuggestions } from '../lib/http-constants';
 import { strings } from '../lib/strings';
@@ -117,6 +121,8 @@ export interface RequestPanelProps {
   knownVariables?: string[];
   variablesMap?: Record<string, VariableDetail>;
   onOpenSecrets?: () => void;
+  docs?: string;
+  onDocsChange?: (docs: string) => void;
 }
 
 export function RequestPanel({
@@ -200,10 +206,13 @@ export function RequestPanel({
   knownVariables,
   variablesMap,
   onOpenSecrets,
+  docs = '',
+  onDocsChange,
 }: RequestPanelProps): React.JSX.Element {
   const [activeSubTab, setActiveSubTab] = useState<
-    'params' | 'headers' | 'auth' | 'body' | 'scripts' | 'tests'
+    'params' | 'headers' | 'auth' | 'body' | 'scripts' | 'tests' | 'docs'
   >('params');
+  const [docsMode, setDocsMode] = useState<'edit' | 'preview' | 'split'>('preview');
   const [scriptSubTab, setScriptSubTab] = useState<'pre' | 'post'>('pre');
 
   const [jsonFormatError, setJsonFormatError] = useState<string | null>(null);
@@ -397,6 +406,11 @@ export function RequestPanel({
               id: 'tests',
               label: strings.requestPanel.tests,
               count: activeTestsCount || undefined,
+            },
+            {
+              id: 'docs',
+              label: 'Docs',
+              count: docs.trim() ? 1 : undefined,
             },
           ]}
           activeId={activeSubTab}
@@ -1657,6 +1671,117 @@ export function RequestPanel({
                 <code className="text-emerald-400">expect(val).toBe(expected)</code>,{' '}
                 <code className="text-emerald-400">expect(val).toContain(item)</code>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* 7. DOCS TAB */}
+        {activeSubTab === 'docs' && (
+          <div className="flex flex-1 flex-col overflow-hidden">
+            {/* Docs toolbar */}
+            <div
+              className="flex shrink-0 items-center justify-between border-b px-3 py-1.5 text-[12px]"
+              style={{
+                backgroundColor: 'var(--bg-surface)',
+                borderColor: 'var(--border)',
+              }}
+            >
+              <div className="flex items-center gap-1">
+                <span className="mr-2 font-medium" style={{ color: 'var(--text-secondary)' }}>
+                  Mode:
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setDocsMode('preview')}
+                  className={`transition-fast flex items-center gap-1 rounded px-2 py-0.5 text-[11px] ${
+                    docsMode === 'preview'
+                      ? 'bg-(--accent) text-white'
+                      : 'text-(--text-secondary) hover:bg-(--bg-hover) hover:text-(--text-primary)'
+                  }`}
+                >
+                  <Eye className="h-3 w-3" />
+                  <span>Preview</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDocsMode('edit')}
+                  className={`transition-fast flex items-center gap-1 rounded px-2 py-0.5 text-[11px] ${
+                    docsMode === 'edit'
+                      ? 'bg-(--accent) text-white'
+                      : 'text-(--text-secondary) hover:bg-(--bg-hover) hover:text-(--text-primary)'
+                  }`}
+                >
+                  <Edit3 className="h-3 w-3" />
+                  <span>Edit</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDocsMode('split')}
+                  className={`transition-fast flex items-center gap-1 rounded px-2 py-0.5 text-[11px] ${
+                    docsMode === 'split'
+                      ? 'bg-(--accent) text-white'
+                      : 'text-(--text-secondary) hover:bg-(--bg-hover) hover:text-(--text-primary)'
+                  }`}
+                >
+                  <Columns className="h-3 w-3" />
+                  <span>Split</span>
+                </button>
+              </div>
+
+              {(!docs || !docs.trim()) && onDocsChange && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const template = `# \${Endpoint Name}\n\nDescribe the purpose and expected usage of this endpoint.\n\n### Query Parameters\n- \`param\`: description\n\n### Response (200 OK)\n\`\`\`json\n{\n  "status": "success"\n}\n\`\`\`\n`;
+                    onDocsChange(template);
+                    setDocsMode('edit');
+                  }}
+                  className="transition-fast cursor-pointer text-[11px] font-medium text-(--text-secondary) hover:text-(--accent)"
+                >
+                  + Insert Markdown Template
+                </button>
+              )}
+            </div>
+
+            {/* Docs content */}
+            <div className="flex flex-1 overflow-hidden">
+              {docsMode === 'preview' && (
+                <div className="h-full w-full overflow-y-auto p-4">
+                  <MarkdownViewer content={docs} />
+                </div>
+              )}
+
+              {docsMode === 'edit' && (
+                <div className="h-full w-full overflow-hidden">
+                  <CodeEditor
+                    value={docs}
+                    onChange={onDocsChange}
+                    mode="text"
+                    minHeight="100%"
+                    className="h-full w-full"
+                  />
+                </div>
+              )}
+
+              {docsMode === 'split' && (
+                <div className="flex h-full w-full overflow-hidden">
+                  <div
+                    className="h-full w-1/2 overflow-hidden border-r"
+                    style={{ borderColor: 'var(--border)' }}
+                  >
+                    <CodeEditor
+                      value={docs}
+                      onChange={onDocsChange}
+                      mode="text"
+                      minHeight="100%"
+                      className="h-full w-full"
+                    />
+                  </div>
+                  <div className="h-full w-1/2 overflow-y-auto p-4">
+                    <MarkdownViewer content={docs} />
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}

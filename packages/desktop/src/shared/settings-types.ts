@@ -18,6 +18,7 @@ export interface AppSettings {
   historyRetentionDays: number;
   hasCompletedFirstRun: boolean;
   trustedCollections: string[];
+  customShortcuts?: Record<string, string>;
 }
 
 export const DEFAULT_APP_SETTINGS: AppSettings = {
@@ -36,4 +37,5 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   historyRetentionDays: 30,
   hasCompletedFirstRun: false,
   trustedCollections: [],
+  customShortcuts: {},
 };

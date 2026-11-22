@@ -19,6 +19,9 @@ import {
   XCircle,
   FlaskConical,
   Cookie as CookieIcon,
+  Pin,
+  PinOff,
+  GitCompare,
 } from 'lucide-react';
 import type { ResponseResult } from '@reqit/core';
 import { StatusBadge } from './ui/Badge';
@@ -27,6 +30,7 @@ import { Tabs } from './ui/Tabs';
 import { TimingWaterfall } from './ui/TimingWaterfall';
 import { EmptyState } from './ui/EmptyState';
 import { CodeEditor, type CodeEditorHandle, type EditorMode } from './editor/CodeEditor';
+import { ResponseDiffModal } from './ResponseDiffModal';
 import { detectContentType, formatPretty, type DetectedFormat } from '../lib/content-type';
 import { formatDuration, formatBytes } from '../lib/format';
 import { strings } from '../lib/strings';
@@ -76,6 +80,10 @@ export function ResponsePanel({
   const [copied, setCopied] = useState<boolean>(false);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [headerFilter, setHeaderFilter] = useState<string>('');
+
+  // Response comparison pinning state (Phase 20)
+  const [pinnedResponse, setPinnedResponse] = useState<ResponseResult | null>(null);
+  const [diffModalOpen, setDiffModalOpen] = useState<boolean>(false);
 
   // Large body streaming state
   const [streamedContent, setStreamedContent] = useState<string>('');
@@ -559,6 +567,50 @@ export function ResponsePanel({
               </span>
             </button>
           )}
+
+          {/* Response Pinning & Diff Controls (Phase 20) */}
+          <div
+            className="flex items-center gap-1.5 border-l pl-2"
+            style={{ borderColor: 'var(--border)' }}
+          >
+            {!pinnedResponse ? (
+              <button
+                type="button"
+                onClick={() => setPinnedResponse(result)}
+                title="Pin this response to compare with future responses"
+                className="transition-fast flex cursor-pointer items-center gap-1 rounded px-2 py-0.5 text-[11px] font-medium text-(--text-secondary) hover:bg-(--bg-hover) hover:text-(--text-primary)"
+              >
+                <Pin className="h-3 w-3" />
+                <span>Pin</span>
+              </button>
+            ) : (
+              <div className="flex items-center gap-1">
+                <span className="flex items-center gap-1 rounded border border-amber-400/40 bg-amber-400/10 px-2 py-0.5 text-[11px] font-medium text-amber-400">
+                  <Pin className="h-3 w-3" />
+                  <span>Pinned ({pinnedResponse.status})</span>
+                </span>
+
+                <button
+                  type="button"
+                  onClick={() => setDiffModalOpen(true)}
+                  title="Compare current response against pinned response"
+                  className="transition-fast flex cursor-pointer items-center gap-1 rounded bg-(--accent)/15 px-2 py-0.5 text-[11px] font-medium text-(--accent) hover:bg-(--accent)/25"
+                >
+                  <GitCompare className="h-3 w-3" />
+                  <span>Diff</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setPinnedResponse(null)}
+                  title="Unpin response"
+                  className="transition-fast cursor-pointer rounded p-1 text-(--text-muted) hover:bg-(--bg-hover) hover:text-(--text-primary)"
+                >
+                  <PinOff className="h-3 w-3" />
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Action buttons (Search, Copy, Save) */}
@@ -1487,6 +1539,15 @@ export function ResponsePanel({
           </div>
         )}
       </div>
+
+      {pinnedResponse && result && (
+        <ResponseDiffModal
+          isOpen={diffModalOpen}
+          onClose={() => setDiffModalOpen(false)}
+          pinnedResponse={pinnedResponse}
+          currentResponse={result}
+        />
+      )}
     </div>
   );
 }

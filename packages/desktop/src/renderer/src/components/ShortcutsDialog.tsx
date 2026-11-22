@@ -1,6 +1,8 @@
 import React from 'react';
 import { Modal } from './ui/Modal';
-import { SHORTCUT_REGISTRY, formatKeyCombination } from '../lib/shortcuts';
+import { getEffectiveShortcuts, formatKeyCombination } from '../lib/shortcuts';
+import { useSettingsStore } from '../stores/settingsStore';
+import { Settings } from 'lucide-react';
 
 export interface ShortcutsDialogProps {
   isOpen: boolean;
@@ -11,13 +13,16 @@ export function ShortcutsDialog({
   isOpen,
   onClose,
 }: ShortcutsDialogProps): React.JSX.Element | null {
+  const customShortcuts = useSettingsStore(s => s.settings.customShortcuts);
+  const openSettings = useSettingsStore(s => s.openSettings);
+  const effectiveShortcuts = getEffectiveShortcuts(customShortcuts);
   const sections = ['Request', 'Navigation', 'General'] as const;
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Keyboard shortcuts" size="default">
       <div className="space-y-6">
         {sections.map(section => {
-          const items = SHORTCUT_REGISTRY.filter(s => s.section === section);
+          const items = effectiveShortcuts.filter(s => s.section === section);
           if (items.length === 0) return null;
 
           return (
@@ -66,6 +71,20 @@ export function ShortcutsDialog({
             </div>
           );
         })}
+
+        <div className="flex justify-end pt-2">
+          <button
+            type="button"
+            onClick={() => {
+              onClose();
+              openSettings('shortcuts');
+            }}
+            className="transition-fast flex cursor-pointer items-center gap-1.5 text-[12px] font-medium text-(--text-secondary) hover:text-(--accent)"
+          >
+            <Settings className="h-3.5 w-3.5" />
+            <span>Customize shortcuts in Settings</span>
+          </button>
+        </div>
       </div>
     </Modal>
   );

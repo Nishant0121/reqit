@@ -76,6 +76,7 @@ export interface RequestDraft {
   preScript?: string;
   postScript?: string;
   tests?: TestAssertionItem[];
+  docs?: string;
   isDirty?: boolean;
   parseError?: string;
   rawRequest?: RequestFile;
@@ -100,7 +101,8 @@ export interface RequestState {
   importCurlToDraft: (id: string, curlCommand: string) => { warnings: string[] };
   importCurlAsNewRequest: (curlCommand: string) => { id: string; warnings: string[] };
   openRequest: (id: string) => void;
-  openDraftFromFile: (filePath: string, file: RequestFile) => void;
+  openDraftFromFile: (filePath: string, file: RequestFile, isPreview?: boolean) => void;
+  pinTab: (id: string) => void;
   onItemRenamed: (oldPath: string, newPath: string, newName: string) => void;
   onItemDeleted: (deletedPath: string) => void;
   handleWatcherFileChange: (changedPath: string, fileDetails: WatcherChangedFile) => void;
@@ -143,6 +145,7 @@ const DEFAULT_INITIAL_DRAFT: RequestDraft = {
   preScript: '',
   postScript: '',
   tests: [],
+  docs: '',
   isDirty: false,
 };
 
@@ -322,7 +325,7 @@ export const useRequestStore = create<RequestState>((set, get) => ({
     });
   },
 
-  openDraftFromFile: (filePath: string, file: RequestFile) => {
+  openDraftFromFile: (filePath: string, file: RequestFile, isPreview = false) => {
     const existingDraft = get().drafts[filePath];
     const draft =
       existingDraft && existingDraft.isDirty
@@ -330,17 +333,50 @@ export const useRequestStore = create<RequestState>((set, get) => ({
         : requestFileToDraft(file, filePath, filePath);
 
     set(state => {
-      const tabExists = state.tabs.some(t => t.id === filePath);
+      const tabIndex = state.tabs.findIndex(t => t.id === filePath);
+      let newTabs: TabItemData[];
+
+      if (tabIndex >= 0) {
+        // Tab is already open. If isPreview is false, ensure it gets pinned.
+        newTabs = state.tabs.map((t, idx) =>
+          idx === tabIndex ? { ...t, isPreview: isPreview ? t.isPreview : false } : t,
+        );
+      } else if (isPreview) {
+        // Find existing clean preview tab to replace
+        const previewIndex = state.tabs.findIndex(t => t.isPreview && !t.isDirty);
+        if (previewIndex >= 0) {
+          newTabs = state.tabs.map((t, idx) =>
+            idx === previewIndex
+              ? { id: filePath, name: draft.name, method: draft.method, isPreview: true }
+              : t,
+          );
+        } else {
+          newTabs = [
+            ...state.tabs,
+            { id: filePath, name: draft.name, method: draft.method, isPreview: true },
+          ];
+        }
+      } else {
+        newTabs = [
+          ...state.tabs,
+          { id: filePath, name: draft.name, method: draft.method, isPreview: false },
+        ];
+      }
+
       return {
         drafts: { ...state.drafts, [filePath]: draft },
-        tabs: tabExists
-          ? state.tabs
-          : [...state.tabs, { id: filePath, name: draft.name, method: draft.method }],
+        tabs: newTabs,
         activeRequestId: filePath,
         result: null,
         error: null,
       };
     });
+  },
+
+  pinTab: (id: string) => {
+    set(state => ({
+      tabs: state.tabs.map(t => (t.id === id ? { ...t, isPreview: false } : t)),
+    }));
   },
 
   onItemRenamed: (oldPath: string, newPath: string, newName: string) => {
@@ -569,6 +605,7 @@ export const useRequestStore = create<RequestState>((set, get) => ({
           name: updates.name !== undefined ? updates.name : t.name,
           method: updates.method !== undefined ? updates.method : t.method,
           isDirty: true,
+          isPreview: false,
         };
       }
       return t;

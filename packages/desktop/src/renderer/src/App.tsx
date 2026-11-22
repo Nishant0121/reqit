@@ -21,6 +21,7 @@ import { ImportCurlModal } from './components/ImportCurlModal';
 import { ImportPostmanModal } from './components/ImportPostmanModal';
 import { CookieManagerModal } from './components/CookieManagerModal';
 import { SnippetModal } from './components/SnippetModal';
+import { CommandPalette } from './components/CommandPalette';
 import { SettingsModal } from './components/SettingsModal';
 import { WelcomeScreen } from './components/WelcomeScreen';
 import { useAppStore } from './stores/appStore';
@@ -28,7 +29,7 @@ import { useCollectionStore } from './stores/collectionStore';
 import { useRequestStore } from './stores/requestStore';
 import { useHistoryStore } from './stores/historyStore';
 import { useSettingsStore } from './stores/settingsStore';
-import { matchesShortcut } from './lib/shortcuts';
+import { matchesShortcut, getEffectiveShortcut } from './lib/shortcuts';
 import { parseUrlQueryParams, syncUrlWithParams } from './lib/url-sync';
 import { draftToRequestFile } from './lib/request-mapper';
 import { serializeRequest } from '@reqit/core/format';
@@ -71,9 +72,11 @@ export default function App(): React.JSX.Element {
   const [importPostmanModalOpen, setImportPostmanModalOpen] = useState(false);
   const [cookieModalOpen, setCookieModalOpen] = useState(false);
   const [snippetModalOpen, setSnippetModalOpen] = useState(false);
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [showWelcomeScreen, setShowWelcomeScreen] = useState(false);
 
-  const { openSettings, loadSettings } = useSettingsStore();
+  const { openSettings, loadSettings, settings } = useSettingsStore();
+  const customShortcuts = settings.customShortcuts;
 
   // 2. Collection store
   const {
@@ -123,6 +126,7 @@ export default function App(): React.JSX.Element {
     importCurlToDraft,
     openRequest,
     openDraftFromFile,
+    pinTab,
     closeTab,
     updateActiveDraft,
     saveActiveDraft,
@@ -556,11 +560,18 @@ export default function App(): React.JSX.Element {
     setShortcutsModalOpen,
   ]);
 
-  // Keyboard shortcut registry listener (Section 10.1)
+  // Keyboard shortcut registry listener (Section 10.1 & Phase 20)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // 0. Command Palette (Ctrl/Cmd + K)
+      if (matchesShortcut(e, getEffectiveShortcut('commandPalette.open', customShortcuts))) {
+        e.preventDefault();
+        setCommandPaletteOpen(prev => !prev);
+        return;
+      }
+
       // 1. Send request (Ctrl/Cmd + Enter)
-      if (matchesShortcut(e, 'Ctrl+Enter')) {
+      if (matchesShortcut(e, getEffectiveShortcut('request.send', customShortcuts))) {
         e.preventDefault();
         if (!loading) handleSend();
         return;
@@ -574,35 +585,35 @@ export default function App(): React.JSX.Element {
       }
 
       // 3. Save request (Ctrl/Cmd + S)
-      if (matchesShortcut(e, 'Ctrl+S')) {
+      if (matchesShortcut(e, getEffectiveShortcut('request.save', customShortcuts))) {
         e.preventDefault();
         handleSave();
         return;
       }
 
       // 4. Toggle sidebar (Ctrl/Cmd + B)
-      if (matchesShortcut(e, 'Ctrl+B')) {
+      if (matchesShortcut(e, getEffectiveShortcut('sidebar.toggle', customShortcuts))) {
         e.preventDefault();
         toggleSidebar();
         return;
       }
 
       // 5. Focus URL bar (Ctrl/Cmd + L)
-      if (matchesShortcut(e, 'Ctrl+L')) {
+      if (matchesShortcut(e, getEffectiveShortcut('url.focus', customShortcuts))) {
         e.preventDefault();
         document.getElementById('url-input')?.focus();
         return;
       }
 
       // 6. New request (Ctrl/Cmd + N)
-      if (matchesShortcut(e, 'Ctrl+N')) {
+      if (matchesShortcut(e, getEffectiveShortcut('request.new', customShortcuts))) {
         e.preventDefault();
         createRequest();
         return;
       }
 
       // 7. Close tab (Ctrl/Cmd + W)
-      if (matchesShortcut(e, 'Ctrl+W')) {
+      if (matchesShortcut(e, getEffectiveShortcut('tab.close', customShortcuts))) {
         e.preventDefault();
         closeTab(activeRequestId);
         return;
@@ -616,21 +627,21 @@ export default function App(): React.JSX.Element {
       }
 
       // 9. Shortcuts cheat sheet (Ctrl/Cmd + /)
-      if (matchesShortcut(e, 'Ctrl+/')) {
+      if (matchesShortcut(e, getEffectiveShortcut('shortcuts.help', customShortcuts))) {
         e.preventDefault();
         setShortcutsModalOpen(true);
         return;
       }
 
       // 10. Import cURL (Ctrl/Cmd + I)
-      if (matchesShortcut(e, 'Ctrl+I')) {
+      if (matchesShortcut(e, getEffectiveShortcut('request.importCurl', customShortcuts))) {
         e.preventDefault();
         setImportCurlModalOpen(true);
         return;
       }
 
       // 11. Code Snippets (Ctrl/Cmd + Alt + C)
-      if (matchesShortcut(e, 'Ctrl+Alt+C')) {
+      if (matchesShortcut(e, getEffectiveShortcut('request.snippets', customShortcuts))) {
         e.preventDefault();
         setSnippetModalOpen(true);
         return;
@@ -657,13 +668,15 @@ export default function App(): React.JSX.Element {
     activeRequestId,
     setShortcutsModalOpen,
     setImportCurlModalOpen,
+    setSnippetModalOpen,
     loadCollection,
     openSettings,
+    customShortcuts,
   ]);
 
   // Request node selection handler
   const handleSelectRequestNode = useCallback(
-    (node: CollectionTreeNode) => {
+    (node: CollectionTreeNode, isPreview = true) => {
       if (node.parseError) {
         addToast({
           type: 'error',
@@ -672,7 +685,7 @@ export default function App(): React.JSX.Element {
         return;
       }
       if (node.request) {
-        openDraftFromFile(node.path, node.request);
+        openDraftFromFile(node.path, node.request, isPreview);
       }
     },
     [addToast, openDraftFromFile],
@@ -742,6 +755,7 @@ export default function App(): React.JSX.Element {
         onOpenExample={handleOpenExample}
         onOpenCookies={() => setCookieModalOpen(true)}
         onOpenSnippets={() => setSnippetModalOpen(true)}
+        onOpenCommandPalette={() => setCommandPaletteOpen(true)}
         recentCollections={recentCollections}
         onSelectRecentCollection={p => loadCollection(p)}
       />
@@ -790,6 +804,7 @@ export default function App(): React.JSX.Element {
                 onSelectTab={openRequest}
                 onCloseTab={closeTab}
                 onNewTab={() => createRequest()}
+                onPinTab={pinTab}
               />
 
               {/* Conflict Banner (Phase 10) */}
@@ -920,6 +935,8 @@ export default function App(): React.JSX.Element {
                     onPostScriptChange={s => updateActiveDraft({ postScript: s })}
                     tests={activeDraft.tests || []}
                     onTestsChange={t => updateActiveDraft({ tests: t })}
+                    docs={activeDraft.docs || ''}
+                    onDocsChange={docs => updateActiveDraft({ docs })}
                     isWorkspaceTrusted={isWorkspaceTrusted}
                     onTrustWorkspace={() => setWorkspaceTrusted(true)}
                     knownVariables={knownVariableNames}
@@ -1023,6 +1040,20 @@ export default function App(): React.JSX.Element {
         onClose={() => setSnippetModalOpen(false)}
         requestFile={currentRequestFile}
         scopes={snippetScope}
+      />
+      <CommandPalette
+        isOpen={commandPaletteOpen}
+        onClose={() => setCommandPaletteOpen(false)}
+        onSendRequest={handleSend}
+        onSaveRequest={handleSave}
+        onNewRequest={() => createRequest()}
+        onImportCurl={() => setImportCurlModalOpen(true)}
+        onOpenSnippets={() => setSnippetModalOpen(true)}
+        onToggleSidebar={toggleSidebar}
+        onOpenSettings={openSettings}
+        onOpenCookies={() => setCookieModalOpen(true)}
+        onOpenShortcuts={() => setShortcutsModalOpen(true)}
+        onOpenSecrets={() => handleOpenEnvModal('secrets')}
       />
     </div>
   );

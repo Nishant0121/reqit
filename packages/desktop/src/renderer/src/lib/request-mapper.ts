@@ -186,6 +186,7 @@ export function requestFileToDraft(
       assert: t.assert || '',
       enabled: t.enabled !== false,
     })),
+    docs: file.docs || '',
     isDirty: false,
     rawRequest: file,
   };
@@ -319,5 +320,6 @@ export function draftToRequestFile(draft: RequestDraft): RequestFile {
     body,
     scripts,
     tests: tests.length > 0 ? tests : undefined,
+    docs: draft.docs?.trim() ? draft.docs.trim() : undefined,
   };
 }
