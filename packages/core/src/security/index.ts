@@ -20,11 +20,14 @@ export function validateSafePath(
     };
   }
 
-  const resolved = path.resolve(targetPath);
-
   // 2. Prevent targeting sensitive root system directories on Windows / POSIX
+  const rawNormalized = targetPath.toLowerCase().replace(/\\/g, '/');
+  const rawWithoutDrive = rawNormalized.replace(/^[a-z]:/, '');
+
+  const resolved = path.resolve(targetPath);
   const normalized = resolved.toLowerCase().replace(/\\/g, '/');
   const withoutDrive = normalized.replace(/^[a-z]:/, '');
+
   const forbiddenSystemPaths = [
     'c:/windows',
     'c:/program files',
@@ -40,6 +43,10 @@ export function validateSafePath(
 
   for (const sysPath of forbiddenSystemPaths) {
     if (
+      rawNormalized === sysPath ||
+      rawNormalized.startsWith(`${sysPath}/`) ||
+      rawWithoutDrive === sysPath ||
+      rawWithoutDrive.startsWith(`${sysPath}/`) ||
       normalized === sysPath ||
       normalized.startsWith(`${sysPath}/`) ||
       withoutDrive === sysPath ||
