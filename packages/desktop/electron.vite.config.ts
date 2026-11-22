@@ -19,7 +19,7 @@ function devCspPlugin(): Plugin {
 
 export default defineConfig({
   main: {
-    plugins: [externalizeDepsPlugin({ exclude: ['@reqit/core'] })],
+    plugins: [externalizeDepsPlugin({ exclude: ['@reqit/core', 'electron-updater'] })],
     build: {
       rollupOptions: {
         input: {

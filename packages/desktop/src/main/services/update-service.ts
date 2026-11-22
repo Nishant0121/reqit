@@ -1,6 +1,19 @@
 import { app, BrowserWindow } from 'electron';
-import { autoUpdater, type UpdateInfo, type ProgressInfo } from 'electron-updater';
+import electronUpdater, { type UpdateInfo, type ProgressInfo } from 'electron-updater';
 import type { UpdateStatus } from '../../shared/ipc-types.js';
+
+// Resolve autoUpdater safely across ESM and CommonJS module boundaries
+function getAutoUpdater() {
+  const mod = electronUpdater as unknown as {
+    autoUpdater?: typeof electronUpdater.autoUpdater;
+    default?: { autoUpdater?: typeof electronUpdater.autoUpdater };
+  };
+  return (
+    mod.autoUpdater ||
+    mod.default?.autoUpdater ||
+    (electronUpdater as unknown as typeof electronUpdater.autoUpdater)
+  );
+}
 
 export class UpdateService {
   private currentStatus: UpdateStatus = {
@@ -12,27 +25,33 @@ export class UpdateService {
   private isDownloading = false;
   private isInitialized = false;
 
+  private get autoUpdater() {
+    return getAutoUpdater();
+  }
+
   constructor() {
-    this.currentStatus.currentVersion = app.getVersion() || '0.3.0';
+    this.currentStatus.currentVersion = app.getVersion() || '1.0.0';
   }
 
   public initialize(): void {
     if (this.isInitialized) return;
     this.isInitialized = true;
 
+    const updater = this.autoUpdater;
+
     // Configure autoUpdater
-    autoUpdater.autoDownload = false;
-    autoUpdater.autoInstallOnAppQuit = true;
+    updater.autoDownload = false;
+    updater.autoInstallOnAppQuit = true;
 
     // Listen to updater events
-    autoUpdater.on('checking-for-update', () => {
+    updater.on('checking-for-update', () => {
       this.setStatus({
         status: 'checking',
         currentVersion: this.currentStatus.currentVersion,
       });
     });
 
-    autoUpdater.on('update-available', (info: UpdateInfo) => {
+    updater.on('update-available', (info: UpdateInfo) => {
       this.isChecking = false;
       this.setStatus({
         status: 'available',
@@ -43,7 +62,7 @@ export class UpdateService {
       });
     });
 
-    autoUpdater.on('update-not-available', (info: UpdateInfo) => {
+    updater.on('update-not-available', (info: UpdateInfo) => {
       this.isChecking = false;
       this.setStatus({
         status: 'not-available',
@@ -52,7 +71,7 @@ export class UpdateService {
       });
     });
 
-    autoUpdater.on('download-progress', (progress: ProgressInfo) => {
+    updater.on('download-progress', (progress: ProgressInfo) => {
       this.setStatus({
         status: 'downloading',
         currentVersion: this.currentStatus.currentVersion,
@@ -64,7 +83,7 @@ export class UpdateService {
       });
     });
 
-    autoUpdater.on('update-downloaded', (info: UpdateInfo) => {
+    updater.on('update-downloaded', (info: UpdateInfo) => {
       this.isDownloading = false;
       this.setStatus({
         status: 'downloaded',
@@ -75,7 +94,7 @@ export class UpdateService {
       });
     });
 
-    autoUpdater.on('error', (err: Error) => {
+    updater.on('error', (err: Error) => {
       this.isChecking = false;
       this.isDownloading = false;
       this.setStatus({
@@ -132,7 +151,7 @@ export class UpdateService {
     }
 
     try {
-      const result = await autoUpdater.checkForUpdates();
+      const result = await this.autoUpdater.checkForUpdates();
       if (!result) {
         this.isChecking = false;
         const status: UpdateStatus = {
@@ -170,7 +189,7 @@ export class UpdateService {
     });
 
     try {
-      await autoUpdater.downloadUpdate();
+      await this.autoUpdater.downloadUpdate();
       return true;
     } catch (err: unknown) {
       this.isDownloading = false;
@@ -186,7 +205,7 @@ export class UpdateService {
   public quitAndInstall(): void {
     if (this.currentStatus.status === 'downloaded') {
       setImmediate(() => {
-        autoUpdater.quitAndInstall();
+        this.autoUpdater.quitAndInstall();
       });
     }
   }
