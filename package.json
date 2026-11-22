@@ -1,6 +1,6 @@
 {
   "name": "reqit-root",
-  "version": "0.3.0",
+  "version": "1.0.0",
   "author": "Reqit Contributors <nishantpatil0121@gmail.com>",
   "repository": "https://github.com/Nishant0121/reqit.git",
   "private": true,
@@ -10,6 +10,9 @@
     "dev": "pnpm --filter desktop dev",
     "build": "pnpm --filter desktop build",
     "build:cli": "pnpm --filter @reqit/cli run build",
+    "docs:dev": "vitepress dev docs-site",
+    "docs:build": "vitepress build docs-site",
+    "docs:preview": "vitepress preview docs-site",
     "test": "vitest run",
     "test:smoke": "pnpm --filter desktop test:smoke",
     "lint": "eslint .",
@@ -40,6 +43,7 @@
     "prettier-plugin-tailwindcss": "^0.8.1",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.24.1",
+    "vitepress": "^1.6.4",
     "vitest": "^3.0.6"
   }
 }

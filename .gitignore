@@ -6,6 +6,8 @@ node_modules/
 dist/
 out/
 build/
+docs-site/.vitepress/dist/
+docs-site/.vitepress/cache/
 !packages/desktop/build/
 *.tsbuildinfo
 

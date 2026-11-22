@@ -2,7 +2,9 @@
 
 > A local-first, Git-native desktop API client. Your requests live as plain YAML files in your repository, next to your code.
 
-[![CI](https://github.com/reqit/reqit/actions/workflows/ci.yml/badge.svg)](https://github.com/reqit/reqit/actions/workflows/ci.yml)
+[![CI](https://github.com/Nishant0121/reqit/actions/workflows/ci.yml/badge.svg)](https://github.com/Nishant0121/reqit/actions/workflows/ci.yml)
+[![Docs](https://img.shields.io/badge/docs-GitHub%20Pages-blue.svg)](https://nishant0121.github.io/reqit/)
+[![Release](https://img.shields.io/badge/release-v1.0.0-emerald.svg)](https://github.com/Nishant0121/reqit/releases/latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 ---
@@ -81,12 +83,15 @@ Download the pre-built installer for your operating system from [GitHub Releases
 
 ---
 
-## Documentation
+## Documentation & Reference
 
-- [File Format Specification](docs/file-format.md) — Comprehensive schema, quoting rules, and directory layout.
-- [Implementation Plan](docs/IMPLEMENTATION_PLAN.md) — Phased architecture roadmap and milestone tracking.
-- [UI Guidelines](docs/UI_GUIDELINES.md) — Design tokens, component specs, and keyboard shortcut standards.
-- [Manual Test Checklist](docs/manual-test-checklist.md) — Pre-release validation checklist across platforms.
+- **[Official Documentation Site](https://nishant0121.github.io/reqit/)** — Complete online documentation, API reference, and guides.
+- **[Getting Started & Installation Guide](https://nishant0121.github.io/reqit/guide/getting-started)** — Quickstart and handling unsigned OS warnings on Windows, Mac, and Linux.
+- **[File Format Specification](https://nishant0121.github.io/reqit/format/specification)** — Complete schema for requests, folders, environments, and secrets.
+- **[Scripting & Assertions API](https://nishant0121.github.io/reqit/features/scripting)** — Pre-request scripts and `reqit.test()` assertion syntax.
+- **[Collection Runner & CLI](https://nishant0121.github.io/reqit/features/runner-cli)** — Headless CI/CD automation with `@reqit/cli`.
+- **[Security & Unsigned Release Guide](docs/SECURITY_AND_INSTALLATION.md)** — Security architecture, sandboxing, and manual verification.
+- **[Changelog](CHANGELOG.md)** — Complete release notes for `v1.0.0`.
 
 ---
 

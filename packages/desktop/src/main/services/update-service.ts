@@ -5,7 +5,7 @@ import type { UpdateStatus } from '../../shared/ipc-types.js';
 export class UpdateService {
   private currentStatus: UpdateStatus = {
     status: 'idle',
-    currentVersion: app.getVersion() || '0.3.0',
+    currentVersion: app.getVersion() || '1.0.0',
   };
 
   private isChecking = false;

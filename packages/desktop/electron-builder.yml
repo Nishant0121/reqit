@@ -18,6 +18,7 @@ publish:
 toolsets:
   appimage: '1.0.3'
 win:
+  icon: build/icon.png
   target:
     - target: nsis
       arch:
@@ -34,6 +35,7 @@ nsis:
   createStartMenuShortcut: true
   differentialPackage: false
 mac:
+  icon: build/icon.png
   target:
     - target: dmg
       arch:
@@ -47,6 +49,7 @@ mac:
   identity: null
   hardenedRuntime: false
 linux:
+  icon: build/icon.png
   executableName: reqit
   maintainer: Reqit Contributors <nishantpatil0121@gmail.com>
   target:

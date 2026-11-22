@@ -16,6 +16,19 @@ function getPreloadPath(): string {
   return join(__dirname, '../preload/index.js');
 }
 
+function getIconPath(): string | undefined {
+  const iconCandidates = [
+    join(__dirname, '../../build/icon.png'),
+    join(__dirname, '../../build/logo.png'),
+    join(app.getAppPath(), 'build/icon.png'),
+    join(app.getAppPath(), 'build/logo.png'),
+  ];
+  for (const candidate of iconCandidates) {
+    if (existsSync(candidate)) return candidate;
+  }
+  return undefined;
+}
+
 function createWindow(): void {
   const isDev = Boolean(process.env.ELECTRON_RENDERER_URL);
   const devCsp =
@@ -43,6 +56,7 @@ function createWindow(): void {
     minWidth: 960,
     minHeight: 600,
     title: 'Reqit',
+    icon: getIconPath(),
     webPreferences: {
       preload: getPreloadPath(),
       contextIsolation: true,

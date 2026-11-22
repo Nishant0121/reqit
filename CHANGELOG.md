@@ -7,6 +7,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.0] - 2026-11-22
+
+### Summary
+
+General Availability (GA) production release of **Reqit** — a local-first, Git-native desktop API client.
+
+### Added
+
+- **Documentation Site & GitHub Pages Deployment (Phase 26)**:
+  - Official documentation site built with VitePress and deployed via GitHub Actions to GitHub Pages.
+  - Complete guides: Overview & Installation, Unsigned Installation Bypasses, Keyboard Shortcuts, Tool Comparison (Reqit vs Postman/Insomnia/Bruno), YAML Format Specification, Variables Hierarchy, Scripting API, Collection Runner & CLI, Cookies & OAuth, OpenAPI & cURL Import, GraphQL, and Security Reference.
+  - Full-text offline client-side search, mobile responsiveness, and dark/light mode toggle.
+- **Signing, Auto-Update & Hardening (Phase 25)**:
+  - Configured unsigned packages for Windows (`nsis` installer and standalone `portable` `.exe`), macOS (`dmg`, `zip`), and Linux (`AppImage`, `deb`).
+  - GitHub Releases auto-update provider with user-visible update prompt modal and top bar status indicator.
+  - Security hardening: path traversal prevention (`validateSafePath`), Electron context isolation, strict Content Security Policy, and workspace trust checks.
+  - Privacy-preserving bug reporting flow with automated redaction (`sanitizeLogContent`) of tokens, passwords, cookies, and secrets.
+  - Production dependency audit with zero known vulnerabilities and automated Dependabot maintenance.
+- **GraphQL Support & Schema Explorer (Phase 24)**:
+  - Dedicated GraphQL query and variables editor with syntax highlighting and formatting.
+  - GraphQL schema introspection against live endpoints.
+  - Interactive Schema Explorer slide-out panel with root operations, object types, and click-to-insert query snippets.
+- **OpenAPI & Swagger Import (Phase 23)**:
+  - Native parser and importer for OpenAPI 3.0, 3.1, and Swagger specifications (JSON / YAML / remote URLs).
+  - Visual hierarchical import preview with selective inclusion and Add New, Merge, and Clean directory modes.
+- **Desktop Collection Runner (Phase 22)**:
+  - Multi-request sequential runner with live progress bar, request latency breakdown, and assertion logging.
+  - Parameterized iterations with CSV and JSON data files.
+  - Export test execution summaries to standalone HTML and JSON reports.
+- **Headless CLI `@reqit/cli` (Phase 21)**:
+  - Standalone Node.js CLI runner for terminal execution and headless CI/CD pipelines (GitHub Actions, GitLab CI).
+  - CLI, JUnit XML, HTML, and JSON reporters with exit code failure gating.
+  - Injection of secrets from CI environments via `REQIT_SECRET_*`.
+
+---
+
 ## [0.3.0] - 2026-11-10
 
 ### Added

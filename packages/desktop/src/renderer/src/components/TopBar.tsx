@@ -23,6 +23,7 @@ import {
   ArrowUpCircle,
 } from 'lucide-react';
 import { Button } from './ui/Button';
+import { ReqitLogo } from './ui/ReqitLogo';
 import { strings } from '../lib/strings';
 import type { ThemeMode } from '../lib/theme';
 import type { EnvironmentFile } from '@reqit/core/format';
@@ -151,15 +152,11 @@ export function TopBar({
         <button
           type="button"
           onClick={onOpenWelcome}
-          className="transition-fast flex h-6 w-6 items-center justify-center rounded-sm text-[12px] leading-none font-bold hover:opacity-90"
-          style={{
-            backgroundColor: 'var(--accent-strong)',
-            color: 'var(--accent-fg)',
-          }}
+          className="transition-fast app-focus-ring flex h-6 w-6 items-center justify-center overflow-hidden rounded-sm shadow-xs hover:opacity-90"
           title="Open Welcome Screen"
           aria-label="Open Welcome Screen"
         >
-          R
+          <ReqitLogo className="h-6 w-6" rx={4} />
         </button>
 
         {/* Collection Dropdown Trigger */}

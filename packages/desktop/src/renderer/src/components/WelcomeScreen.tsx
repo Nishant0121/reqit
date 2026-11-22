@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { ReqitLogo } from './ui/ReqitLogo';
 import {
   FolderOpen,
   FolderPlus,
@@ -74,8 +75,8 @@ export function WelcomeScreen({
       <div className="flex w-full max-w-3xl flex-col gap-8">
         {/* Hero Section */}
         <div className="flex flex-col items-center text-center">
-          <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-(--accent)/15 text-(--accent)">
-            <Zap className="h-8 w-8 fill-current" />
+          <div className="mb-3 flex h-16 w-16 items-center justify-center drop-shadow-md">
+            <ReqitLogo className="h-16 w-16" rx={12} />
           </div>
           <h1 className="text-3xl font-extrabold tracking-tight text-(--text-primary)">
             Welcome to Reqit

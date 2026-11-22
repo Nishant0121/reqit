@@ -1,6 +1,6 @@
 {
   "name": "@reqit/cli",
-  "version": "0.3.0",
+  "version": "1.0.0",
   "description": "Git-native, local-first API client CLI runner",
   "author": "Reqit Contributors <nishantpatil0121@gmail.com>",
   "license": "MIT",
