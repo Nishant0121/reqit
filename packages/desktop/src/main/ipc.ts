@@ -1,6 +1,7 @@
 import { app, ipcMain, dialog } from 'electron';
 import fs from 'node:fs';
 import path from 'node:path';
+import os from 'node:os';
 import {
   sendRequest,
   resolveRequest,
@@ -47,6 +48,8 @@ import {
   type OAuthClientCredentialsConfig,
 } from './services/oauth-service.js';
 import { openBundledExampleCollection } from './services/example-collection.js';
+import { updateService } from './services/update-service.js';
+import { sanitizeLogContent } from './security.js';
 import type { AppSettings } from '../shared/settings-types.js';
 import type {
   SendRequestPayload,
@@ -76,6 +79,8 @@ import type {
   OpenApiImportPayload,
   GraphQLIntrospectPayload,
   GraphQLIntrospectResult,
+  UpdateStatus,
+  DiagnosticReport,
 } from '../shared/ipc-types.js';
 
 const activeRequests = new Map<string, AbortController>();
@@ -1140,4 +1145,50 @@ export function registerIpcHandlers(): void {
       }
     },
   );
+
+  // 52. updater:check
+  ipcMain.handle('updater:check', async (_event, manual?: boolean): Promise<UpdateStatus> => {
+    return updateService.checkForUpdates(Boolean(manual));
+  });
+
+  // 53. updater:download
+  ipcMain.handle('updater:download', async (): Promise<boolean> => {
+    return updateService.downloadUpdate();
+  });
+
+  // 54. updater:install
+  ipcMain.handle('updater:install', async (): Promise<void> => {
+    updateService.quitAndInstall();
+  });
+
+  // 55. updater:simulate (for manual dev and demonstration without live github releases)
+  ipcMain.handle('updater:simulate', async (_event, version?: string): Promise<UpdateStatus> => {
+    return updateService.simulateUpdate(version || '1.0.0');
+  });
+
+  // 56. app:getDiagnostics (for Bug Reporting with sanitized logs)
+  ipcMain.handle('app:getDiagnostics', async (): Promise<DiagnosticReport> => {
+    const mem = process.memoryUsage();
+    return {
+      appVersion: app.getVersion() || '0.3.0',
+      electronVersion: process.versions.electron || 'unknown',
+      nodeVersion: process.versions.node || 'unknown',
+      chromeVersion: process.versions.chrome || 'unknown',
+      osPlatform: process.platform,
+      osRelease: os.release(),
+      osArch: process.arch,
+      memoryUsageMb: Math.round(mem.heapUsed / 1024 / 1024),
+      uptimeSeconds: Math.round(process.uptime()),
+      sanitizedLogs: [
+        sanitizeLogContent(`App version: ${app.getVersion() || '0.3.0'}`),
+        sanitizeLogContent(`Platform: ${process.platform} (${os.release()}, ${process.arch})`),
+        sanitizeLogContent(
+          `Node: ${process.versions.node}, Electron: ${process.versions.electron}`,
+        ),
+        sanitizeLogContent(
+          `Heap Used: ${Math.round(mem.heapUsed / 1024 / 1024)}MB / Total: ${Math.round(mem.heapTotal / 1024 / 1024)}MB`,
+        ),
+      ],
+    };
+  });
 }

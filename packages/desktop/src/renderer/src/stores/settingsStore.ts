@@ -4,7 +4,7 @@ import { DEFAULT_APP_SETTINGS } from '../../../shared/settings-types.js';
 import { applyTheme } from '../lib/theme';
 import { useAppStore } from './appStore';
 
-export type SettingsTab = 'general' | 'request' | 'proxy' | 'history' | 'shortcuts';
+export type SettingsTab = 'general' | 'request' | 'proxy' | 'history' | 'shortcuts' | 'updates';
 
 interface SettingsState {
   settings: AppSettings;

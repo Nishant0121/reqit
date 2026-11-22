@@ -1,6 +1,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { app, dialog, shell, BrowserWindow } from 'electron';
+import { validateSafePath } from '../security.js';
 import {
   createCollection,
   createFolder,
@@ -111,6 +112,11 @@ export class FileService {
       throw new Error(`Directory does not exist: ${target}`);
     }
 
+    const pathCheck = validateSafePath(target);
+    if (!pathCheck.safe) {
+      throw new Error(pathCheck.error || 'Access to path denied.');
+    }
+
     const tree = await scanCollection(target);
     addRecentCollection(target);
     await ensureSecretsGitignored(target);
@@ -143,6 +149,11 @@ export class FileService {
       targetDir = res.filePaths[0];
     }
 
+    const pathCheck = validateSafePath(targetDir);
+    if (!pathCheck.safe) {
+      throw new Error(pathCheck.error || 'Access to target directory denied.');
+    }
+
     const { rootPath } = await createCollection(targetDir, name);
     const tree = await scanCollection(rootPath);
     addRecentCollection(rootPath);
@@ -161,12 +172,16 @@ export class FileService {
   }
 
   async createRequest(payload: CreateRequestPayload): Promise<CollectionTreeNode> {
+    const parentCheck = validateSafePath(payload.parentDir);
+    if (!parentCheck.safe) throw new Error(parentCheck.error || 'Access denied.');
     const node = await createRequest(payload.parentDir, payload.name, payload.data);
     this.watcher.registerAppWrite(node.path);
     return node;
   }
 
   async createFolder(payload: CreateFolderPayload): Promise<CollectionTreeNode> {
+    const parentCheck = validateSafePath(payload.parentDir);
+    if (!parentCheck.safe) throw new Error(parentCheck.error || 'Access denied.');
     const node = await createFolder(payload.parentDir, payload.name);
     this.watcher.registerAppWrite(node.path);
     this.watcher.registerAppWrite(path.join(node.path, 'folder.yaml'));
@@ -174,6 +189,8 @@ export class FileService {
   }
 
   async renameItem(payload: RenameItemPayload): Promise<{ newPath: string; newName: string }> {
+    const check = validateSafePath(payload.itemPath);
+    if (!check.safe) throw new Error(check.error || 'Access denied.');
     this.watcher.registerAppWrite(payload.itemPath);
     const result = await renameItem(payload.itemPath, payload.newName);
     this.watcher.registerAppWrite(result.newPath);
@@ -181,12 +198,16 @@ export class FileService {
   }
 
   async duplicateRequest(sourcePath: string): Promise<CollectionTreeNode> {
+    const check = validateSafePath(sourcePath);
+    if (!check.safe) throw new Error(check.error || 'Access denied.');
     const node = await duplicateRequest(sourcePath);
     this.watcher.registerAppWrite(node.path);
     return node;
   }
 
   async deleteItem(itemPath: string): Promise<boolean> {
+    const check = validateSafePath(itemPath);
+    if (!check.safe) throw new Error(check.error || 'Access denied.');
     const resolved = path.resolve(itemPath);
     const parentDir = path.dirname(resolved);
     const slug = path.basename(resolved);
@@ -226,6 +247,8 @@ export class FileService {
   }
 
   async saveRequest(payload: SaveRequestPayload): Promise<boolean> {
+    const check = validateSafePath(payload.filePath);
+    if (!check.safe) throw new Error(check.error || 'Access denied.');
     const yaml = serializeRequest(payload.request);
     this.watcher.registerAppWrite(payload.filePath, yaml);
     await saveRequest(payload.filePath, payload.request);
@@ -233,17 +256,23 @@ export class FileService {
   }
 
   async saveEnvironment(payload: SaveEnvironmentPayload): Promise<string> {
+    const check = validateSafePath(payload.rootPath);
+    if (!check.safe) throw new Error(check.error || 'Access denied.');
     const filePath = await saveEnvironment(payload.rootPath, payload.name, payload.environment);
     this.watcher.registerAppWrite(filePath);
     return filePath;
   }
 
   async deleteEnvironment(payload: DeleteEnvironmentPayload): Promise<boolean> {
+    const check = validateSafePath(payload.rootPath);
+    if (!check.safe) throw new Error(check.error || 'Access denied.');
     const success = await deleteEnvironment(payload.rootPath, payload.name);
     return success;
   }
 
   async saveSecrets(payload: SaveSecretsPayload): Promise<string> {
+    const check = validateSafePath(payload.rootPath);
+    if (!check.safe) throw new Error(check.error || 'Access denied.');
     const filePath = await saveSecrets(payload.rootPath, payload.secrets);
     this.watcher.registerAppWrite(filePath);
     return filePath;

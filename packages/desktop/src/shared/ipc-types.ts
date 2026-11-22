@@ -402,6 +402,47 @@ export interface ReqitApi {
   importOpenApi: (payload: OpenApiImportPayload) => Promise<OpenApiImportReport>;
   /** Performs GraphQL schema introspection on the specified endpoint */
   introspectGraphQL: (payload: GraphQLIntrospectPayload) => Promise<GraphQLIntrospectResult>;
+  /** Checks for updates via autoUpdater or simulated */
+  checkForUpdates: (manual?: boolean) => Promise<UpdateStatus>;
+  /** Downloads available update */
+  downloadUpdate: () => Promise<boolean>;
+  /** Quits app and installs downloaded update */
+  quitAndInstallUpdate: () => Promise<void>;
+  /** Simulates update notification for testing */
+  simulateUpdate: (version?: string) => Promise<UpdateStatus>;
+  /** Subscribes to live updater status events */
+  onUpdateStatus: (callback: (status: UpdateStatus) => void) => () => void;
+  /** Generates anonymized system diagnostic report for bug reporting */
+  getDiagnosticReport: () => Promise<DiagnosticReport>;
+}
+
+export type UpdateStatusKind =
+  'idle' | 'checking' | 'available' | 'not-available' | 'downloading' | 'downloaded' | 'error';
+
+export interface UpdateStatus {
+  status: UpdateStatusKind;
+  version?: string;
+  currentVersion: string;
+  releaseNotes?: string;
+  releaseDate?: string;
+  percent?: number;
+  transferred?: number;
+  total?: number;
+  bytesPerSecond?: number;
+  error?: string;
+}
+
+export interface DiagnosticReport {
+  appVersion: string;
+  electronVersion: string;
+  nodeVersion: string;
+  chromeVersion: string;
+  osPlatform: string;
+  osRelease: string;
+  osArch: string;
+  memoryUsageMb: number;
+  uptimeSeconds: number;
+  sanitizedLogs: string[];
 }
 
 export interface GraphQLIntrospectPayload {

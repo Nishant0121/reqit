@@ -52,6 +52,10 @@
     "./graphql": {
       "types": "./src/graphql/index.ts",
       "import": "./src/graphql/index.ts"
+    },
+    "./security": {
+      "types": "./src/security/index.ts",
+      "import": "./src/security/index.ts"
     }
   },
   "scripts": {

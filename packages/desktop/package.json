@@ -48,6 +48,7 @@
     "@reqit/core": "workspace:*",
     "better-sqlite3": "^13.0.3",
     "codemirror": "^6.0.2",
+    "electron-updater": "^6.8.11",
     "lucide-react": "^1.61.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",

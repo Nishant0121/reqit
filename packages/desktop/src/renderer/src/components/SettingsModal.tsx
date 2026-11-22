@@ -19,10 +19,22 @@ import {
   Trash2,
   Keyboard,
   RotateCcw,
+  Sparkles,
+  Bug,
+  ExternalLink,
+  ShieldCheck,
 } from 'lucide-react';
 import { SHORTCUT_REGISTRY, formatKeyCombination, recordKeyCombination } from '../lib/shortcuts';
 
-export function SettingsModal(): React.JSX.Element | null {
+export interface SettingsModalProps {
+  onOpenReportBug?: () => void;
+  onOpenUpdateModal?: () => void;
+}
+
+export function SettingsModal({
+  onOpenReportBug,
+  onOpenUpdateModal,
+}: SettingsModalProps = {}): React.JSX.Element | null {
   const { isOpen, closeSettings, activeTab, setActiveTab, settings, updateSettings } =
     useSettingsStore();
   const { clearHistory } = useHistoryStore();
@@ -160,6 +172,7 @@ export function SettingsModal(): React.JSX.Element | null {
     { id: 'proxy', label: 'Proxy', icon: <Globe size={15} /> },
     { id: 'history', label: 'Privacy & History', icon: <Shield size={15} /> },
     { id: 'shortcuts', label: 'Shortcuts', icon: <Keyboard size={15} /> },
+    { id: 'updates', label: 'Updates & Security', icon: <Sparkles size={15} /> },
   ];
 
   return (
@@ -732,6 +745,176 @@ export function SettingsModal(): React.JSX.Element | null {
                   </div>
                 );
               })}
+            </div>
+          )}
+
+          {/* 6. UPDATES & SECURITY TAB (Phase 25) */}
+          {activeTab === 'updates' && (
+            <div className="space-y-6">
+              {/* Version & Updates */}
+              <div>
+                <h3 className="mb-1 text-[14px] font-semibold text-(--text-primary)">
+                  Software Updates & Version
+                </h3>
+                <p className="mb-4 text-[12px] text-(--text-muted)">
+                  Manage updates and view current release status.
+                </p>
+
+                <div
+                  className="space-y-3 rounded border p-3.5"
+                  style={{ backgroundColor: 'var(--bg-base)', borderColor: 'var(--border)' }}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="block text-[11px] text-(--text-muted) uppercase">
+                        Installed Version
+                      </span>
+                      <span className="font-mono text-[13px] font-semibold text-(--accent)">
+                        Reqit v0.3.0
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          if (window.reqitApi) {
+                            addToast({ type: 'info', message: 'Checking for updates...' });
+                            const res = await window.reqitApi.checkForUpdates(true);
+                            if (res.status === 'available') {
+                              onOpenUpdateModal?.();
+                            } else if (res.status === 'not-available') {
+                              addToast({
+                                type: 'success',
+                                message: 'Reqit is up to date! You are running the newest release.',
+                              });
+                            } else if (res.status === 'error') {
+                              addToast({
+                                type: 'error',
+                                message: res.error || 'Failed to check for updates.',
+                              });
+                            }
+                          }
+                        }}
+                        className="flex items-center gap-1.5 rounded border px-3 py-1.5 text-[12px] font-medium transition-colors hover:bg-(--bg-hover)"
+                        style={{
+                          borderColor: 'var(--border-strong)',
+                          backgroundColor: 'var(--bg-surface)',
+                          color: 'var(--text-primary)',
+                        }}
+                      >
+                        <Sparkles className="h-3.5 w-3.5 text-(--accent)" />
+                        <span>Check for Updates</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          if (window.reqitApi) {
+                            await window.reqitApi.simulateUpdate('1.0.0');
+                            onOpenUpdateModal?.();
+                          }
+                        }}
+                        className="flex items-center gap-1 rounded border px-2.5 py-1.5 text-[11px] font-medium transition-colors hover:bg-(--bg-hover)"
+                        style={{
+                          borderColor: 'var(--border)',
+                          backgroundColor: 'var(--bg-surface)',
+                          color: 'var(--text-secondary)',
+                        }}
+                        title="Simulate update notification in development mode"
+                      >
+                        <span>Simulate Update (Test)</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div
+                    className="flex items-center justify-between border-t pt-2.5 text-[11px] text-(--text-muted)"
+                    style={{ borderColor: 'var(--border)' }}
+                  >
+                    <span>Official releases are published on GitHub.</span>
+                    <a
+                      href="https://github.com/Nishant0121/reqit/releases"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1 text-(--accent) hover:underline"
+                    >
+                      <span>View Releases</span>
+                      <ExternalLink className="h-3 w-3" />
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              {/* Security & Architecture */}
+              <div>
+                <h3 className="mb-1 text-[14px] font-semibold text-(--text-primary)">
+                  Security & Hardening
+                </h3>
+                <p className="mb-3 text-[12px] text-(--text-muted)">
+                  Local-first architecture designed to keep your credentials and collections
+                  completely safe.
+                </p>
+
+                <div
+                  className="space-y-2.5 rounded border p-3.5 text-[12px]"
+                  style={{ backgroundColor: 'var(--bg-base)', borderColor: 'var(--border)' }}
+                >
+                  <div className="flex items-start gap-2">
+                    <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+                    <div>
+                      <strong className="text-(--text-primary)">Local-First & Offline:</strong>
+                      <span className="ml-1 text-(--text-secondary)">
+                        Requests, environments, and secrets never leave your machine unless
+                        explicitly sent by you.
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-2">
+                    <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+                    <div>
+                      <strong className="text-(--text-primary)">Path Traversal Protection:</strong>
+                      <span className="ml-1 text-(--text-secondary)">
+                        File operations are sanitized to prevent directory escape outside your
+                        collection root.
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-2">
+                    <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+                    <div>
+                      <strong className="text-(--text-primary)">Script Sandboxing:</strong>
+                      <span className="ml-1 text-(--text-secondary)">
+                        Pre-request scripts and post-response tests run in isolated sandboxes with
+                        strict time and memory limits.
+                      </span>
+                    </div>
+                  </div>
+
+                  <div
+                    className="mt-2 flex items-center justify-between border-t pt-2.5"
+                    style={{ borderColor: 'var(--border)' }}
+                  >
+                    <span className="text-[11px] text-(--text-muted)">
+                      Need to inspect diagnostic details or report an issue?
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => onOpenReportBug?.()}
+                      className="flex items-center gap-1.5 rounded border px-2.5 py-1 text-[11px] font-medium text-(--text-primary) hover:bg-(--bg-hover)"
+                      style={{
+                        borderColor: 'var(--border-strong)',
+                        backgroundColor: 'var(--bg-surface)',
+                      }}
+                    >
+                      <Bug className="h-3.5 w-3.5 text-amber-500" />
+                      <span>Diagnostics & Report Bug</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
         </div>

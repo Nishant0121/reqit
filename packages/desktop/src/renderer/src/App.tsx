@@ -27,6 +27,9 @@ import { CollectionRunnerModal } from './components/CollectionRunnerModal';
 import { GraphQLSchemaDrawer } from './components/GraphQLSchemaDrawer';
 import { SettingsModal } from './components/SettingsModal';
 import { WelcomeScreen } from './components/WelcomeScreen';
+import { UpdatePromptModal } from './components/UpdatePromptModal';
+import { ReportBugModal } from './components/ReportBugModal';
+import type { UpdateStatus } from '../../shared/ipc-types';
 import { useAppStore } from './stores/appStore';
 import { useCollectionStore } from './stores/collectionStore';
 import { useRequestStore } from './stores/requestStore';
@@ -82,6 +85,9 @@ export default function App(): React.JSX.Element {
   const [showWelcomeScreen, setShowWelcomeScreen] = useState(false);
   const [graphqlDrawerOpen, setGraphqlDrawerOpen] = useState(false);
   const [isIntrospectingGraphQL, setIsIntrospectingGraphQL] = useState(false);
+  const [updatePromptOpen, setUpdatePromptOpen] = useState(false);
+  const [reportBugModalOpen, setReportBugModalOpen] = useState(false);
+  const [updateStatus, setUpdateStatus] = useState<UpdateStatus | null>(null);
 
   const handleOpenRunner = useCallback((folderPath?: string) => {
     setRunnerTargetFolder(folderPath);
@@ -334,6 +340,20 @@ export default function App(): React.JSX.Element {
       unsubscribe();
     };
   }, [applyWatcherChange]);
+
+  // Subscribe to auto-updater lifecycle events (Phase 25)
+  useEffect(() => {
+    if (!window.reqitApi?.onUpdateStatus) return;
+    const unsubscribe = window.reqitApi.onUpdateStatus(status => {
+      setUpdateStatus(status);
+      if (status.status === 'available' || status.status === 'downloaded') {
+        setUpdatePromptOpen(true);
+      }
+    });
+    return () => {
+      unsubscribe();
+    };
+  }, []);
 
   // Theme toggle cycle: system -> light -> dark -> system
   const handleToggleTheme = () => {
@@ -857,6 +877,9 @@ export default function App(): React.JSX.Element {
         onOpenCommandPalette={() => setCommandPaletteOpen(true)}
         recentCollections={recentCollections}
         onSelectRecentCollection={p => loadCollection(p)}
+        updateStatus={updateStatus}
+        onOpenUpdateModal={() => setUpdatePromptOpen(true)}
+        onOpenReportBug={() => setReportBugModalOpen(true)}
       />
 
       {/* 2. Middle Area: Sidebar + Main Content */}
@@ -1127,7 +1150,10 @@ export default function App(): React.JSX.Element {
           onLoadDisk={() => resolveConflictLoadDisk(activeDraft.id)}
         />
       )}
-      <SettingsModal />
+      <SettingsModal
+        onOpenUpdateModal={() => setUpdatePromptOpen(true)}
+        onOpenReportBug={() => setReportBugModalOpen(true)}
+      />
       <HistoryDetailModal />
       <HistorySettingsModal />
       <ClearHistoryConfirmModal />
@@ -1190,6 +1216,22 @@ export default function App(): React.JSX.Element {
           });
         }}
       />
+      {updateStatus && (
+        <UpdatePromptModal
+          isOpen={updatePromptOpen}
+          onClose={() => setUpdatePromptOpen(false)}
+          status={updateStatus}
+          onDownload={() => window.reqitApi?.downloadUpdate()}
+          onInstall={() => window.reqitApi?.quitAndInstallUpdate()}
+          onCheckAgain={async () => {
+            if (window.reqitApi) {
+              const res = await window.reqitApi.checkForUpdates(true);
+              setUpdateStatus(res);
+            }
+          }}
+        />
+      )}
+      <ReportBugModal isOpen={reportBugModalOpen} onClose={() => setReportBugModalOpen(false)} />
     </div>
   );
 }

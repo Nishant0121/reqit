@@ -10,6 +10,11 @@ files:
   - package.json
 asarUnpack:
   - '**/*.node'
+publish:
+  provider: github
+  owner: Nishant0121
+  repo: reqit
+  releaseType: release
 toolsets:
   appimage: '1.0.3'
 win:
@@ -17,18 +22,30 @@ win:
     - target: nsis
       arch:
         - x64
+    - target: portable
+      arch:
+        - x64
+  signAndEditExecutable: false
+  verifyUpdateCodeSignature: false
 nsis:
   oneClick: false
   allowToChangeInstallationDirectory: true
   createDesktopShortcut: always
   createStartMenuShortcut: true
+  differentialPackage: false
 mac:
   target:
     - target: dmg
       arch:
         - x64
         - arm64
+    - target: zip
+      arch:
+        - x64
+        - arm64
   category: public.app-category.developer-tools
+  identity: null
+  hardenedRuntime: false
 linux:
   executableName: reqit
   maintainer: Reqit Contributors <nishantpatil0121@gmail.com>

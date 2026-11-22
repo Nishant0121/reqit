@@ -19,11 +19,14 @@ import {
   Cookie as CookieIcon,
   Code2,
   Search,
+  Bug,
+  ArrowUpCircle,
 } from 'lucide-react';
 import { Button } from './ui/Button';
 import { strings } from '../lib/strings';
 import type { ThemeMode } from '../lib/theme';
 import type { EnvironmentFile } from '@reqit/core/format';
+import type { UpdateStatus } from '../../../shared/ipc-types';
 
 export interface TopBarProps {
   sidebarOpen: boolean;
@@ -49,6 +52,9 @@ export interface TopBarProps {
   onOpenCommandPalette?: () => void;
   recentCollections?: string[];
   onSelectRecentCollection?: (path: string) => void;
+  updateStatus?: UpdateStatus | null;
+  onOpenUpdateModal?: () => void;
+  onOpenReportBug?: () => void;
 }
 
 export function TopBar({
@@ -75,6 +81,9 @@ export function TopBar({
   onOpenCommandPalette,
   recentCollections = [],
   onSelectRecentCollection,
+  updateStatus,
+  onOpenUpdateModal,
+  onOpenReportBug,
 }: TopBarProps): React.JSX.Element {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -321,6 +330,38 @@ export function TopBar({
                   })}
                 </>
               )}
+
+              <div className="my-1 border-t" style={{ borderColor: 'var(--border)' }} />
+
+              {onOpenUpdateModal && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    onOpenUpdateModal();
+                  }}
+                  className="transition-fast flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-(--bg-hover)"
+                  style={{ color: 'var(--text-primary)' }}
+                >
+                  <ArrowUpCircle className="h-5 w-5 text-(--accent)" strokeWidth={1.75} />
+                  <span className="flex-1 font-medium">Check for Updates...</span>
+                </button>
+              )}
+
+              {onOpenReportBug && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    onOpenReportBug();
+                  }}
+                  className="transition-fast flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-(--bg-hover)"
+                  style={{ color: 'var(--text-primary)' }}
+                >
+                  <Bug className="h-5 w-5 text-(--accent)" strokeWidth={1.75} />
+                  <span className="flex-1 font-medium">Report a Bug & Diagnostics...</span>
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -465,6 +506,63 @@ export function TopBar({
         >
           {getThemeIcon()}
         </Button>
+
+        {/* Update Notification Pill */}
+        {updateStatus &&
+          (updateStatus.status === 'available' ||
+            updateStatus.status === 'downloading' ||
+            updateStatus.status === 'downloaded') && (
+            <button
+              type="button"
+              onClick={onOpenUpdateModal}
+              className={`transition-fast app-focus-ring flex h-7 items-center gap-1.5 rounded-full px-2.5 text-[11px] font-medium shadow-xs ${
+                updateStatus.status === 'downloaded'
+                  ? 'border border-emerald-500/30 bg-emerald-500/15 text-emerald-600 hover:bg-emerald-500/25 dark:text-emerald-400'
+                  : 'border border-(--accent)/30 bg-(--accent-subtle) text-(--accent) hover:bg-(--accent-muted)'
+              }`}
+              title={
+                updateStatus.status === 'downloaded'
+                  ? 'Update ready - click to restart and install'
+                  : updateStatus.status === 'downloading'
+                    ? `Downloading update ${Math.round(updateStatus.percent || 0)}%`
+                    : `Update v${updateStatus.version} available`
+              }
+              aria-label="Software update status"
+            >
+              <span className="relative flex h-2 w-2">
+                <span
+                  className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-75 ${
+                    updateStatus.status === 'downloaded' ? 'bg-emerald-400' : 'bg-(--accent)'
+                  }`}
+                />
+                <span
+                  className={`relative inline-flex h-2 w-2 rounded-full ${
+                    updateStatus.status === 'downloaded' ? 'bg-emerald-500' : 'bg-(--accent)'
+                  }`}
+                />
+              </span>
+              <span>
+                {updateStatus.status === 'downloaded'
+                  ? 'Restart to Update'
+                  : updateStatus.status === 'downloading'
+                    ? `Updating ${Math.round(updateStatus.percent || 0)}%`
+                    : `Update v${updateStatus.version}`}
+              </span>
+            </button>
+          )}
+
+        {onOpenReportBug && (
+          <Button
+            variant="ghost"
+            size="compact"
+            onClick={onOpenReportBug}
+            title="Report a Bug / Diagnostics"
+            aria-label="Report a Bug / Diagnostics"
+            className="transition-fast flex h-8 w-8 items-center justify-center rounded-sm p-0 text-(--text-secondary) hover:bg-(--bg-hover) hover:text-(--text-primary)"
+          >
+            <Bug className="h-5 w-5" strokeWidth={1.75} />
+          </Button>
+        )}
 
         <Button
           variant="ghost"

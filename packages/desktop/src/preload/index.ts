@@ -251,6 +251,33 @@ const api: ReqitApi = {
   introspectGraphQL: (payload: import('../shared/ipc-types.js').GraphQLIntrospectPayload) => {
     return ipcRenderer.invoke('graphql:introspect', payload);
   },
+  checkForUpdates: (manual = false) => {
+    return ipcRenderer.invoke('updater:check', manual);
+  },
+  downloadUpdate: () => {
+    return ipcRenderer.invoke('updater:download');
+  },
+  quitAndInstallUpdate: () => {
+    return ipcRenderer.invoke('updater:install');
+  },
+  simulateUpdate: (version?: string) => {
+    return ipcRenderer.invoke('updater:simulate', version);
+  },
+  onUpdateStatus: (callback: (status: import('../shared/ipc-types.js').UpdateStatus) => void) => {
+    const handler = (
+      _event: Electron.IpcRendererEvent,
+      status: import('../shared/ipc-types.js').UpdateStatus,
+    ) => {
+      callback(status);
+    };
+    ipcRenderer.on('updater:status', handler);
+    return () => {
+      ipcRenderer.removeListener('updater:status', handler);
+    };
+  },
+  getDiagnosticReport: () => {
+    return ipcRenderer.invoke('app:getDiagnostics');
+  },
   onMenuAction: (callback: (action: string) => void) => {
     const handler = (_event: Electron.IpcRendererEvent, action: string) => {
       callback(action);
