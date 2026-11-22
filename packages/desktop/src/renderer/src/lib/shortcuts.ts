@@ -142,7 +142,7 @@ export function matchesShortcut(e: KeyboardEvent, keys: string): boolean {
 
   const mainKey = parts.find(p => !['ctrl', 'cmd', 'alt', 'shift'].includes(p));
 
-  const ctrlPressed = isMac() ? e.metaKey : e.ctrlKey;
+  const ctrlPressed = Boolean(e.ctrlKey || e.metaKey);
   if (needsCtrl !== ctrlPressed) return false;
   if (needsAlt !== e.altKey) return false;
   if (needsShift !== e.shiftKey) return false;

@@ -171,6 +171,17 @@ describe('Phase 20: Keyboard Shortcuts Customization', () => {
 
     expect(matchesShortcut(event, 'Ctrl+P')).toBe(true);
     expect(matchesShortcut(event, 'Ctrl+K')).toBe(false);
+
+    const macEvent = {
+      key: 'p',
+      ctrlKey: false,
+      metaKey: true,
+      altKey: false,
+      shiftKey: false,
+    } as KeyboardEvent;
+
+    expect(matchesShortcut(macEvent, 'Ctrl+P')).toBe(true);
+    expect(matchesShortcut(macEvent, 'Ctrl+K')).toBe(false);
   });
 });
 
