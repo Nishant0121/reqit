@@ -73,6 +73,10 @@ export function setupApplicationMenu(mainWindow: BrowserWindow): void {
           click: () => sendAction('import-postman'),
         },
         {
+          label: 'Import OpenAPI / Swagger...',
+          click: () => sendAction('import-openapi'),
+        },
+        {
           label: 'Code Snippets...',
           accelerator: 'CmdOrCtrl+Alt+C',
           click: () => sendAction('open-snippets'),

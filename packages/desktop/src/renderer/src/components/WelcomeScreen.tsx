@@ -10,6 +10,7 @@ import {
   Zap,
   X,
   Layers,
+  Globe,
 } from 'lucide-react';
 
 export interface WelcomeScreenProps {
@@ -18,6 +19,7 @@ export interface WelcomeScreenProps {
   onOpenExample: () => void;
   onImportCurl: () => void;
   onImportPostman?: () => void;
+  onImportOpenApi?: () => void;
   onDismissToEditor?: () => void;
   recentCollections: string[];
   onSelectRecent: (path: string) => void;
@@ -29,6 +31,7 @@ export function WelcomeScreen({
   onOpenExample,
   onImportCurl,
   onImportPostman,
+  onImportOpenApi,
   onDismissToEditor,
   recentCollections,
   onSelectRecent,
@@ -168,7 +171,18 @@ export function WelcomeScreen({
               className="flex items-center gap-2 rounded px-3 py-1.5 font-medium text-(--text-secondary) transition-colors hover:bg-(--bg-hover) hover:text-(--text-primary)"
             >
               <Layers className="h-4 w-4" />
-              Import Postman Collection
+              Import Postman
+            </button>
+          )}
+
+          {onImportOpenApi && (
+            <button
+              type="button"
+              onClick={onImportOpenApi}
+              className="flex items-center gap-2 rounded px-3 py-1.5 font-medium text-(--text-secondary) transition-colors hover:bg-(--bg-hover) hover:text-(--text-primary)"
+            >
+              <Globe className="h-4 w-4" />
+              Import OpenAPI
             </button>
           )}
 

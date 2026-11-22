@@ -19,6 +19,7 @@ import { HistorySettingsModal } from './components/HistorySettingsModal';
 import { ClearHistoryConfirmModal } from './components/ClearHistoryConfirmModal';
 import { ImportCurlModal } from './components/ImportCurlModal';
 import { ImportPostmanModal } from './components/ImportPostmanModal';
+import { ImportOpenApiModal } from './components/ImportOpenApiModal';
 import { CookieManagerModal } from './components/CookieManagerModal';
 import { SnippetModal } from './components/SnippetModal';
 import { CommandPalette } from './components/CommandPalette';
@@ -71,6 +72,7 @@ export default function App(): React.JSX.Element {
   const [envModalVarName, setEnvModalVarName] = useState<string | undefined>(undefined);
   const [importCurlModalOpen, setImportCurlModalOpen] = useState(false);
   const [importPostmanModalOpen, setImportPostmanModalOpen] = useState(false);
+  const [importOpenApiModalOpen, setImportOpenApiModalOpen] = useState(false);
   const [cookieModalOpen, setCookieModalOpen] = useState(false);
   const [snippetModalOpen, setSnippetModalOpen] = useState(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
@@ -544,6 +546,10 @@ export default function App(): React.JSX.Element {
         case 'file:import-postman':
           setImportPostmanModalOpen(true);
           break;
+        case 'import-openapi':
+        case 'file:import-openapi':
+          setImportOpenApiModalOpen(true);
+          break;
         case 'open-shortcuts':
         case 'help:shortcuts':
           setShortcutsModalOpen(true);
@@ -797,6 +803,7 @@ export default function App(): React.JSX.Element {
               onOpenExample={handleOpenExample}
               onImportCurl={() => setImportCurlModalOpen(true)}
               onImportPostman={() => setImportPostmanModalOpen(true)}
+              onImportOpenApi={() => setImportOpenApiModalOpen(true)}
               onDismissToEditor={() => setShowWelcomeScreen(false)}
               recentCollections={recentCollections}
               onSelectRecent={async p => {
@@ -1039,6 +1046,11 @@ export default function App(): React.JSX.Element {
         onClose={() => setImportPostmanModalOpen(false)}
         onSuccess={() => setShowWelcomeScreen(false)}
       />
+      <ImportOpenApiModal
+        isOpen={importOpenApiModalOpen}
+        onClose={() => setImportOpenApiModalOpen(false)}
+        onSuccess={() => setShowWelcomeScreen(false)}
+      />
       <CookieManagerModal
         isOpen={cookieModalOpen}
         onClose={() => setCookieModalOpen(false)}
@@ -1064,6 +1076,8 @@ export default function App(): React.JSX.Element {
         onOpenShortcuts={() => setShortcutsModalOpen(true)}
         onOpenSecrets={() => handleOpenEnvModal('secrets')}
         onRunCollection={() => handleOpenRunner()}
+        onImportOpenApi={() => setImportOpenApiModalOpen(true)}
+        onImportPostman={() => setImportPostmanModalOpen(true)}
       />
       <CollectionRunnerModal
         isOpen={runnerModalOpen}

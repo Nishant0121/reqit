@@ -9,6 +9,8 @@ import type {
   SecretsFile,
   HttpMethod,
   PostmanImportReport,
+  OpenApiImportReport,
+  OpenApiParseSummary,
 } from '@reqit/core';
 import type { AppSettings } from './settings-types.js';
 
@@ -392,6 +394,12 @@ export interface ReqitApi {
   openDataFileDialog: () => Promise<OpenDataFileResult | null>;
   /** Exports runner report to disk */
   exportRunnerReport: (payload: ExportReportPayload) => Promise<string | null>;
+  /** Opens native file dialog for OpenAPI/Swagger files (.json, .yaml, .yml) */
+  openOpenApiFileDialog: () => Promise<OpenOpenApiFileResult | null>;
+  /** Parses an OpenAPI or Swagger spec from text content or remote URL for preview */
+  parseOpenApi: (payload: OpenApiParsePayload) => Promise<OpenApiParseSummary>;
+  /** Imports OpenAPI or Swagger spec into a directory on disk */
+  importOpenApi: (payload: OpenApiImportPayload) => Promise<OpenApiImportReport>;
 }
 
 export interface OpenDataFileResult {
@@ -406,4 +414,24 @@ export interface ExportReportPayload {
   summary?: import('@reqit/core').RunnerSummary;
   defaultFilename: string;
   type: 'html' | 'json';
+}
+
+export interface OpenOpenApiFileResult {
+  filename: string;
+  filePath: string;
+  content: string;
+}
+
+export interface OpenApiParsePayload {
+  specContent?: string;
+  specUrl?: string;
+}
+
+export interface OpenApiImportPayload {
+  specContent?: string;
+  specUrl?: string;
+  targetDir: string;
+  collectionNameOverride?: string;
+  mode?: 'add-new' | 'merge' | 'clean';
+  defaultBaseUrl?: string;
 }

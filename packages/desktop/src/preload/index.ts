@@ -239,6 +239,15 @@ const api: ReqitApi = {
   exportRunnerReport: (payload: import('../shared/ipc-types.js').ExportReportPayload) => {
     return ipcRenderer.invoke('runner:exportReport', payload);
   },
+  openOpenApiFileDialog: () => {
+    return ipcRenderer.invoke('dialog:openOpenApiFile');
+  },
+  parseOpenApi: (payload: import('../shared/ipc-types.js').OpenApiParsePayload) => {
+    return ipcRenderer.invoke('openapi:parse', payload);
+  },
+  importOpenApi: (payload: import('../shared/ipc-types.js').OpenApiImportPayload) => {
+    return ipcRenderer.invoke('openapi:import', payload);
+  },
   onMenuAction: (callback: (action: string) => void) => {
     const handler = (_event: Electron.IpcRendererEvent, action: string) => {
       callback(action);

@@ -44,6 +44,10 @@
     "./runner": {
       "types": "./src/runner/index.ts",
       "import": "./src/runner/index.ts"
+    },
+    "./openapi": {
+      "types": "./src/openapi/index.ts",
+      "import": "./src/openapi/index.ts"
     }
   },
   "scripts": {

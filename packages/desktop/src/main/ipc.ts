@@ -26,9 +26,14 @@ import {
   runCollectionRunner,
   parseDataFileContent,
   generateHtmlReport,
+  parseOpenApiSpec,
+  importOpenApiToDirectory,
+  fetchSpecFromUrl,
   type RunnerOptions,
   type RunnerProgressEvent,
   type RunnerSummary,
+  type OpenApiParseSummary,
+  type OpenApiImportReport,
 } from '@reqit/core';
 import { fileService } from './services/file-service.js';
 import { historyService } from './services/history-service.js';
@@ -64,6 +69,9 @@ import type {
   OpenJsonFileResult,
   OpenDataFileResult,
   ExportReportPayload,
+  OpenOpenApiFileResult,
+  OpenApiParsePayload,
+  OpenApiImportPayload,
 } from '../shared/ipc-types.js';
 
 const activeRequests = new Map<string, AbortController>();
@@ -926,6 +934,100 @@ export function registerIpcHandlers(): void {
 
       await fs.promises.writeFile(res.filePath, contentToWrite ?? '', 'utf-8');
       return res.filePath;
+    },
+  );
+
+  // 48. dialog:openOpenApiFile
+  ipcMain.handle('dialog:openOpenApiFile', async (): Promise<OpenOpenApiFileResult | null> => {
+    const res = await dialog.showOpenDialog({
+      title: 'Select OpenAPI / Swagger Specification',
+      filters: [
+        {
+          name: 'OpenAPI / Swagger Files (*.json, *.yaml, *.yml)',
+          extensions: ['json', 'yaml', 'yml'],
+        },
+        { name: 'JSON Files (*.json)', extensions: ['json'] },
+        { name: 'YAML Files (*.yaml, *.yml)', extensions: ['yaml', 'yml'] },
+        { name: 'All Files (*.*)', extensions: ['*'] },
+      ],
+      properties: ['openFile'],
+    });
+
+    if (res.canceled || !res.filePaths[0]) {
+      return null;
+    }
+
+    const filePath = res.filePaths[0];
+    const content = await fs.promises.readFile(filePath, 'utf-8');
+    const filename = path.basename(filePath);
+    return {
+      filename,
+      filePath,
+      content,
+    };
+  });
+
+  // 49. openapi:parse
+  ipcMain.handle(
+    'openapi:parse',
+    async (_event, payload: OpenApiParsePayload): Promise<OpenApiParseSummary> => {
+      let rawContent = payload.specContent;
+      if (!rawContent && payload.specUrl) {
+        rawContent = await fetchSpecFromUrl(payload.specUrl);
+      }
+      if (!rawContent || !rawContent.trim()) {
+        throw new Error('Specification content or valid URL is required.');
+      }
+
+      const parsed = parseOpenApiSpec(rawContent);
+      const servers = parsed.baseUrl ? [parsed.baseUrl] : [];
+      const operationsPreview = parsed.allRequests.slice(0, 50).map(r => ({
+        method: r.method,
+        path: r.url.replace(/^\{\{baseUrl\}\}/, ''),
+        summary: r.name,
+        tag: r.folderPath,
+      }));
+
+      return {
+        title: parsed.title,
+        version: parsed.version,
+        specFormat: parsed.specFormat,
+        totalOperations: parsed.allRequests.length,
+        totalTags: parsed.folders.length,
+        servers,
+        warnings: parsed.warnings,
+        operationsPreview,
+      };
+    },
+  );
+
+  // 50. openapi:import
+  ipcMain.handle(
+    'openapi:import',
+    async (_event, payload: OpenApiImportPayload): Promise<OpenApiImportReport> => {
+      let rawContent = payload.specContent;
+      if (!rawContent && payload.specUrl) {
+        rawContent = await fetchSpecFromUrl(payload.specUrl);
+      }
+      if (!rawContent || !rawContent.trim()) {
+        throw new Error('Specification content or valid URL is required.');
+      }
+      if (!payload.targetDir || !payload.targetDir.trim()) {
+        throw new Error('Target directory is required for OpenAPI import.');
+      }
+
+      const report = await importOpenApiToDirectory({
+        spec: rawContent,
+        targetDir: payload.targetDir.trim(),
+        collectionNameOverride: payload.collectionNameOverride?.trim() || undefined,
+        mode: payload.mode || 'add-new',
+        defaultBaseUrl: payload.defaultBaseUrl?.trim() || undefined,
+      });
+
+      // Automatically open the imported collection and refresh watcher/recents
+      await fileService.openCollection(report.targetDirectory || payload.targetDir.trim());
+
+      return report;
     },
   );
 }

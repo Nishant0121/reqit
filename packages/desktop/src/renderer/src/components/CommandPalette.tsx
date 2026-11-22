@@ -38,6 +38,8 @@ export interface CommandPaletteProps {
   onOpenShortcuts: () => void;
   onOpenSecrets?: () => void;
   onRunCollection?: () => void;
+  onImportOpenApi?: () => void;
+  onImportPostman?: () => void;
 }
 
 interface PaletteItem {
@@ -106,6 +108,8 @@ export function CommandPalette({
   onOpenShortcuts,
   onOpenSecrets,
   onRunCollection,
+  onImportOpenApi,
+  onImportPostman,
 }: CommandPaletteProps): React.JSX.Element | null {
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -201,6 +205,28 @@ export function CommandPalette({
           icon: <Download className="h-4 w-4 text-amber-500" />,
           run: onImportCurl,
         },
+        ...(onImportPostman
+          ? [
+              {
+                id: 'action-postman',
+                title: 'Import Postman Collection',
+                subtitle: 'Import v2.1 Postman collection and environments',
+                icon: <Download className="h-4 w-4 text-orange-500" />,
+                run: onImportPostman,
+              },
+            ]
+          : []),
+        ...(onImportOpenApi
+          ? [
+              {
+                id: 'action-openapi',
+                title: 'Import OpenAPI / Swagger',
+                subtitle: 'Import OpenAPI 3.x or Swagger 2.0 (file, URL, or raw text)',
+                icon: <Globe className="h-4 w-4 text-emerald-400" />,
+                run: onImportOpenApi,
+              },
+            ]
+          : []),
         {
           id: 'action-snippets',
           title: 'Generate Code Snippets',
@@ -363,6 +389,9 @@ export function CommandPalette({
     onOpenCookies,
     onOpenShortcuts,
     onOpenSecrets,
+    onRunCollection,
+    onImportOpenApi,
+    onImportPostman,
     onClose,
     setActiveEnvironment,
     openDraftFromFile,
