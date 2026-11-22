@@ -1,42 +1,33 @@
 version: 2
 updates:
-  # Maintain dependencies for npm packages across monorepo
+  # Maintain dependencies for npm packages across monorepo (grouped & non-breaking)
   - package-ecosystem: 'npm'
     directory: '/'
     schedule:
-      interval: 'weekly'
-    open-pull-requests-limit: 10
+      interval: 'monthly'
+    open-pull-requests-limit: 2
+    groups:
+      dependencies:
+        patterns:
+          - '*'
+    # Ignore breaking major version upgrades for critical tooling
+    ignore:
+      - dependency-name: 'typescript'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'eslint'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'lint-staged'
+        update-types: ['version-update:semver-major']
+      - dependency-name: '@typescript-eslint/*'
+        update-types: ['version-update:semver-major']
     commit-message:
       prefix: 'chore(deps)'
-
-  - package-ecosystem: 'npm'
-    directory: '/packages/core'
-    schedule:
-      interval: 'weekly'
-    open-pull-requests-limit: 5
-    commit-message:
-      prefix: 'chore(core-deps)'
-
-  - package-ecosystem: 'npm'
-    directory: '/packages/desktop'
-    schedule:
-      interval: 'weekly'
-    open-pull-requests-limit: 5
-    commit-message:
-      prefix: 'chore(desktop-deps)'
-
-  - package-ecosystem: 'npm'
-    directory: '/packages/cli'
-    schedule:
-      interval: 'weekly'
-    open-pull-requests-limit: 5
-    commit-message:
-      prefix: 'chore(cli-deps)'
 
   # Maintain dependencies for GitHub Actions workflows
   - package-ecosystem: 'github-actions'
     directory: '/'
     schedule:
       interval: 'monthly'
+    open-pull-requests-limit: 2
     commit-message:
       prefix: 'ci(actions)'
