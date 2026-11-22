@@ -378,4 +378,32 @@ export interface ReqitApi {
   ) => Promise<import('@reqit/core').OAuthTokenResult>;
   /** Subscribes to native menu actions */
   onMenuAction: (callback: (action: string) => void) => () => void;
+  /** Runs collection or folder runner */
+  startCollectionRunner: (
+    options: import('@reqit/core').RunnerOptions,
+  ) => Promise<import('@reqit/core').RunnerSummary>;
+  /** Cancels active collection run */
+  cancelCollectionRunner: () => Promise<boolean>;
+  /** Subscribes to live runner progress events */
+  onRunnerProgress: (
+    callback: (event: import('@reqit/core').RunnerProgressEvent) => void,
+  ) => () => void;
+  /** Opens native file dialog for data file (CSV or JSON) and returns parsed rows */
+  openDataFileDialog: () => Promise<OpenDataFileResult | null>;
+  /** Exports runner report to disk */
+  exportRunnerReport: (payload: ExportReportPayload) => Promise<string | null>;
+}
+
+export interface OpenDataFileResult {
+  filename: string;
+  filePath: string;
+  rows: Record<string, unknown>[];
+  headers: string[];
+}
+
+export interface ExportReportPayload {
+  content?: string;
+  summary?: import('@reqit/core').RunnerSummary;
+  defaultFilename: string;
+  type: 'html' | 'json';
 }

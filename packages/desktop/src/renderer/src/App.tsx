@@ -22,6 +22,7 @@ import { ImportPostmanModal } from './components/ImportPostmanModal';
 import { CookieManagerModal } from './components/CookieManagerModal';
 import { SnippetModal } from './components/SnippetModal';
 import { CommandPalette } from './components/CommandPalette';
+import { CollectionRunnerModal } from './components/CollectionRunnerModal';
 import { SettingsModal } from './components/SettingsModal';
 import { WelcomeScreen } from './components/WelcomeScreen';
 import { useAppStore } from './stores/appStore';
@@ -73,7 +74,14 @@ export default function App(): React.JSX.Element {
   const [cookieModalOpen, setCookieModalOpen] = useState(false);
   const [snippetModalOpen, setSnippetModalOpen] = useState(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  const [runnerModalOpen, setRunnerModalOpen] = useState(false);
+  const [runnerTargetFolder, setRunnerTargetFolder] = useState<string | undefined>(undefined);
   const [showWelcomeScreen, setShowWelcomeScreen] = useState(false);
+
+  const handleOpenRunner = useCallback((folderPath?: string) => {
+    setRunnerTargetFolder(folderPath);
+    setRunnerModalOpen(true);
+  }, []);
 
   const { openSettings, loadSettings, settings } = useSettingsStore();
   const customShortcuts = settings.customShortcuts;
@@ -773,6 +781,7 @@ export default function App(): React.JSX.Element {
             requests={requestsList}
             onSelectRequest={openRequest}
             onNewRequest={() => createRequest()}
+            onRunFolder={handleOpenRunner}
           />
         )}
 
@@ -1054,6 +1063,14 @@ export default function App(): React.JSX.Element {
         onOpenCookies={() => setCookieModalOpen(true)}
         onOpenShortcuts={() => setShortcutsModalOpen(true)}
         onOpenSecrets={() => handleOpenEnvModal('secrets')}
+        onRunCollection={() => handleOpenRunner()}
+      />
+      <CollectionRunnerModal
+        isOpen={runnerModalOpen}
+        onClose={() => setRunnerModalOpen(false)}
+        collectionTree={currentTree}
+        activeEnvironment={activeEnvironment}
+        initialFolderPath={runnerTargetFolder}
       />
     </div>
   );

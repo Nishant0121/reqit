@@ -37,6 +37,7 @@ export interface CommandPaletteProps {
   onOpenCookies: () => void;
   onOpenShortcuts: () => void;
   onOpenSecrets?: () => void;
+  onRunCollection?: () => void;
 }
 
 interface PaletteItem {
@@ -104,6 +105,7 @@ export function CommandPalette({
   onOpenCookies,
   onOpenShortcuts,
   onOpenSecrets,
+  onRunCollection,
 }: CommandPaletteProps): React.JSX.Element | null {
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -166,6 +168,14 @@ export function CommandPalette({
           shortcutId: 'request.send',
           icon: <Play className="h-4 w-4 text-emerald-500" />,
           run: onSendRequest,
+        },
+        {
+          id: 'action-run-collection',
+          title: 'Run Collection / Folder...',
+          subtitle:
+            'Launch the Collection Runner for batch execution, iterations, and test reports',
+          icon: <Play className="h-4 w-4 text-blue-500" />,
+          run: () => onRunCollection?.(),
         },
         {
           id: 'action-save',

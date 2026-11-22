@@ -23,6 +23,12 @@ import {
   type ScriptError,
   type TestAssertionResult,
   type Cookie,
+  runCollectionRunner,
+  parseDataFileContent,
+  generateHtmlReport,
+  type RunnerOptions,
+  type RunnerProgressEvent,
+  type RunnerSummary,
 } from '@reqit/core';
 import { fileService } from './services/file-service.js';
 import { historyService } from './services/history-service.js';
@@ -56,9 +62,12 @@ import type {
   PostmanParseResult,
   PostmanImportPayload,
   OpenJsonFileResult,
+  OpenDataFileResult,
+  ExportReportPayload,
 } from '../shared/ipc-types.js';
 
 const activeRequests = new Map<string, AbortController>();
+let activeRunnerController: AbortController | null = null;
 
 export function registerIpcHandlers(): void {
   // 1. app:getVersion
@@ -826,6 +835,97 @@ export function registerIpcHandlers(): void {
     'oauth:fetchClientCredentials',
     async (_event, config: OAuthClientCredentialsConfig) => {
       return oauthService.fetchClientCredentials(config);
+    },
+  );
+
+  // 44. runner:start
+  ipcMain.handle('runner:start', async (event, options: RunnerOptions): Promise<RunnerSummary> => {
+    activeRunnerController = new AbortController();
+    try {
+      const summary = await runCollectionRunner(
+        {
+          ...options,
+          signal: activeRunnerController.signal,
+        },
+        (progress: RunnerProgressEvent) => {
+          if (!event.sender.isDestroyed()) {
+            event.sender.send('runner:progress', progress);
+          }
+        },
+      );
+      return summary;
+    } finally {
+      activeRunnerController = null;
+    }
+  });
+
+  // 45. runner:cancel
+  ipcMain.handle('runner:cancel', async (): Promise<boolean> => {
+    if (activeRunnerController) {
+      activeRunnerController.abort();
+      activeRunnerController = null;
+      return true;
+    }
+    return false;
+  });
+
+  // 46. dialog:openDataFile
+  ipcMain.handle('dialog:openDataFile', async (): Promise<OpenDataFileResult | null> => {
+    const res = await dialog.showOpenDialog({
+      title: 'Select Data File (CSV or JSON)',
+      filters: [
+        { name: 'Data Files (*.csv, *.json)', extensions: ['csv', 'json'] },
+        { name: 'CSV Files (*.csv)', extensions: ['csv'] },
+        { name: 'JSON Files (*.json)', extensions: ['json'] },
+        { name: 'All Files (*.*)', extensions: ['*'] },
+      ],
+      properties: ['openFile'],
+    });
+
+    if (res.canceled || !res.filePaths[0]) {
+      return null;
+    }
+
+    const filePath = res.filePaths[0];
+    const content = await fs.promises.readFile(filePath, 'utf-8');
+    const filename = path.basename(filePath);
+    const rows = parseDataFileContent(content, filename);
+    const headers = rows.length > 0 && rows[0] ? Object.keys(rows[0]) : [];
+
+    return {
+      filename,
+      filePath,
+      rows,
+      headers,
+    };
+  });
+
+  // 47. runner:exportReport
+  ipcMain.handle(
+    'runner:exportReport',
+    async (_event, payload: ExportReportPayload): Promise<string | null> => {
+      const isHtml = payload.type === 'html';
+      const res = await dialog.showSaveDialog({
+        title: isHtml ? 'Export HTML Report' : 'Export JSON Summary',
+        defaultPath: payload.defaultFilename,
+        filters: isHtml
+          ? [{ name: 'HTML Report (*.html)', extensions: ['html'] }]
+          : [{ name: 'JSON Summary (*.json)', extensions: ['json'] }],
+      });
+
+      if (res.canceled || !res.filePath) {
+        return null;
+      }
+
+      let contentToWrite = payload.content;
+      if (contentToWrite === undefined && payload.summary) {
+        contentToWrite = isHtml
+          ? generateHtmlReport(payload.summary)
+          : JSON.stringify(payload.summary, null, 2);
+      }
+
+      await fs.promises.writeFile(res.filePath, contentToWrite ?? '', 'utf-8');
+      return res.filePath;
     },
   );
 }

@@ -14,6 +14,7 @@ import {
   AlertCircle,
   FolderPlus,
   FilePlus,
+  Play,
 } from 'lucide-react';
 import type { HttpMethod, CollectionTree, CollectionTreeNode } from '@reqit/core';
 import { MethodBadge } from './ui/Badge';
@@ -39,6 +40,7 @@ export interface SidebarProps {
   requests?: RequestItem[];
   onSelectRequest?: (id: string) => void;
   onNewRequest?: () => void;
+  onRunFolder?: (folderPath?: string) => void;
 }
 
 export function Sidebar({
@@ -50,6 +52,7 @@ export function Sidebar({
   requests = [],
   onSelectRequest,
   onNewRequest,
+  onRunFolder,
 }: SidebarProps): React.JSX.Element {
   const [filterText, setFilterText] = useState('');
   const [activeTab, setActiveTab] = useState<'collections' | 'history'>('collections');
@@ -616,6 +619,19 @@ export function Sidebar({
         {/* New Request or New Folder Button (Collections only) */}
         {activeTab === 'collections' && (
           <div className="flex items-center gap-1">
+            {tree?.rootPath && onRunFolder && (
+              <Button
+                variant="ghost"
+                size="compact"
+                onClick={() => onRunFolder()}
+                title="Run Collection..."
+                aria-label="Run Collection"
+                className="flex h-7 w-7 items-center justify-center p-0 text-(--text-secondary) hover:text-(--accent)"
+              >
+                <Play className="h-4 w-4 fill-current" />
+              </Button>
+            )}
+
             {tree?.rootPath && (
               <Button
                 variant="ghost"
@@ -812,6 +828,20 @@ export function Sidebar({
         >
           {contextMenu.node.type === 'folder' ? (
             <>
+              {onRunFolder && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const targetPath = contextMenu.node.path;
+                    setContextMenu(null);
+                    onRunFolder(targetPath);
+                  }}
+                  className="transition-fast flex w-full items-center gap-2 px-3 py-1.5 text-left text-(--text-primary) hover:bg-(--bg-hover)"
+                >
+                  <Play className="h-3.5 w-3.5 fill-current text-emerald-400" />
+                  <span>Run Folder...</span>
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => {

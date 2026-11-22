@@ -215,6 +215,30 @@ const api: ReqitApi = {
   fetchOAuthClientCredentials: (config: OAuthClientCredentialsConfig) => {
     return ipcRenderer.invoke('oauth:fetchClientCredentials', config);
   },
+  startCollectionRunner: (options: import('@reqit/core').RunnerOptions) => {
+    return ipcRenderer.invoke('runner:start', options);
+  },
+  cancelCollectionRunner: () => {
+    return ipcRenderer.invoke('runner:cancel');
+  },
+  onRunnerProgress: (callback: (event: import('@reqit/core').RunnerProgressEvent) => void) => {
+    const handler = (
+      _event: Electron.IpcRendererEvent,
+      progress: import('@reqit/core').RunnerProgressEvent,
+    ) => {
+      callback(progress);
+    };
+    ipcRenderer.on('runner:progress', handler);
+    return () => {
+      ipcRenderer.removeListener('runner:progress', handler);
+    };
+  },
+  openDataFileDialog: () => {
+    return ipcRenderer.invoke('dialog:openDataFile');
+  },
+  exportRunnerReport: (payload: import('../shared/ipc-types.js').ExportReportPayload) => {
+    return ipcRenderer.invoke('runner:exportReport', payload);
+  },
   onMenuAction: (callback: (action: string) => void) => {
     const handler = (_event: Electron.IpcRendererEvent, action: string) => {
       callback(action);
